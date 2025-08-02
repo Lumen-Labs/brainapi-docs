@@ -1,0 +1,795 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FastAPI",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://brainapi.lumen-labs.ai",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/api/v1/memory/update/": {
+      "post": {
+        "tags": ["v1", "memory", "memory"],
+        "summary": "Update Memory",
+        "description": "Update a memory with new content. This will start a background task to update the memory. You can check the status of the task by using the task_id.",
+        "operationId": "update_memory_api_v1_memory_update__post",
+        "parameters": [
+          {
+            "name": "X-LumenBrain-ApiKey",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "API Key for authentication",
+              "title": "X-Lumenbrain-Apikey"
+            },
+            "description": "API Key for authentication"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMemoryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Memory updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateMemoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, make sure to include the memory_uuid, type, and content"
+          },
+          "401": {
+            "description": "Invalid API key"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/memory/update/file": {
+      "post": {
+        "tags": ["v1", "memory", "memory"],
+        "summary": "Update Memory File",
+        "description": "Update a memory with a file. This will start a background task to update the memory. You can check the status of the task by using the task_id.",
+        "operationId": "update_memory_file_api_v1_memory_update_file_post",
+        "parameters": [
+          {
+            "name": "X-LumenBrain-ApiKey",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "API Key for authentication",
+              "title": "X-Lumenbrain-Apikey"
+            },
+            "description": "API Key for authentication"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_memory_file_api_v1_memory_update_file_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Memory updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, make sure to include the memory_uuid, type, and files"
+          },
+          "401": {
+            "description": "Invalid API key"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/memory/query/": {
+      "post": {
+        "tags": ["v1", "memory", "memory"],
+        "summary": "Query Memory",
+        "description": "Query a memory. This will return the most relevant context from the memory. You can also specify a conversation_id to get the history of the conversation.",
+        "operationId": "query_memory_api_v1_memory_query__post",
+        "parameters": [
+          {
+            "name": "X-LumenBrain-ApiKey",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "API Key for authentication",
+              "title": "X-Lumenbrain-Apikey"
+            },
+            "description": "API Key for authentication"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryMemoryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Memory queried successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryMemoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, make sure to include the memory_uuid, text, and conversation_id (optional)"
+          },
+          "401": {
+            "description": "Invalid API key"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/memory/query/memory-records": {
+      "get": {
+        "tags": ["v1", "memory", "memory"],
+        "summary": "Get Memory Records",
+        "description": "Retrieve memory records with pagination and filtering",
+        "operationId": "get_memory_records_api_v1_memory_query_memory_records_get",
+        "parameters": [
+          {
+            "name": "memory_uuid",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The UUID of the memory to query",
+              "title": "Memory Uuid"
+            },
+            "description": "The UUID of the memory to query"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Page number (starts from 1)",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number (starts from 1)"
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search query to filter records",
+              "title": "Query"
+            },
+            "description": "Search query to filter records"
+          },
+          {
+            "name": "types",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated list of types to filter by",
+              "title": "Types"
+            },
+            "description": "Comma-separated list of types to filter by"
+          },
+          {
+            "name": "X-LumenBrain-ApiKey",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "API Key for authentication",
+              "title": "X-Lumenbrain-Apikey"
+            },
+            "description": "API Key for authentication"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Memory records retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMemoryRecordsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, make sure to include the memory_uuid, page, query, and types"
+          },
+          "401": {
+            "description": "Invalid API key"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/memory/": {
+      "post": {
+        "tags": ["v1", "memory"],
+        "summary": "Create Memory",
+        "description": "Create a new memory store",
+        "operationId": "create_memory_api_v1_memory__post",
+        "parameters": [
+          {
+            "name": "X-LumenBrain-ApiKey",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "API Key for authentication",
+              "title": "X-Lumenbrain-Apikey"
+            },
+            "description": "API Key for authentication"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryCreateResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Memory created successfully"
+          },
+          "400": {
+            "description": "Invalid request, make sure the uuid is a valid alphanumeric string (you can use underscores)"
+          },
+          "401": {
+            "description": "Invalid API key"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/memory/content-types": {
+      "get": {
+        "tags": ["v1", "memory"],
+        "summary": "Get Memory Types",
+        "description": "Get all the content types that can be used to create a memory.",
+        "operationId": "get_memory_types_api_v1_memory_content_types_get",
+        "responses": {
+          "200": {
+            "description": "Memory types retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryTypesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid API key"
+          }
+        }
+      }
+    },
+    "/api/v1/tasks/{task_id}": {
+      "get": {
+        "tags": ["v1", "tasks"],
+        "summary": "Get Task",
+        "description": "Get the result of a task",
+        "operationId": "get_task_api_v1_tasks__task_id__get",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "X-LumenBrain-ApiKey",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "API Key for authentication",
+              "title": "X-Lumenbrain-Apikey"
+            },
+            "description": "API Key for authentication"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task result retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTaskResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid API key"
+          },
+          "404": {
+            "description": "Task not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_update_memory_file_api_v1_memory_update_file_post": {
+        "properties": {
+          "files": {
+            "items": {
+              "type": "string",
+              "format": "binary"
+            },
+            "type": "array",
+            "title": "Files"
+          },
+          "memory_uuid": {
+            "type": "string",
+            "title": "Memory Uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["email", "file", "webpage", "event"],
+            "title": "Type"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["user", "assistant"]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "resource_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "file",
+                  "file_chunk",
+                  "event",
+                  "webpage",
+                  "webpage_chunk",
+                  "email",
+                  "email_chunk"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Type"
+          }
+        },
+        "type": "object",
+        "required": ["files", "memory_uuid", "type"],
+        "title": "Body_update_memory_file_api_v1_memory_update_file_post"
+      },
+      "GetMemoryRecordsResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status"
+          },
+          "records": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Records"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          }
+        },
+        "type": "object",
+        "required": ["status", "records", "total_count"],
+        "title": "GetMemoryRecordsResponse"
+      },
+      "GetTaskResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "result": {
+            "$ref": "#/components/schemas/TaskResult"
+          }
+        },
+        "type": "object",
+        "required": ["task_id", "result"],
+        "title": "GetTaskResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MemoryCreateResponse": {
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "title": "Uuid"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": ["uuid", "id"],
+        "title": "MemoryCreateResponse"
+      },
+      "MemoryTypesResponse": {
+        "properties": {
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Types"
+          }
+        },
+        "type": "object",
+        "required": ["types"],
+        "title": "MemoryTypesResponse"
+      },
+      "QueryMemoryRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "memory_uuid": {
+            "type": "string",
+            "title": "Memory Uuid"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          }
+        },
+        "type": "object",
+        "required": ["text", "memory_uuid"],
+        "title": "QueryMemoryRequest"
+      },
+      "QueryMemoryResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status"
+          },
+          "context": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": ["status", "context"],
+        "title": "QueryMemoryResponse"
+      },
+      "TaskResult": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ok", "error"],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": ["status"],
+        "title": "TaskResult"
+      },
+      "UpdateMemoryRequest": {
+        "properties": {
+          "memory_uuid": {
+            "type": "string",
+            "title": "Memory Uuid"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "message"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "file",
+                  "file_chunk",
+                  "event",
+                  "webpage",
+                  "webpage_chunk",
+                  "email",
+                  "email_chunk"
+                ]
+              }
+            ],
+            "title": "Type"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "resource_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "file",
+                  "file_chunk",
+                  "event",
+                  "webpage",
+                  "webpage_chunk",
+                  "email",
+                  "email_chunk"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Type"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["user", "assistant"]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata"
+          }
+        },
+        "type": "object",
+        "required": ["memory_uuid", "type", "content"],
+        "title": "UpdateMemoryRequest"
+      },
+      "UpdateMemoryResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status"
+          },
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "memory_id": {
+            "type": "string",
+            "title": "Memory Id"
+          },
+          "conversation_id": {
+            "type": "string",
+            "title": "Conversation Id"
+          }
+        },
+        "type": "object",
+        "required": ["status", "task_id", "memory_id", "conversation_id"],
+        "title": "UpdateMemoryResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

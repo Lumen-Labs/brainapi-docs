@@ -1,0 +1,122 @@
+---
+title: Injection
+description: How to inject data into the memory store
+---
+
+## Injection
+
+You can inject extra knowledge into the memory store. You might want to add memories about user documents, emails. You might also want to add general memories if you are building a chatbot, for example you might want to add the documentation of your product or the knowledge base that will be used to answer questions from your users.
+
+## Importing
+
+Start by importing the `Driver` class.
+
+<Tabs items={["Typescript", "Python"]}>
+  <Tab value="Typescript">
+    <DynamicCodeBlock
+      lang="ts"
+      code={`import { LumenBrainDriver } from "lumen-brain";
+
+// Initialize the driver with your API key
+const brain = new LumenBrainDriver("your-api-key");`}
+/>
+
+  </Tab>
+  <Tab value="Python">
+    <DynamicCodeBlock
+      lang="py"
+      code={`# Choose between the synchronous and asynchronous drivers
+
+from lumen_brain import LumenBrainDriver
+from lumen_brain import AsyncLumenBrainDriver
+
+# Initialize the driver with your API key
+
+brain = LumenBrainDriver("your-api-key")
+client = AsyncLumenBrainDriver(api_key="your-api-key")
+`}
+/>
+
+  </Tab>
+</Tabs>
+
+## Injecting additional knowledge
+
+You can retrieve additional context based on the user's message and append it to the prompt for the LLM.
+The additional context will include relevant information extracted from the memory and the conversation history if conversation_id is provided.
+
+<Tabs items={["Typescript", "Python"]}>
+  <Tab value="Typescript">
+    <DynamicCodeBlock
+      lang="ts"
+      code={`const knowledgeResult = await brain.injectKnowledge(
+    "memory-uuid",
+    "Important information to remember",
+    "event" // message, file, event, webpage, email
+);`}
+    />
+    <TypeTable
+      type={{
+        memory_uuid: {
+          description:
+            "It must be the first parameter, The unique identifier provided by your app, it's used to identify a unique memory.",
+          type: "str",
+          required: true,
+        },
+        type: {
+          description:
+            "It must be the second parameter, The type of the content. It can be 'message', 'file', 'event', 'webpage' or 'email'.",
+          type: "Literal",
+          values: ["message", "file", "event", "webpage", "email"],
+          required: true,
+        },
+        content: {
+          description:
+            "It must be the third parameter, The text content that will be injected into the memory store.",
+          type: "str",
+          required: true,
+        },
+      }}
+    />
+  </Tab>
+  <Tab value="Python">
+    <DynamicCodeBlock
+      lang="py"
+      code={`await client.inject_knowledge(
+    memory_uuid="your-memory-uuid",
+    type="message", # message, file, event, webpage, email
+    content="Your message content",
+    metadata={"key": "value"}
+)`}
+    />
+    <TypeTable
+      type={{
+        memory_uuid: {
+          description:
+            "The unique identifier provided by your app, it's used to identify a unique memory.",
+          type: "str",
+          required: true,
+        },
+        type: {
+          description:
+            "The type of the content. It can be 'message', 'file', 'event', 'webpage' or 'email'.",
+          type: "Literal",
+          values: ["message", "file", "event", "webpage", "email"],
+          required: true,
+        },
+        content: {
+          description:
+            "The text content that will be injected into the memory store.",
+          type: "str",
+          required: true,
+        },
+        metadata: {
+          description:
+            "The metadata of the message. It's used to store additional information about the message. It's an optional parameter.",
+          type: "dict",
+          required: false,
+        },
+      }}
+    />
+  </Tab>
+</Tabs>

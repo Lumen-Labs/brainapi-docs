@@ -1,0 +1,137 @@
+---
+title: Saving
+description: How to save data to the memory store
+---
+
+## Importing
+
+Start by importing the `Driver` class.
+
+<Tabs items={["Typescript", "Python"]}>
+  <Tab value="Typescript">
+    <DynamicCodeBlock
+      lang="ts"
+      code={`import { LumenBrainDriver } from "lumen-brain";
+
+// Initialize the driver with your API key
+const brain = new LumenBrainDriver("your-api-key");`}
+/>
+
+  </Tab>
+  <Tab value="Python">
+    <DynamicCodeBlock
+      lang="py"
+      code={`# Choose between the synchronous and asynchronous drivers
+
+from lumen_brain import LumenBrainDriver
+from lumen_brain import AsyncLumenBrainDriver
+
+# Initialize the driver with your API key
+
+brain = LumenBrainDriver("your-api-key")
+client = AsyncLumenBrainDriver(api_key="your-api-key")
+`}
+/>
+
+  </Tab>
+</Tabs>
+
+## Saving a message
+
+You can save messages from your application during a conversation.
+
+<Tabs items={["Typescript", "Python"]}>
+  <Tab value="Typescript">
+    <DynamicCodeBlock
+      lang="ts"
+      code={`const saveResult = await brain.saveMessage(
+    "memory-uuid",
+    "Hello, this is a test message",
+    "user",
+    "conversation-123"
+);`}
+    />
+    <TypeTable
+      type={{
+        memory_uuid: {
+          description:
+            "It must be the first parameter, it's unique and it's used to identify the memory. Often used to identify the memory for an entire user.",
+          type: "string",
+          required: true,
+        },
+        content: {
+          description:
+            "It must be the second parameter, the text content of the user message.",
+          type: "string",
+          required: true,
+        },
+        role: {
+          description:
+            'It must be the third parameter, the role of the message. It can be "user" or "assistant".',
+          type: "enum",
+          values: ["user", "assistant"],
+          required: true,
+        },
+        conversation_id: {
+          description:
+            "It must be the fourth parameter, the conversation id. It's used to keep track of the history of a conversation. If not provided, a new conversation will be created.",
+          type: "string",
+        },
+      }}
+    />
+  </Tab>
+  <Tab value="Python">
+    <DynamicCodeBlock
+      lang="py"
+      code={`await client.save_message(
+      memory_uuid="your-memory-uuid",
+      type="message",
+      content="Your message content",
+      role="user",
+      conversation_id="your-conversation-id",
+      metadata={"key": "value"}
+)`}
+    />
+    <TypeTable
+      type={{
+        memory_uuid: {
+          description:
+            "It's unique and it's used to identify the memory. Often used to identify the memory for an entire user.",
+          type: "str",
+          required: true,
+        },
+        type: {
+          description: "The type of content, it's always 'message'.",
+          type: "Literal",
+          values: ["message"],
+          required: false,
+          default: "message",
+        },
+        content: {
+          description: "The text content of the user message.",
+          type: "str",
+          required: true,
+        },
+        role: {
+          description:
+            'The role of the message. It can be "user" or "assistant".',
+          type: "Literal",
+          values: ["user", "assistant"],
+          required: true,
+        },
+        conversation_id: {
+          description:
+            "The conversation id. It's used to keep track of the history of a conversation. If not provided, a new conversation will be created.",
+          type: "str",
+          default: "Auto-generated",
+        },
+        metadata: {
+          description:
+            "The metadata of the message. It's used to store additional information about the message. It's an optional parameter.",
+          type: "dict",
+          required: false,
+        },
+      }}
+    />
+  </Tab>
+</Tabs>
