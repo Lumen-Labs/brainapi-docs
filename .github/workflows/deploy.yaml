@@ -1,0 +1,42 @@
+name: BrainAPI prod
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+      - run: npm ci
+      - run: npm install -g env-cmd
+      - run: env-cmd -f .env.production npm run build
+
+      - name: Copy repository contents via scp
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          port: ${{ secrets.PORT }}
+          key: ${{ secrets.SSHKEY }}
+          source: "./"
+          target: "/home/github/brainapi-docs"
+      - name: Restart PM2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          port: ${{ secrets.PORT }}
+          key: ${{ secrets.SSHKEY }}
+          script: pm2 restart brainapi-docs
