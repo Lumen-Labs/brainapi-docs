@@ -6,7 +6,7 @@
   },
   "servers": [
     {
-      "url": "https://brainapi.lumen-labs.ai",
+      "url": "https://api.brainapi.lumen-labs.ai",
       "description": "Production"
     }
   ],
