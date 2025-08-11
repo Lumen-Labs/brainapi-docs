@@ -9,6 +9,63 @@ It is a simple API that allows you to store and retrieve data from a memory stor
 
 It is designed to be used with any LLM application, but it is particularly useful for applications that need to store and retrieve data from a memory store, ai assistants for documentation search, chatbots, etc.
 
+## Examples
+Next.js simple route example in just 4 steps
+<DynamicCodeBlock
+  lang="ts"
+  code={`import OpenAI from "openai";
+import { LumenBrainDriver } from "@lumenlabs/lumen-brain";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const brain = new LumenBrainDriver(process.env.LUMEN_BRAIN_API_KEY!);
+
+export async function POST(req: Request) {
+    try {
+      const { message, memoryId, conversationId } = await req.json();
+
+
+      // 1. Save the sent message to the memory ========
+      const brainResponse = await brain.saveMessage(
+        memoryId,
+        message,
+        "user",
+        conversationId
+      ); // ============================================
+
+
+      // 2. Query the memory for relevant context ======
+      const queryResponse = await brain.queryMemory(
+        message,
+        brainResponse.memory_id,
+        brainResponse.conversation_id!
+      ); // ============================================
+
+
+      // 3. Send the request to the LLM ================
+      const response = await openai.responses.create({
+        model: "gpt-4o",
+        input: message + queryResponse.context,
+      }); // ===========================================
+
+
+      // 4. Save the response to the memory ============
+      await brain.saveMessage(
+        brainResponse.memory_id,
+        response.choices[0].message.content!,
+        "assistant",
+        brainResponse.conversation_id!
+      ); // ============================================
+
+
+      return response;
+    } catch (error) {
+      return error;
+    }
+}`}
+/>
+
+See Next.js example chat with streaming and memory project [here](https://github.com/Lumen-Labs/lumen-brain-node/tree/main/examples/example-chat)
+
 ## What's next?
 
 <Cards>
@@ -18,14 +75,24 @@ It is designed to be used with any LLM application, but it is particularly usefu
 
 ## Contributing
 
-<Card
-  title="Contributing"
-  href="https://github.com/orgs/Lumen-Labs/repositories"
->
-  <p>
-    We welcome contributions to the project. See our repositories on GitHub.
-    <br />
-    <br />
-    <a href="https://github.com/orgs/Lumen-Labs/repositories">GitHub</a>
-  </p>
-</Card>
+<Cards>
+  <Card
+    title="Contributing"
+    href="https://github.com/orgs/Lumen-Labs/repositories"
+  >
+    <p>
+      We welcome contributions to the project. See our repositories on GitHub.
+      <br />
+      <br />
+      <a href="https://github.com/orgs/Lumen-Labs/repositories">GitHub</a>
+    </p>
+  </Card>
+  <Card title="Discord Server" href="https://discord.gg/VTngQTaeDf">
+    <p>
+      Join the community on Discord.
+      <br />
+      <br />
+      <a href="https://discord.gg/VTngQTaeDf">Join</a>
+    </p>
+  </Card>
+</Cards>
