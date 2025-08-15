@@ -295,6 +295,100 @@
         }
       }
     },
+    "/api/v1/memory/query/entities/": {
+      "get": {
+        "tags": ["v1", "memory", "memory"],
+        "summary": "Retrieve information",
+        "description": "Retrieve information about an entity or concept by querying the relationships between them in the memory",
+        "operationId": "query_entities_api_v1_memory_query_entities__get",
+        "parameters": [
+          {
+            "name": "memory_uuid",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Memory Uuid"
+            }
+          },
+          {
+            "name": "info",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Info"
+            }
+          },
+          {
+            "name": "depth",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 2,
+              "title": "Depth"
+            }
+          },
+          {
+            "name": "X-LumenBrain-ApiKey",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "API Key for authentication",
+              "title": "X-Lumenbrain-Apikey"
+            },
+            "description": "API Key for authentication"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "title": "Entities"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success, the entities and the most relevant relation are returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryEntitiesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request, the request is invalid, make sure the request has all the required fields"
+          },
+          "401": {
+            "description": "Unauthorized, the API key is invalid or missing, make sure to provide it in the X-LumenBrain-ApiKey header"
+          },
+          "404": {
+            "description": "Not Found, the memory does not exist"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/memory/": {
       "post": {
         "tags": ["v1", "memory"],
