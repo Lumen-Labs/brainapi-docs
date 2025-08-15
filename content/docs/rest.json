@@ -603,6 +603,72 @@
         "required": ["files", "memory_uuid", "type"],
         "title": "Body_update_memory_file_api_v1_memory_update_file_post"
       },
+      "Node": {
+        "properties": {
+          "natural_lang": {
+            "type": "string",
+            "title": "Natural Lang"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "relationships": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Relationship"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relationships",
+            "default": []
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          }
+        },
+        "type": "object",
+        "required": ["natural_lang", "id", "name", "source_id"],
+        "title": "Node"
+      },
+      "QueryEntitiesResponse": {
+        "properties": {
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/Node"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "most_relevant_relation": {
+            "$ref": "#/components/schemas/Relationship"
+          }
+        },
+        "type": "object",
+        "required": ["nodes", "most_relevant_relation"],
+        "title": "QueryEntitiesResponse"
+      },
       "GetMemoryRecordsResponse": {
         "properties": {
           "status": {
