@@ -308,8 +308,24 @@
             "required": true,
             "schema": {
               "type": "string",
+              "description": "The UUID of the memory",
               "title": "Memory Uuid"
-            }
+            },
+            "description": "The UUID of the memory"
+          },
+          {
+            "name": "entities",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "The entities to be retrieved",
+              "title": "Entities"
+            },
+            "description": "The entities to be retrieved"
           },
           {
             "name": "info",
@@ -317,8 +333,10 @@
             "required": true,
             "schema": {
               "type": "string",
+              "description": "The information to be retrieved",
               "title": "Info"
-            }
+            },
+            "description": "The information to be retrieved"
           },
           {
             "name": "depth",
@@ -326,9 +344,11 @@
             "required": false,
             "schema": {
               "type": "integer",
+              "description": "The higher relation depth that will be looked for",
               "default": 2,
               "title": "Depth"
-            }
+            },
+            "description": "The higher relation depth that will be looked for"
           },
           {
             "name": "X-LumenBrain-ApiKey",
@@ -342,20 +362,6 @@
             "description": "API Key for authentication"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "title": "Entities"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Success, the entities and the most relevant relation are returned",
