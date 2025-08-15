@@ -652,6 +652,48 @@
         "required": ["natural_lang", "id", "name", "source_id"],
         "title": "Node"
       },
+      "Relationship": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "phrase": {
+            "type": "string",
+            "title": "Phrase"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction"
+          },
+          "natural_lang": {
+            "type": "string",
+            "title": "Natural Lang"
+          },
+          "related_node": {
+            "$ref": "#/components/schemas/Node"
+          },
+          "similarity": {
+            "type": "number",
+            "title": "Similarity"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "phrase",
+          "direction",
+          "natural_lang",
+          "related_node",
+          "similarity",
+          "source_id"
+        ],
+        "title": "Relationship"
+      },
       "QueryEntitiesResponse": {
         "properties": {
           "nodes": {
