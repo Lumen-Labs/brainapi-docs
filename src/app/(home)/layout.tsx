@@ -46,6 +46,11 @@ export default function Layout({ children }: { children: ReactNode }) {
             type: "page",
           },
           {
+            name: "Extracting Entities",
+            url: "/docs/extracting-entities",
+            type: "page",
+          },
+          {
             name: "Injection",
             url: "/docs/injection",
             type: "page",

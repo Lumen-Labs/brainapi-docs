@@ -1,0 +1,273 @@
+---
+title: Extracting Entities
+description: Extracting entities with information from memory
+---
+
+One of the biggest advantages of Lumen Brain is the ability to retrieve information and relationships between entities in a blink of an eye. 
+Modern LLMs are great at reasoning but they need time to generate tokens even for reasoning, this makes them slow to answer questions that require reasoning.
+
+<b>Entity Extraction API</b> is designed to be used alongside LLMs. While LLMs excel at generating text, this API enables lightning-fast information extraction.
+This is especially useful when you want your LLM to answer reasoning-based questions without relying on naive RAG approaches or raw, lengthy text chunks. 
+By providing concise, relevant context immediately—without waiting for the LLM to use external tools that could further slow down the response—you can achieve much faster answering times.
+
+![Entities Diagram](/images/entities-diagram.png)
+
+## Example
+<Tabs items={["Typescript", "Python"]}>
+  <Tab value="Typescript">
+    <DynamicCodeBlock
+      lang="ts"
+      code={`import { LumenBrainDriver } from "lumen-brain";
+
+// Initialize the driver with your API key
+const brain = new LumenBrainDriver("your-api-key");
+
+// Few previously saved messages
+await brain.saveMessage("mem-uuid", "Mary's husband is John", "user", "conv-123");
+await brain.saveMessage("mem-uuid", "John's wedding will be the 22th of October", "user", "conv-123");
+await brain.saveMessage("mem-uuid", "Mary's wedding will occur during the conference in New York", "user", "conv-123");
+/**
+ * Note that we never said when the conference in New York will occur.
+ */
+
+// User asks a question
+const userMessage = "When is the Conference in New York?";
+
+// Retrieve the entities
+const result = await brain.fetchInfo(
+    "mem-uuid",
+    ["Conference", "New York"], // Subject entities
+    "When", // What we are looking for
+);
+
+console.log(result.most_relevant_relation.related_node.name);
+// Result will be "22th of October"
+`}
+/>
+
+  </Tab>
+  <Tab value="Python">
+    <DynamicCodeBlock
+      lang="py"
+      code={`from lumen_brain import AsyncLumenBrainDriver
+
+# Initialize the driver with your API key
+brain = AsyncLumenBrainDriver(api_key="your-api-key")
+
+# Few previously saved messages
+await brain.save_message("mem-uuid", "Mary's husband is John", "user", "conv-123")
+await brain.save_message("mem-uuid", "John's wedding will be the 22th of October", "user", "conv-123")
+await brain.save_message("mem-uuid", "Mary's wedding will occur during the conference in New York", "user", "conv-123")
+"""
+Note that we never said when the conference in New York will occur.
+"""
+
+# User asks a question
+user_message = "When is the Conference in New York?"
+
+# Retrieve the entities
+result = await brain.fetch_info(
+    "mem-uuid",
+    ["Conference", "New York"], # Subject entities
+    "When", # What we are looking for
+)
+
+print(result.most_relevant_relation.related_node.name)
+# Result will be "22th of October"
+`}
+/>
+
+  </Tab>
+</Tabs>
+
+<Callout type="info">
+**Confidence Score**
+You can access the confidence score that can tell you how likely the most relevant relation is to be true by using the `<result>.most_relevant_confidence` property.
+</Callout>
+
+## Importing
+
+Start by importing the `Driver` class.
+
+<Tabs items={["Typescript", "Python"]}>
+  <Tab value="Typescript">
+    <DynamicCodeBlock
+      lang="ts"
+      code={`import { LumenBrainDriver } from "lumen-brain";
+
+// Initialize the driver with your API key
+const brain = new LumenBrainDriver("your-api-key");`}
+/>
+
+  </Tab>
+  <Tab value="Python">
+    <DynamicCodeBlock
+      lang="py"
+      code={`# Choose between the synchronous and asynchronous drivers
+
+from lumen_brain import LumenBrainDriver
+from lumen_brain import AsyncLumenBrainDriver
+
+# Initialize the driver with your API key
+
+brain = LumenBrainDriver("your-api-key")
+client = AsyncLumenBrainDriver(api_key="your-api-key")
+`}
+/>
+
+  </Tab>
+</Tabs>
+
+## Retrieving additional context
+
+You can retrieve information about entities from few hundred millisecond to few seconds in some edge cases, depending on your location, internet connection and the number of entities and relations you have in your memory.
+Generally speaking the retrieval is fast and easy to use out of the box.
+
+<Tabs items={["Typescript", "Python"]}>
+  <Tab value="Typescript">
+    <DynamicCodeBlock
+      lang="ts"
+      code={`const result = await brain.fetchInfo(
+    "mem-uuid",
+    ["Conference", "New York"], // Subject entities
+    "When", // What we are looking for
+);`}
+    />
+    <TypeTable
+      type={{
+        memory_uuid: {
+          description:
+            "It must be the first parameter, the memory uuid.",
+          type: "string",
+          required: true,
+        },
+        entities: {
+          description:
+            "It must be the second parameter, the entities to retrieve information about.",
+          type: "array<string>",
+          required: true,
+        },
+        info: {
+          description:
+            "It must be the third parameter, the information to retrieve.",
+          type: "string",
+          required: true,
+        },
+        depth: {
+          description:
+            "It must be the fourth parameter, the maximum depth of the relation that will be looked for when retrieving the information.",
+          type: "int",
+          required: false,
+          default: 2,
+        },
+      }}
+    />
+  </Tab>
+  <Tab value="Python">
+    <DynamicCodeBlock
+      lang="py"
+      code={`result = await client.fetch_info(
+    memory_uuid="your-memory-uuid", 
+    entities=["Conference", "New York"],
+    info="When"
+)`}
+    />
+    <TypeTable
+      type={{
+        memory_uuid: {
+          description:
+            "The memory uuid.",
+          type: "str",
+          required: true,
+        },
+        entities: {
+          description:
+            "The entities to retrieve information about.",
+          type: "list[str]",
+          required: true,
+        },
+        info: {
+          description:
+            "The information to be retrieved.",
+          type: "str",
+          required: true,
+        },
+        depth: {
+          description:
+            "The maximum depth of the relation that will be looked for when retrieving the information.",
+          type: "int",
+          required: false,
+          default: 2,
+        },
+      }}
+    />
+  </Tab>
+</Tabs>
+
+## Result
+
+The result will be an object where you can access the relevent nodes and relationships, the most relevant relation and the confidence score for the most relevant relation.
+
+<Tabs items={["Typescript", "Python"]}>
+  <Tab value="Typescript">
+    <DynamicCodeBlock
+      lang="ts"
+      code={`export interface Node {
+      natural_lang: string; // A natural language representation of the node
+      id: string; // The unique identifier of the node
+      parent_id: string | null; // The parent node id
+      name: string; // The name of the node (Entity, e.g. "John", "New York", "Conference")
+      relationships: Relationship[]; // The relationships of the node
+      source_id: string; // The source id of the node, it could be the message id, the file id, the email id, the webpage id, etc.
+      phrase: string; // The phrase containing or describing the node (e.g. "Mary's husband is John")
+}
+
+export interface Relationship {
+      name: string; // The name of the relationship (e.g. "IS_HUSBAND_OF", "IS_WIFE_OF", "OCCURS_DURING", "IS_LOCATED_IN")
+      phrase: string; // The phrase describing the relationship (e.g. "Mary's husband is John")
+      direction: string; // The direction of the relationship (e.g. "inbound", "outbound")
+      natural_lang: string; // A natural language representation of the relationship
+      related_node: Node; // The related node
+      similarity: number; // The relevance of the relationship with the searched information (0-1)
+      source_id: string; // The source id of the relationship, it could be the message id, the file id, the email id, the webpage id, etc.
+}
+
+export interface QueryEntitiesResponse {
+      nodes: Node[];
+      most_relevant_relation: Relationship | null; // The most relevant relation
+      most_relevant_confidence: number | null; // The confidence score of the most relevant relation (0-1)
+}
+
+      `}
+    />
+  </Tab>
+  <Tab value="Python">
+    <DynamicCodeBlock
+      lang="py"
+      code={`class Relationship():
+    name: str # The name of the relationship (e.g. "IS_HUSBAND_OF", "IS_WIFE_OF", "OCCURS_DURING", "IS_LOCATED_IN")
+    phrase: str # The phrase describing the relationship (e.g. "Mary's husband is John")
+    direction: str # The direction of the relationship (e.g. "inbound", "outbound")
+    natural_lang: str # A natural language representation of the relationship
+    related_node: "Node" # The related node
+    similarity: float # The relevance of the relationship with the searched information (0-1)
+    source_id: str # The source id of the relationship, it could be the message id, the file id, the email id, the webpage id, etc.
+
+
+class Node():
+    natural_lang: str # A natural language representation of the node
+    id: str # The unique identifier of the node
+    parent_id: Optional[str] = None # The parent node id
+    name: str # The name of the node (Entity, e.g. "John", "New York", "Conference")
+    relationships: Optional[List[Relationship]] = [] # The relationships of the node
+    source_id: str # The source id of the node, it could be the message id, the file id, the email id, the webpage id, etc.
+    phrase: str # The phrase containing or describing the node (e.g. "Mary's husband is John")
+
+
+class InfoRetrievalResult():
+    nodes: List[Node] # The nodes that are related to the information to be retrieved
+    most_relevant_relation: Optional[Relationship] = None # The most relevant relation between the entities and the information to be retrieved
+    most_relevant_confidence: Optional[float] = None # The confidence of the most relevant relation (0-1)`}
+    />
+  </Tab>
+</Tabs>
