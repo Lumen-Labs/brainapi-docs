@@ -63,17 +63,17 @@ The additional context will include relevant information extracted from the memo
           type: "str",
           required: true,
         },
-        type: {
-          description:
-            "It must be the second parameter, The type of the content. It can be 'message', 'file', 'event', 'webpage' or 'email'.",
-          type: "Literal",
-          values: ["message", "file", "event", "webpage", "email"],
-          required: true,
-        },
         content: {
           description:
-            "It must be the third parameter, The text content that will be injected into the memory store.",
+            "It must be the second parameter, The text content that will be injected into the memory store.",
           type: "str",
+          required: true,
+        },
+        type: {
+          description:
+            "It must be the third parameter, The type of the content. It can be 'message', 'file', 'event', 'webpage' or 'email'.",
+          type: "Literal",
+          values: ["message", "file", "event", "webpage", "email"],
           required: true,
         },
       }}
