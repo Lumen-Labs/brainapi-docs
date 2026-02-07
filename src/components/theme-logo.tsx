@@ -4,6 +4,9 @@ import { useTheme } from "next-themes";
 import NextImage from "next/image";
 import { useEffect, useState } from "react";
 
+import logoDark from "@/assets/images/logo-dark.png";
+import logoLight from "@/assets/images/logo-light.png";
+
 export function ThemeLogo() {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -13,9 +16,7 @@ export function ThemeLogo() {
   }, []);
 
   const src =
-    !mounted || resolvedTheme === "dark"
-      ? "/images/logo-dark.png"
-      : "/images/logo-light.png";
+    !mounted || resolvedTheme === "dark" ? logoDark.src : logoLight.src;
 
   return (
     <div className="">
