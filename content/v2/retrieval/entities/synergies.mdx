@@ -1,0 +1,518 @@
+---
+title: Synergies
+description: The Synergies API provides a way to retrieve entities that are related to each other with a positive polarity (eg. Ecommerce product recommendations) or with a negative polarity (eg. Suggested courses to take to solve a problem)
+---
+
+## Positive Polarity Example
+
+Let's take a look at the following example, we are saving into the brain the following information:
+
+<DynamicCodeBlock
+  lang="txt"
+  code={`
+    Maria employs Tom and Lisa.
+    `}
+/>
+
+The structured network of information rapresenting this data will look like this:
+
+![Entities Diagram](/images/positive-polarity-example-maria.png)
+
+Now let's say that we want to know <b>who is the colleage of Lisa</b>, brainapi makes this retrieval easy by using the <b>synergies</b> API. By using the <b>synergies</b> API we can retrieve the entities that are related to each other with a positive polarity.
+We will call the `/retrieve/entity/synergies` endpoint with the following parameters:
+
+<DynamicCodeBlock
+  lang="js"
+  code={`
+    const response = await fetch("<DEPLOYMENT_URL>/retrieve/entity/synergies", {
+      method: "GET",
+      body: JSON.stringify({
+        target: "Lisa",
+        brain_id: "example1",
+      }),
+    });
+
+    const data = await response.json();
+
+    // This will return us:
+    // data.target_node.name = "Lisa"
+    // data.synergies [
+    //   ..
+    //   {
+    //      "node": {
+    //         ..
+    //         "name": "Tom",
+    //         ..
+    //      },
+    //      "connected_by": [
+    //         {
+    //            ..
+    //            "name": "Employs",
+    //            "description": "Maria employs Tom and Lisa.",
+    //            ..
+    //         }
+    //      ]
+    //   }
+    //   ..
+    // ]
+    `}
+
+/>
+
+<Callout type="info">
+  **The Synergies API is designed to retrieve entities of the same type that
+  have a defined synergistic relationship**, expressed with either positive or
+  negative polarity. Typical examples include product recommendations, user
+  suggestions in a social network, or course recommendations for a given problem
+  (where the problem has negative polarity and the course has positive
+  polarity). **If you need to retrieve information about a specific entity**,
+  including relationships with entities of a different type (for example, “the
+  organization where Lisa works”), you should instead use the
+  **`/retrieve/entities/neighbors` API **or the `/retrieve/entity/info` API**.
+</Callout>
+
+## Usage
+
+The synergies API is available via REST API, Python SDK and Typescript SDK.
+Using it is straightforward, you just need to call the API with the entity you want to retrieve the synergies for.
+
+Extra parameters can be passed to the API to customize the retrieval and response. The following parameters in the table are available:
+
+<Tabs items={["Typescript", "Python", "cURL"]}>
+  <Tab value="Typescript">
+  The Typescript SDK provides the `retrieveSynergies` function to retrieve the synergies.
+    <DynamicCodeBlock
+      lang="ts"
+      code={`// This will retrieve all the "Persons" that share some synergy with "Lisa"
+const result = await brain.retrieveSynergies(
+      {
+        target: "Lisa", // Lisa is of type "Person"
+        brainId: "example1", // default is "default"
+        do: false, // optional
+        pa: false, // optional
+        ppa: false, // optional
+      }
+);`}
+    />
+    The accepted parameters are the following, passed as an object to the `retrieveSynergies` function:
+    <TypeTable
+      type={{
+        target: {
+          description: "This will be the target entity to retrieve the synergies for.",
+          type: "string",
+          required: true,
+        },
+        brainId: {
+          description:
+            "This will be the brain identifier to retrieve the synergies from.",
+          type: "string",
+          required: true,
+        },
+        do: {
+          description:
+            "Whether to return only the synergies that are directly connected to the target entity.",
+          type: "boolean",
+          required: false,
+        },
+        pa: {
+          description:
+            "Whether to return all the edges and directly connected nodes to the target entity.",
+          type: "boolean",
+          required: false,
+        },
+        ppa: {
+          description:
+            "Whether to return all the edges and nodes that are similar to the directly connected nodes to the target entity but not directly connected.",
+          type: "boolean",
+          required: false,
+        },
+      }}
+    />
+    The response will be an object with of type `QuerySynergiesResponse`:
+     <DynamicCodeBlock
+      lang="ts"
+      code={`export interface QuerySynergiesResponse {
+  target_node: {
+    uuid: string;
+    labels: string[];
+    name: string;
+    description: string;
+    properties: Record<string, any>;
+    polarity: string;
+    metadata: Record<string, any> | null;
+    happened_at: string | null;
+    last_updated: string;
+    observations: unknown[] | null;
+  };
+  synergies: Array<{
+    node: {
+      uuid: string;
+      labels: string[];
+      name: string;
+      description: string;
+      properties: Record<string, any>;
+      polarity: string;
+      metadata: Record<string, any> | null;
+      happened_at: string | null;
+      last_updated: string;
+      observations: string[] | null;
+    };
+    connected_by: Array<{
+      uuid: string;
+      labels: string[];
+      name: string;
+      description: string;
+      properties: Record<string, any>;
+      polarity: string;
+      metadata: Record<string, any> | null;
+      happened_at: string | null;
+      last_updated: string;
+      observations: string[] | null;
+    }>;
+    association_score: number;
+  }>;
+}`}
+    />
+
+  </Tab>
+  <Tab value="Python">
+  The Python SDK provides the `retrieve_synergies` method to retrieve the synergies.
+    <DynamicCodeBlock
+      lang="py"
+      code={`result = await client.retrieve_synergies(
+    target="Lisa",
+    brain_id="example1",
+    do=False,
+    pa=False,
+    ppa=False,
+)`}
+    />
+    The accepted parameters are the following, passed to the `retrieve_synergies` method:
+    <TypeTable
+      type={{
+        target: {
+          description: "This will be the target entity to retrieve the synergies for.",
+          type: "str",
+          required: true,
+        },
+        brain_id: {
+          description:
+            "This will be the brain identifier to retrieve the synergies from.",
+          type: "str",
+          required: true,
+        },
+        do: {
+          description:
+            "Whether to return only the synergies that are directly connected to the target entity.",
+          type: "bool",
+          required: false,
+        },
+        pa: {
+          description:
+            "Whether to return all the edges and directly connected nodes to the target entity.",
+          type: "bool",
+          required: false,
+        },
+        ppa: {
+          description:
+            "Whether to return all the edges and nodes that are similar to the directly connected nodes to the target entity but not directly connected.",
+          type: "bool",
+          required: false,
+        },
+      }}
+    />
+    The response will be an object of type `QuerySynergiesResponse`:
+     <DynamicCodeBlock
+      lang="py"
+      code={`class QuerySynergiesResponse(TypedDict):
+    target_node: dict
+    synergies: list[dict]
+
+class TargetNode(TypedDict, total=False):
+uuid: str
+labels: list[str]
+name: str
+description: str
+properties: dict[str, Any]
+polarity: str
+metadata: dict[str, Any] | None
+happened_at: str | None
+last_updated: str
+observations: list[Any] | None
+
+class SynergyNode(TypedDict, total=False):
+uuid: str
+labels: list[str]
+name: str
+description: str
+properties: dict[str, Any]
+polarity: str
+metadata: dict[str, Any] | None
+happened_at: str | None
+last_updated: str
+observations: list[str] | None
+
+class SynergyItem(TypedDict):
+node: dict
+connected_by: list[dict]
+association_score: float`}
+/>
+
+  </Tab>
+  <Tab value="cURL">
+  Call the GET endpoint with query parameters to retrieve the synergies.
+    <DynamicCodeBlock
+      lang="bash"
+      code={`curl -X GET "<DEPLOYMENT_URL>/retrieve/entity/synergies" \\
+  -G \\
+  --data-urlencode "target=Lisa" \\
+  --data-urlencode "brain_id=example1" \\
+  --data-urlencode "do=false" \\
+  --data-urlencode "pa=false" \\
+  --data-urlencode "ppa=false"`}
+    />
+    The accepted query parameters are the following:
+    <TypeTable
+      type={{
+        target: {
+          description: "This will be the target entity to retrieve the synergies for.",
+          type: "string",
+          required: true,
+        },
+        brain_id: {
+          description:
+            "This will be the brain identifier to retrieve the synergies from.",
+          type: "string",
+          required: true,
+        },
+        do: {
+          description:
+            "Whether to return only the synergies that are directly connected to the target entity.",
+          type: "boolean",
+          required: false,
+        },
+        pa: {
+          description:
+            "Whether to return all the edges and directly connected nodes to the target entity.",
+          type: "boolean",
+          required: false,
+        },
+        ppa: {
+          description:
+            "Whether to return all the edges and nodes that are similar to the directly connected nodes to the target entity but not directly connected.",
+          type: "boolean",
+          required: false,
+        },
+      }}
+    />
+    Example response:
+    <DynamicCodeBlock
+      lang="json"
+      code={`{
+  "target_node": {
+    "uuid": "550e8400-e29b-41d4-a716-446655440001",
+    "labels": ["Person"],
+    "name": "Lisa",
+    "description": "A person named Lisa.",
+    "properties": {},
+    "polarity": "positive",
+    "metadata": null,
+    "happened_at": null,
+    "last_updated": "2025-01-15T10:30:00Z",
+    "observations": null
+  },
+  "synergies": [
+    {
+      "node": {
+        "uuid": "550e8400-e29b-41d4-a716-446655440002",
+        "labels": ["Person"],
+        "name": "Tom",
+        "description": "A person named Tom.",
+        "properties": {},
+        "polarity": "positive",
+        "metadata": null,
+        "happened_at": null,
+        "last_updated": "2025-01-15T10:30:00Z",
+        "observations": null
+      },
+      "connected_by": [
+        {
+          "uuid": "550e8400-e29b-41d4-a716-446655440003",
+          "labels": ["Employs"],
+          "name": "Employs",
+          "description": "Maria employs Tom and Lisa.",
+          "properties": {},
+          "polarity": "positive",
+          "metadata": null,
+          "happened_at": null,
+          "last_updated": "2025-01-15T10:30:00Z",
+          "observations": null
+        }
+      ],
+      "association_score": 0.92
+    }
+  ]
+}`}
+    />
+  </Tab>
+</Tabs>
+
+## Extra Parameters
+
+### do (direct only)
+
+This parameter is a boolean value that, if set to true, will return only the synergies that are directly connected to the target entity.
+
+This means that we will get only synergies like this (Maria\<>Michael + Maria\<>James):
+![Direct Only Example](/images/example-do.png)
+
+And not synergies like this (Maria\<>Marco):
+![Direct Only Example](/images/example-ppa.png)
+
+### pa (provide anchors)
+
+This parameter is a boolean value that, if set to true, will return all the synergies that are connected to the target entity via a shared node/edge.
+This is helpful to understand what the target entity is connected to and what could match it.
+
+Here is an example of what the anchors are (Lisa, Tom, Stanford, Cafe Shop), all connected via through an "EVENT" hub:
+
+![Anchors Example](/images/example-pa.png)
+
+### ppa (provide potential anchors)
+
+This parameter is a boolean value that, if set to true, will return all the synergies both directly connected to the target entity but also similar nodes found with cosine similarity to the directly connected nodes but not directly connected.
+
+Here is an example of what the potential anchors are (UC Berkeley, Stanford, Cafe Shop and Pastry Shop) those are the nodes that are not directly connected but that if they would be, would create a direct synergistic relationship with the target entity depending on their cosine similarity:
+
+![Potential Anchors Example](/images/example-ppa.png)
+
+## Similarity Score
+
+The similarity score is calculated and weighted based on the connections between the target entity and the synergies and also their similarity itself, the core formulas to keep in mind are listed below:
+
+### WSIM (Weighted Similarity)
+
+This is a python util that can be found in the [utils/similarity/numbers.py](https://github.com/Lumen-Labs/brainapi2/blob/main/src/utils/similarity/numbers.py), used to weight the similarity scores.
+
+```python
+return similarity ** (1 - weight)
+```
+
+```math
+\operatorname{wsim}(s, w) = s^{\,1 - w}
+\begin{aligned}
+s &\in [0,1] && \text{base similarity} \\
+w &\in \mathbb{R} && \text{weight (may be negative)}
+\end{aligned}
+```
+
+### WMEAN (Weighted Mean)
+
+Weighted mean of a list of values. The first two values are transformed with WSIM using an effective weight (weight times max(1, n minus 2) over max(2, n), so it is never zero when n equals 2); the remaining values are left unchanged. The result is the average of this transformed list. Empty lists return 0; a single value is returned as-is.
+
+The purpose is to add more importance to quantity based similarities insead of an average of the values
+(eg: similarity between 2 elements with 5 things in common is found with 0.20 cosine each is more relevant than a similarity of 0.90 between 2 elements with 1 thing in common).
+
+```math
+\operatorname{wmean}(\{x_i\}, w)
+=
+\frac{
+x_1^{\,1 - w_{\text{eff}}(n)}
++
+x_2^{\,1 - w_{\text{eff}}(n)}
++
+\sum_{i=3}^{n} x_i
+}{
+n
+}
+```
+
+### Cosine Similarity
+
+Classic cosine similarity formula.
+
+```math
+\operatorname{cosine}(a, b) = \frac{a \cdot b}{\|a\|\|b\|}
+```
+
+### Node-Target description similarity
+
+This measures the direct similarity between the target node and the found node with synergies, comparing descriptions. The result is used with higher weights than the relationship / context similarity.
+
+```python
+tn_score = wsim(
+    cosine_similarity(neighbor_node_embedding, target_embedding),
+    NODE_SIM_DESC_INCREMENTAL_WEIGHT,
+)
+```
+
+```math
+\operatorname{tn\_score}
+=
+\operatorname{cosine}(v_n, v_t)^{1 - w_d}
+```
+
+```math
+w_d = \text{NODE\_SIM\_DESC\_INCREMENTAL\_WEIGHT}
+```
+
+### Relationship / context similarity
+
+The `found_embeddings` is a vector mean of the vectors rapresenting the `edge` (the event hub), connected to the found node with synergies, the `target_embeddings` is a vector mean of the vectors rapresenting the `edge` (the event hub) connected to the target node.
+The cosine similarity of the two means will return us the similarity between the way the two entities are connected to the a shared synergy.
+
+```python
+rel_score = cosine_similarity(found_embeddings, target_embeddings)
+```
+
+```math
+\operatorname{rel\_score}
+=
+\operatorname{cosine}\!\left(
+\frac{v_e + v_r}{2},
+\; v_{ctx}
+\right)
+
+```
+
+```math
+v_{ctx} = \text{target side context embedding}
+v_{r} = \text{related node embedding}
+v_{e} = \text{edge embedding}
+```
+
+### Association score (core formula)
+
+The association score is a simple mean between the cosine similarity of the target description with the found node description and the cosine similarity of the relationships connecting the found node and the target node with some shared node/edge.
+The multiplier is applied to weight the similarity based on the case that the found node is directly connected to the target node or not (connected via similar nodes found with cosine similarity but not directly connected).
+
+```python
+(np.mean([tn_score, rel_score]) * multiplier)
+```
+
+```math
+\operatorname{assoc}(n)
+=
+m \cdot \frac{\operatorname{tn\_score} + \operatorname{rel\_score}}{2}
+```
+
+```math
+m =
+\begin{cases}
+1.30 & \text{direct connection} \\
+0.70 & \text{remote connection}
+\end{cases}
+```
+
+### Incremental merge of multiple paths (weighted mean)
+
+If more synergies are found for a neighbor entity, the association score is recalculated and the mean is weighted by the `FACTORS_INCREMENTAL_WEIGHT`.
+
+```math
+pas = \text{association score of the previous path} \\
+nas = \text{association score of the current path}
+```
+
+```python
+n_association_score = wmean([pas, nas], FACTORS_INCREMENTAL_WEIGHT)
+```

@@ -2,3 +2,13 @@
 @import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
 @import "fumadocs-openapi/css/preset.css";
+
+#nd-sidebar button:has(div.size-9) {
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+#nd-sidebar button:has(div.size-9)[data-state="open"] {
+  background: var(--fd-accent);
+  color: var(--fd-accent-foreground);
+}

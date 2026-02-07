@@ -1,0 +1,397 @@
+---
+title: Saving structured data
+description: How to save structured data (json) to the memory store
+---
+
+Ingesting structured data is useful when there is the need to operate with data related to a specific subject like products, people, events, accounts (eg: people suggestions into social network apps, product recommendations in e-commerce apps, etc.).
+The following are few example of payloads that can be ingested into the memory store:
+
+<Tabs
+  items={[
+    "Example 1: Social Network",
+    "Example 2: Ecommerce",
+    "Example 3: News App",
+  ]}
+>
+  <Tab value="Example 1: Social Network">
+    <DynamicCodeBlock
+      lang="json"
+      code={`{
+    data: [
+        {
+            json_data: {
+                "favorite_topics": ["Technology", "Science", "Health"],
+            },
+            metadata: {
+                "user_name": "John Doe",
+                "user_email": "john.doe@example.com",
+            },
+            types: ["Person"],
+            identification_params: {
+                "user_id": "123"
+            },
+            textual_data: {
+                "user_bio": "This will be the bio of the user that liked the post.",
+            },
+        },
+        {
+            json_data: {
+                "favorite_topics": ["Technology", "Science", "Health"],
+            },
+            metadata: {
+                "user_name": "John Doe",
+                "user_email": "john.doe@example.com",
+                "user_phone": "+1234567890",
+                "user_address": "123 Main St, Anytown, USA",
+            },
+            types: ["Person"],
+            identification_params: {
+                "user_id": "321"
+            },
+            textual_data: {
+                "user_bio": "This will be the bio of the user that liked the post.",
+            },
+        },
+        {
+            json_data: {
+                "action": "POST_LIKED",
+                "liked_by": {
+                    "user_id": "123",
+                    "liked_at": "2026-01-01T00:00:00Z",
+                },
+            },
+            metadata: {
+                "post_author_id": "312",
+            },
+            types: ["Post"],
+            identification_params: {
+                "post_id": "123"
+            },
+            textual_data: {
+                "post_title": "This is the title of the post that was liked.",
+                "post_content": "This will be the content of the post that was liked.",
+            },
+        },
+    ],
+    observate_for: [],
+    brain_id: "socialnetwork",
+}`}
+/>
+
+  </Tab>
+  <Tab value="Example 2: Ecommerce">
+    <DynamicCodeBlock
+      lang="json"
+      code={`{
+    data: [
+        {
+            json_data: {
+                "action": "PRODUCT_PURCHASED",
+                "purchased_by": {
+                    "user_id": "123",
+                    "purchase_date": "2026-01-01T00:00:00Z"
+                },
+            },
+            metadata: {
+                "other_product_ids_in_cart": ["123", "456", "789"]
+            },
+            types: ["Product"],
+            identification_params: {
+                "product_id": "123"
+            },
+            textual_data: {
+                "product_name": "Product 1",
+                "product_description": "This will be the description of the product that was purchased."
+            },
+        },
+        {
+            json_data: {
+                "product_history_snap": [
+                    {
+                        "product_name": "Product 1",
+                        "product_description": "This will be the description of the product that was purchased.",
+                    }
+                ]
+            },
+            metadata: {
+                "other_product_ids_in_cart": ["123", "456", "789"]
+            },
+            types: ["User"],
+            identification_params: {
+                "user_id": "123"
+            },
+            textual_data: {},
+        },
+    ],
+    observate_for: [
+        "user's potential product needs",
+    ],
+    brain_id: "ecommerce",
+
+}`}
+/>
+
+  </Tab>
+  <Tab value="Example 3: News App">
+    <DynamicCodeBlock
+      lang="json"
+      code={`{
+    data: [
+        {
+            json_data: {
+                "action": "READ_ARTICLE",
+                "article_topics": ["Technology", "Science", "Health"],
+                "read_by_user": {
+                    "user_id": "123",
+                    "liked_at": "2026-01-01T00:00:00Z",
+                    "read_percentage": 68,
+                },
+            },
+            metadata: {
+                "article_id": "123",
+                "article_tags": ["Technology", "Science", "Health"],
+                "article_polarity": "positive",
+                "article_author_id": "123",
+                "article_author": "John Doe",
+            },
+            types: ["Article"],
+            identification_params: {
+                "article_id": "123",
+            },
+            textual_data: {
+                "article_title": "Article 1",
+                "article_content": "This will be the content of the article that was read.",
+            },
+        },
+        {
+            json_data: {
+                "user_name": "John Doe",
+                "user_preferred_categories": ["Technology", "Science", "Health"],
+            },
+            metadata: {
+                "user_email": "john.doe@example.com",
+            },
+            types: ["User"],
+            identification_params: {
+                "user_id": "123",
+            },
+            textual_data: {
+                "user_bio": "This will be the bio of the user that read the article.",
+            },
+        },
+    ],
+    observate_for: [
+        "user's potential interests",
+        "user's reading preferences",
+    ],
+    brain_id: "newsapp",
+}`}
+    />
+  </Tab>
+</Tabs>
+
+<Callout type="info">
+  In this API **not** all data is used in the analysis, only the data into
+  `json_data` and `textual_data` are ingested into the analysis pipeline. The
+  metadata is just extra data attached to the node identified/created with the
+  `identification_params` parameters + the `types` parameters.
+</Callout>
+
+## Usage
+
+The structured data API is available via the REST API, Python SDK, and TypeScript SDK.
+The API payload consists of three main sections: `data`, which contains the entities to process; the optional `observate_for` array, which provides tailored instructions to focus the analysis; and `brain_id`, which specifies the target brain identifier.
+
+<Tabs items={["Typescript", "Python", "cURL"]}>
+  <Tab value="Typescript">
+    The Typescript SDK provides the `ingestStructuredData` function to ingest
+    structured data.
+    <DynamicCodeBlock
+      lang="ts"
+      code={`
+const result = await brain.ingestStructuredData({
+    data: [
+        ...processableEntities    
+    ],
+    observate_for: [], // optional instructions to tailor the analysis
+    brain_id: "example01",
+});`}
+    />
+  </Tab>
+  <Tab value="Python">
+    The Python SDK provides the `ingest_structured_data` method to ingest
+    structured data.
+    <DynamicCodeBlock
+      lang="py"
+      code={`result = await client.ingest_structured_data(
+    data=processable_entities,
+    observate_for=observate_for_instructions,
+    brain_id="example01",
+)`}
+    />
+  </Tab>
+  <Tab value="cURL">
+    Call the POST endpoint with the payload to ingest structured data.
+    <DynamicCodeBlock
+      lang="bash"
+      code={`curl -X POST "<DEPLOYMENT_URL>/ingest/structured" \\
+  -H "Content-Type: application/json" \\
+  -d '{"data": [...processable_entities], "observate_for": [...observate_for_instructions], "brain_id": "example01"}'`}
+    />
+  </Tab>
+</Tabs>
+
+## Parameters information
+
+Below you can find more information about the parameters that can be used to ingest structured data.
+
+### `processableEntity`, the objects inside `data`
+
+This objects can rapresent accomplished actions or standalone entities. Most of the time those are related and should have one or more (more is better) references between them.
+The structure of the object is the following:
+
+<Tabs items={["Typescript", "Python", "json"]}>
+  <Tab value="Typescript">
+    The Typescript SDK provides the `processableEntity` type to ingest
+    structured data.
+    <DynamicCodeBlock
+      lang="ts"
+      code={`interface ProcessableEntity {
+    json_data: Record<string, any>,
+    metadata: Record<string, any>,
+    types: string[],
+    identification_params: Record<string, any>,
+    textual_data: Record<string, string>,
+}`}
+    />
+    <TypeTable
+      type={{
+        json_data: {
+          description: "The json data to ingest into the memory store.",
+          type: "object",
+          required: true,
+        },
+        metadata: {
+          description: "The metadata to ingest into the memory store.",
+          type: "object",
+          required: true,
+        },
+        types: {
+          description: "The types to ingest into the memory store.",
+          type: "string[]",
+          required: true,
+        },
+        identification_params: {
+          description:
+            "The identification params to ingest into the memory store.",
+          type: "object",
+          required: true,
+        },
+        textual_data: {
+          description: "The textual data to ingest into the memory store.",
+          type: "object",
+          required: true,
+        },
+      }}
+    />
+  </Tab>
+  <Tab value="Python">
+    The Python SDK provides the `ProcessableEntity` type to ingest structured
+    data.
+    <DynamicCodeBlock
+      lang="py"
+      code={`class ProcessableEntity(TypedDict):
+    json_data: dict[str, Any]
+    metadata: dict[str, Any]
+    types: list[str]
+    identification_params: dict[str, Any]
+    textual_data: dict[str, str]
+    `}
+    />
+    <TypeTable
+      type={{
+        json_data: {
+          description: "The json data to ingest into the memory store.",
+          type: "object",
+          required: true,
+        },
+        metadata: {
+          description: "The metadata to ingest into the memory store.",
+          type: "object",
+          required: true,
+        },
+        types: {
+          description: "The types to ingest into the memory store.",
+          type: "string[]",
+          required: true,
+        },
+        identification_params: {
+          description:
+            "The identification params to ingest into the memory store.",
+          type: "object",
+          required: true,
+        },
+        textual_data: {
+          description: "The textual data to ingest into the memory store.",
+          type: "object",
+          required: true,
+        },
+      }}
+    />
+  </Tab>
+  <Tab value="json">
+    The json payload to ingest structured data.
+    <DynamicCodeBlock
+      lang="json"
+      code={`{
+    "json_data": object,
+    "metadata": object,
+    "types": string[],
+    "identification_params": object,
+    "textual_data": object,
+}`}
+    />
+    <TypeTable
+      type={{
+        json_data: {
+          description: "The json data to ingest into the memory store.",
+          type: "object",
+          required: true,
+        },
+        metadata: {
+          description: "The metadata to ingest into the memory store.",
+          type: "object",
+          required: true,
+        },
+        types: {
+          description: "The types to ingest into the memory store.",
+          type: "string[]",
+          required: true,
+        },
+        identification_params: {
+          description:
+            "The identification params to ingest into the memory store.",
+          type: "object",
+          required: true,
+        },
+        textual_data: {
+          description: "The textual data to ingest into the memory store.",
+          type: "object",
+          required: true,
+        },
+      }}
+    />
+  </Tab>
+</Tabs>
+
+### `types` parameter in `processableEntity`
+
+Here is where you should attach what type the entity belongs to, since for example we can have a person named `John Doe` and a company named `John Doe`.
+
+### `identification_params` parameter in `processableEntity`
+
+The parameters specified here will be used to attach and connect information within the entity that uniquely identifies with the information provided here.
+
+### `textual_data` parameter in `processableEntity`
+
+This is the section where you should add the more detailed textual information about the entity. Provided as json object where the values are strings.

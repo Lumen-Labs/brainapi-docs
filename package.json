@@ -14,9 +14,13 @@
     "fumadocs-mdx": "11.7.1",
     "fumadocs-openapi": "^9.1.7",
     "fumadocs-ui": "15.6.7",
+    "katex": "^0.16.28",
+    "lucide-react": "^0.563.0",
     "next": "15.4.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
     "shiki": "^3.9.1"
   },
   "devDependencies": {

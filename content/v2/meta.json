@@ -1,0 +1,24 @@
+{
+  "title": "V2",
+  "pages": [
+    "---Getting started---",
+    "index",
+    "installation",
+    "plugins",
+    "---Concepts---",
+    "core-philosophy",
+    "use-cases",
+    "---Ingestion---",
+    "ingestion/structured-data",
+    "ingestion/text.mdx",
+    "ingestion/backups",
+    "---Retrieval---",
+    "retrieval/synergies",
+    "retrieval/entities",
+    "retrieval/context",
+    "retrieval/export-backups",
+    "---Agentic---",
+    "agentic/streaming-client",
+    "agentic/MCP"
+  ]
+}

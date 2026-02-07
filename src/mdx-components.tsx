@@ -2,6 +2,7 @@ import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
 import * as TabsComponents from "fumadocs-ui/components/tabs";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
+import { CodeBlock } from "fumadocs-ui/components/codeblock";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { openapi } from "./lib/source";
 import { APIPage } from "fumadocs-openapi/ui";
@@ -13,6 +14,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     ...defaultMdxComponents,
     ...TabsComponents,
     DynamicCodeBlock,
+    CodeBlock,
     TypeTable,
     APIPage: (props) => <APIPage {...openapi.getAPIPageProps(props)} />,
     img: (props) => (

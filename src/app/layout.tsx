@@ -1,16 +1,27 @@
 import "@/app/global.css";
 import { RootProvider } from "fumadocs-ui/provider";
-import { Inter } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
 import type { ReactNode } from "react";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import "katex/dist/katex.min.css";
 
 const inter = Inter({
   subsets: ["latin"],
 });
 
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-outfit",
+});
+
 export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={inter.className} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${inter.className} ${outfit.className}`}
+      suppressHydrationWarning
+    >
       <body className="flex flex-col min-h-screen">
         <GoogleAnalytics gaId="G-W1ZHLEVG8B" />
         <script

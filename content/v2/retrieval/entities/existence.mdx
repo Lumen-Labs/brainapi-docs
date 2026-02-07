@@ -1,0 +1,257 @@
+---
+title: Existence
+description: This API provides a way to check if an entity exists in the brain.
+---
+
+## Usage
+
+The existence API is available via REST API, Python SDK and Typescript SDK.
+Using it is straightforward, you just need to call the API with the entity name you want to check the existence for.
+
+<Tabs items={["Typescript", "Python", "cURL"]}>
+  <Tab value="Typescript">
+  The Typescript SDK provides the `checkExistence` function to check the existence of an entity.
+    <DynamicCodeBlock
+      lang="ts"
+      code={`// This will check if the entity "Lisa" exists in the brain with the identifier "example1"
+const result = await brain.checkExistence("Lisa", "example1", {
+    types: ["Person"],
+});`}
+    />
+    The accepted parameters are the following, passed as an object to the `checkExistence` function:
+    <TypeTable
+      type={{
+        name: {
+          description: "This will be the name of the entity to check the existence for. It's the first parameter.",
+          type: "string",
+          required: true,
+        },
+        brainId: {
+          description: "This will be the brain identifier, it's optional and defaults to 'default' if not provided. It's the second parameter.",
+          type: "string",
+          required: true,
+        },
+        types: {
+          description: "The types that the entity needs to match. It's optional and defaults to [] if not provided.",
+          type: "string[]",
+          required: false,
+        },
+      }}
+    />
+    The response will be an object with of type `CheckExistenceResponse`:
+     <DynamicCodeBlock
+      lang="ts"
+      code={`// Response model
+export interface CheckExistenceResponse {
+  node: EntityNode;
+  exists: boolean;
+  has_relationships: boolean;
+  relationships: [RelationshipEdge, EntityNode][];
+  observations: string[];
+}
+
+export interface EntityNode {
+  uuid: string;
+  labels: string[];
+  name: string;
+  description: string;
+  properties: Record<string, any>;
+  polarity: string;
+  metadata: object | null;
+  happened_at: string | null;
+  last_updated: string;
+  observations: string[] | null;
+}
+
+export interface RelationshipEdge {
+  uuid: string;
+  name: string;
+  description: string;
+  flow_key: string;
+  last_updated: string;
+  deprecated: boolean;
+  direction: string;
+  amount: number | null;
+  observations: string | null;
+  properties: Record<string, any>;
+  level: string | null;
+}`}
+    />
+
+  </Tab>
+  <Tab value="Python">
+  The Python SDK provides the `check_existence` method to check if an entity exists.
+    <DynamicCodeBlock
+      lang="py"
+      code={`result = await client.check_existence(
+    name="Lisa",
+    brain_id="example1",
+    types=["Person"],
+)`}
+    />
+    The accepted parameters are the following, passed to the `check_existence` method:
+    <TypeTable
+      type={{
+        name: {
+          description: "The name of the entity to check the existence for.",
+          type: "str",
+          required: true,
+        },
+        brain_id: {
+          description: "The brain identifier to check the entity in. Defaults to 'default' if not provided.",
+          type: "str",
+          required: false,
+        },
+        types: {
+          description: "The types that the entity needs to match. It's optional and defaults to [] if not provided.",
+          type: "list[str]",
+          required: false,
+        },
+      }}
+    />
+    The response will be an object of type `CheckExistenceResponse`:
+     <DynamicCodeBlock
+      lang="py"
+      code={`class CheckExistenceResponse(TypedDict):
+    node: dict
+    exists: bool
+    has_relationships: bool
+    relationships: list[tuple[dict, dict]]
+    observations: list[Any]
+
+class EntityNode(TypedDict, total=False):
+uuid: str
+labels: list[str]
+name: str
+description: str
+properties: dict[str, Any]
+polarity: str
+metadata: dict[str, Any] | None
+happened_at: str | None
+last_updated: str
+observations: list[Any] | None
+
+class RelationshipEdge(TypedDict, total=False):
+uuid: str
+name: str
+description: str
+flow_key: str
+last_updated: str
+deprecated: bool
+direction: str
+amount: Any | None
+observations: Any | None
+properties: dict[str, Any]
+level: Any | None`}
+/>
+
+  </Tab>
+  <Tab value="cURL">
+  Call the GET endpoint with query parameters to check if an entity exists.
+    <DynamicCodeBlock
+      lang="bash"
+      code={`curl -X GET "<DEPLOYMENT_URL>/retrieve/entity/status" \\
+  -G \\
+  --data-urlencode "target=Lisa" \\
+  --data-urlencode "brain_id=example1" \\
+  --data-urlencode "types=Person"`}
+    />
+    The accepted query parameters are the following:
+    <TypeTable
+      type={{
+        name: {
+          description: "The name of the entity to check the existence for.",
+          type: "string",
+          required: true,
+        },
+        brain_id: {
+          description: "The brain identifier to check the entity in. Defaults to 'default' if not provided.",
+          type: "string",
+          required: false,
+        },
+        types: {
+          description: "The types that the entity needs to match. It's optional and defaults to [] if not provided.",
+          type: "string",
+          required: false,
+        },
+      }}
+    />
+    Example response:
+    <DynamicCodeBlock
+      lang="json"
+      code={`{
+  "node": {
+    "uuid": "550e8400-e29b-41d4-a716-446655440001",
+    "labels": ["PERSON"],
+    "name": "Lisa",
+    "description": "A person named Lisa.",
+    "properties": {},
+    "polarity": "positive",
+    "metadata": null,
+    "happened_at": null,
+    "last_updated": "2025-01-15T10:30:00Z",
+    "observations": null
+  },
+  "exists": true,
+  "has_relationships": true,
+  "relationships": [
+    [
+      {
+        "uuid": "adf174fe-c98e-41f8-b94b-8839d778d9e3",
+        "name": "INITIATED",
+        "description": "Lisa initiated the founding of Acme Inc.",
+        "flow_key": "768dfdf1-f7ec-4dbd-819d-49009f9bdcdd",
+        "last_updated": "2025-01-15T10:30:00Z",
+        "deprecated": false,
+        "direction": "out",
+        "amount": null,
+        "observations": null,
+        "properties": {},
+        "level": null
+      },
+      {
+        "uuid": "550e8400-e29b-41d4-a716-446655440002",
+        "labels": ["EVENT"],
+        "name": "Founded",
+        "description": "Acme Inc. was founded.",
+        "properties": {},
+        "polarity": "neutral",
+        "metadata": null,
+        "happened_at": null,
+        "last_updated": "2025-01-15T10:30:00Z",
+        "observations": null
+      }
+    ],
+    [
+      {
+        "uuid": "1c4b5700-1132-4423-af8b-023b6b217dd9",
+        "name": "ROLE",
+        "description": "Lisa holds the role of Founder.",
+        "flow_key": "768dfdf1-f7ec-4dbd-819d-49009f9bdcdd",
+        "last_updated": "2025-01-15T10:30:00Z",
+        "deprecated": false,
+        "direction": "out",
+        "amount": null,
+        "observations": null,
+        "properties": {},
+        "level": null
+      },
+      {
+        "uuid": "876f631e-be31-469e-81da-63f3b24ac1bd",
+        "labels": ["ROLE"],
+        "name": "Founder",
+        "description": "Founder role.",
+        "properties": {},
+        "polarity": "neutral",
+        "metadata": null,
+        "happened_at": null,
+        "last_updated": "2025-01-15T10:30:00Z",
+        "observations": null
+      }
+    ]
+  ],
+  "observations": []
+}`}
+    />
+  </Tab>
+</Tabs>
