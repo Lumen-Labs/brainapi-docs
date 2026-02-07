@@ -31,7 +31,7 @@ jobs:
           port: ${{ secrets.PORT }}
           key: ${{ secrets.SSHKEY }}
           source: "./"
-          target: "/home/github/brainapi-docs"
+          target: "/home/${{ secrets.USERNAME }}/brainapi-docs"
       - name: Restart PM2
         uses: appleboy/ssh-action@master
         with:
