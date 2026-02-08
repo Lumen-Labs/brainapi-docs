@@ -29,6 +29,14 @@ It can be called from the Typescript SDK, Python SDK and cURL.
             "The brain identifier to retrieve the context from. This is the second parameter.",
           type: "string",
           required: true,
+          default: "default",
+        },
+        historical_limit: {
+          description:
+            "The number of historical context to retrieve. This is the third parameter.",
+          type: "number",
+          required: false,
+          default: 10,
         },
       }}
     />
@@ -51,6 +59,14 @@ It can be called from the Typescript SDK, Python SDK and cURL.
             "The brain identifier to retrieve the context from. This is the second parameter.",
           type: "string",
           required: true,
+          default: "default",
+        },
+        historical_limit: {
+          description:
+            "The number of historical context to retrieve. This is the third parameter.",
+          type: "number",
+          required: false,
+          default: 10,
         },
       }}
     />
@@ -71,6 +87,13 @@ It can be called from the Typescript SDK, Python SDK and cURL.
           description: "The brain identifier to retrieve the context from.",
           type: "string",
           required: true,
+          default: "default",
+        },
+        historical_limit: {
+          description: "The number of historical context to retrieve.",
+          type: "number",
+          required: false,
+          default: 10,
         },
       }}
     />
@@ -91,6 +114,7 @@ The return type is the following:
 export interface GetContextResponse {
     text_context: string;
     triples: GetContextTriple[];
+    historical_context: string[];
 }`}
     />
   </Tab>
@@ -106,7 +130,8 @@ export interface GetContextResponse {
 class GetContextResponse(BaseModel):
 
     text_context: str
-    triples: List[GetContextTriple]`}
+    triples: List[GetContextTriple]
+    historical_context: List[str]`}
 
 />
 
@@ -119,7 +144,8 @@ class GetContextResponse(BaseModel):
     "triples": [
         {
             "identified_entity": "Apple inc.",
-            "triple": ["entity1", "relation", "event", "relation", "entity2"]
+            "triple": ["entity1", "relation", "event", "relation", "entity2"],
+            "historical_context": ["The CEO of Apple inc. is Tim Cook.", "Apple was founded in 1976 by Steve Jobs, Steve Wozniak and Ronald Wayne."]
         }
     ]
 }`}
@@ -129,3 +155,5 @@ class GetContextResponse(BaseModel):
 
 The response will be composed by a unified `text_content` string of all the textual information relevant to the input text,
 and a list of **event-centric** relationships rapresenting the information in the brain relevant to the identified noun or entity in the input text.
+
+The response will also contain a list of `historical_context` strings, which are the latest informations that were added to the brain.
