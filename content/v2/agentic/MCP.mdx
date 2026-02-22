@@ -25,42 +25,31 @@ From the settings sidebar click into **Developer** and click the **Edit Config**
 ### 3. Add the Configuration
 
 Now you can edit the config and add the configuration for your BrainAPI instance inside the `mcpServers` object.
+Make sure to replace the `<your-mcp-name>`, `<your-mcp-url>` and `<your-pat>` with the correct values.
 
 <DynamicCodeBlock
   lang="json"
   code={`{
       "mcpServers": {
 
-        // Remote MCP Server Configuration
-        "<your-remote-mcp-server-name>": {
+        // Add this if you are want to use Node.js
+        "<your-mcp-name>": {
             "command": "~/.nvm/versions/node/v22.19.0/bin/npx",
             "args": ["-y", "@pyroprompts/mcp-stdio-to-streamable-http-adapter"],
             "env": {
-            "URI": "https://<your-remote-mcp-server-url>/mcp",
+            "URI": "<your-mcp-url>/mcp",
             "MCP_NAME": "<your-remote-mcp-server-name>",
             "PATH": "~/.nvm/versions/node/v22.19.0/bin:/usr/local/bin:/usr/bin:/bin", // Replace with your own path
             "BEARER_TOKEN": "<your-pat>"
             }
         },
 
-        // Local MCP Server Configuration
-        "<your-local-mcp-server-name>": {
-            "command": "~/.nvm/versions/node/v22.19.0/bin/npx",
-            "args": ["-y", "@pyroprompts/mcp-stdio-to-streamable-http-adapter"],
-            "env": {
-            "URI": "http://localhost:8001/mcp",
-            "MCP_NAME": "<your-local-mcp-server-name>",
-            "PATH": "~/.nvm/versions/node/v22.19.0/bin:/usr/local/bin:/usr/bin:/bin", // Replace with your own path
-            "BEARER_TOKEN": "<your-pat>"
-            }
-        }
-
-        // Pre-built binary Configuration
+        // Add this if you are using the pre-built binary
         "<your-mcp-server-name": {
             "command": "/absolute/path/to/brainapi-mcp-http-adapter",
             "args": [],
             "env": {
-                "URI": "https://<your-remote-mcp-server-url>/mcp",
+                "URI": "<your-mcp-url>/mcp",
                 "MCP_NAME": "<your-mcp-name>",
                 "BEARER_TOKEN": "<your-pat>"
             }
