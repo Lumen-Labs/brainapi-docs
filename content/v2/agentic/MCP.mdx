@@ -3,4 +3,69 @@ title: MCP
 description: How to use MCP with BrainAPI
 ---
 
-BrainAPI V2 documentation.
+BrainAPI supports the MCP protocol. You can use MCP with BrainAPI or with your remote deployed BrainAPI instance.
+There are several ways to connect, you can use your client of choice to connect to the MCP server.
+
+## How to connect using **Claude Desktop MCP Client**
+
+You can use the Claude Desktop MCP Client to connect to your remote or local BrainAPI instance.
+There are two ways to connect, if you have Node.js installed you can connect using the `@pyroprompts/mcp-stdio-to-streamable-http-adapter` package.
+Or by using the pre-built binary that you can download the [GitHub page]().
+
+### 1. Open Claude Desktop and go to the Developer Settings
+
+Open your Claude Desktop Application and go to the Developer Settings.
+![Claude Desktop Developer Settings](/images/claude-desktop-setting-1.png)
+
+### 2. Open the Config File
+
+From the settings sidebar click into **Developer** and click the **Edit Config** button.
+![Claude Desktop Developer Settings](/images/claude-desktop-setting-2.png)
+
+### 3. Add the Configuration
+
+Now you can edit the config and add the configuration for your BrainAPI instance inside the `mcpServers` object.
+
+<DynamicCodeBlock
+  lang="json"
+  code={`{
+      "mcpServers": {
+
+        // Remote MCP Server Configuration
+        "<your-remote-mcp-server-name>": {
+            "command": "~/.nvm/versions/node/v22.19.0/bin/npx",
+            "args": ["-y", "@pyroprompts/mcp-stdio-to-streamable-http-adapter"],
+            "env": {
+            "URI": "https://<your-remote-mcp-server-url>/mcp",
+            "MCP_NAME": "<your-remote-mcp-server-name>",
+            "PATH": "~/.nvm/versions/node/v22.19.0/bin:/usr/local/bin:/usr/bin:/bin", // Replace with your own path
+            "BEARER_TOKEN": "<your-pat>"
+            }
+        },
+
+        // Local MCP Server Configuration
+        "<your-local-mcp-server-name>": {
+            "command": "~/.nvm/versions/node/v22.19.0/bin/npx",
+            "args": ["-y", "@pyroprompts/mcp-stdio-to-streamable-http-adapter"],
+            "env": {
+            "URI": "http://localhost:8001/mcp",
+            "MCP_NAME": "<your-local-mcp-server-name>",
+            "PATH": "~/.nvm/versions/node/v22.19.0/bin:/usr/local/bin:/usr/bin:/bin", // Replace with your own path
+            "BEARER_TOKEN": "<your-pat>"
+            }
+        }
+
+        // Pre-built binary Configuration
+        "<your-mcp-server-name": {
+            "command": "/absolute/path/to/brainapi-mcp-http-adapter",
+            "args": [],
+            "env": {
+                "URI": "https://<your-remote-mcp-server-url>/mcp",
+                "MCP_NAME": "<your-mcp-name>",
+                "BEARER_TOKEN": "<your-pat>"
+            }
+        }
+
+}
+`}
+/>
