@@ -1,0 +1,53 @@
+---
+title: Saving files
+description: How to save files to the memory store
+---
+
+Ingesting files is useful when you have information stored in documents and you don't want to implement a pipeline yourself to extract textual information from them.
+You just need to send the files to the ingestion API and the system will take care of going through a complete OCR process to extract the textual information from the files.
+
+<Callout type="info">
+  The accepted file types are: PDF (.pdf), DOC (.doc), DOCX (.docx), XLS (.xls),
+  XLSX (.xlsx), TXT (.txt), CSV (.csv), JSON (.json), JPG (.jpg), and PNG
+  (.png).
+</Callout>
+
+## Usage
+
+The file ingestion API is available via the REST API, Python SDK, and TypeScript SDK.
+It accepts one file at a time and will process it one page at a time.
+
+<Tabs items={["Typescript", "Python", "cURL"]}>
+  <Tab value="Typescript">
+    The Typescript SDK provides the `ingestFile` function to ingest a file.
+    <DynamicCodeBlock
+      lang="ts"
+      code={`
+const result = await brain.ingestFile({
+    file: "path/to/file.pdf",
+    brain_id: "example01",
+});`}
+    />
+  </Tab>
+  <Tab value="Python">
+    The Python SDK provides the `ingest_file` method to ingest a file.
+    <DynamicCodeBlock
+      lang="py"
+      code={`result = await client.ingest_file(
+    file="path/to/file.pdf",
+    brain_id="example01",
+)`}
+    />
+  </Tab>
+  <Tab value="cURL">
+    Call the POST endpoint with the payload to ingest plain text.
+    <DynamicCodeBlock
+      lang="bash"
+      code={`curl -X POST "<DEPLOYMENT_URL>/ingest" \\
+      -H "Content-Type: application/json" \\
+      -H "X-Brain-ID: mybrain123" \\
+      -H "BrainPAT: YOUR_BRAIN_PAT" \\
+      -F "file=@/absolute/path/to/your-file.pdf"`}
+    />
+  </Tab>
+</Tabs>

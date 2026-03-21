@@ -3,4 +3,81 @@ title: Saving text
 description: How to save text to the memory store
 ---
 
-BrainAPI V2 documentation.
+Ingesting text is the simplest way to save information into a memory store. Storing simple text is useful in most of the cases,
+such as powering memory for chatbots and ai assistants, but also to power a RAG pipeline for a set of documents.
+
+## Usage
+
+The text ingestion API is available via the REST API, Python SDK, and TypeScript SDK.
+The API payload consists of one main section: `data.text_data`, which contains the text to ingest; the optional fields
+`meta_keys`, `identification_params` and `observate_for` array, are used to tailor the analysis and provide metadata.
+
+<Tabs items={["Typescript", "Python", "cURL"]}>
+  <Tab value="Typescript">
+    The Typescript SDK provides the `ingestText` function to ingest plain text.
+    <DynamicCodeBlock
+      lang="ts"
+      code={`
+const result = await brain.ingestText({
+    text: "This is a plain text to ingest into the memory store.",
+    observate_for: [], // optional instructions to tailor the analysis
+    brain_id: "example01",
+});`}
+    />
+  </Tab>
+  <Tab value="Python">
+    The Python SDK provides the `ingest_text` method to ingest plain text.
+    <DynamicCodeBlock
+      lang="py"
+      code={`result = await client.ingest_text(
+    text="This is a plain text to ingest into the memory store.",
+    observate_for=[], // optional instructions to tailor the analysis
+    brain_id="example01",
+)`}
+    />
+  </Tab>
+  <Tab value="cURL">
+    Call the POST endpoint with the payload to ingest plain text.
+    <DynamicCodeBlock
+      lang="bash"
+      code={`curl -X POST "<DEPLOYMENT_URL>/ingest" \\
+      -H "Content-Type: application/json" \\
+      -H "X-Brain-ID: mybrain123" \\
+      -H "BrainPAT: YOUR_BRAIN_PAT" \\
+      -d '{
+        "data": {
+          "data_type": "text",
+          "text_data": "Alice met Bob at Acme Corp in 2024."
+        },
+        "meta_keys": {"email": "alice@example.com"},
+        "identification_params": {"source": "crm"},
+        "observate_for": ["people", "companies", "dates"],
+        "preferred_extraction_entities": ["Person", "Company"]
+      }'`}
+    />
+  </Tab>
+</Tabs>
+
+## Parameters information
+
+Below you can find more information about the parameters that can be used to ingest plain text.
+
+### `text_data`, field inside `data`
+
+This field will contain accept only plain text that will be saved into the memory store:
+
+### `meta_keys` optional parameter
+
+This is an object that carring the metadata that will be attached to the text and that will not be used in the analysis.
+
+### `identification_params` optional parameter
+
+This is an object that will contain the key value pairs that will be used to identify an entity that is associated with the saved text.
+
+### `observate_for` optional parameter
+
+This is a list of strings that will be used to tailor the analysis of the saved text, (eg. "Looking for new ways to improve the product" or "Planning a new trip to Paris").
+
+### `preferred_extraction_entities` optional parameter
+
+This is a list of strings that if provided will be used to used to constrain the types of entities that will be extracted from the saved text and used to create the entity graph.

@@ -4,4 +4,503 @@ description: How to use plugins with BrainAPI
 icon: Puzzle
 ---
 
-BrainAPI V2 documentation.
+BrainAPI is flexible enough to support many use cases and can be used out of the box as a standalone memory bank or cognitive engine for your application.
+By default, it decomposes ingested data into granular pieces so that each bit of information can be stored and represented in a general way.
+This behavior is often useful, but not always desirable: in some cases, you may want to constrain what gets stored, omit certain information, or reduce costs, since more granular storage is typically more expensive.
+
+For this reason, BrainAPI supports third-party plugins that can extend and modify its functionality.
+Plugins can currently be used to constrain the ontology, add API routes, customize orchestrated agents' prompts, and add MCP tools.
+
+Plugins can be installed, uninstalled, and published through the BrainAPI Plugins CLI.
+By default, they are hosted in the BrainAPI plugin registry at https://registry.brain-api.dev, but you can also use a custom registry by changing the `PLUGIN_REGISTRY_URL` environment variable before using the CLI.
+
+![Plugins Registry](/images/registry-list.png)
+
+<Callout type="warn">
+  Plugins may contain arbitrary code. Install only plugins from sources you
+  trust, and inspect package contents in the registry before installing.
+</Callout>
+
+## Quickstart
+
+Run the CLI from the BrainAPI repository root:
+
+```bash
+git clone git@github.com:Lumen-Labs/brainapi2.git
+cd brainapi2
+./bin/brainapi
+```
+
+The `./bin/brainapi` wrapper runs the plugin CLI through Poetry and configures `PYTHONPATH` automatically.
+
+## Configuration
+
+The CLI reads settings from environment variables:
+
+<TypeTable
+  type={{
+    PLUGINS_DIR: {
+      description: "Local directory where installed plugins are stored.",
+      type: "string",
+      required: false,
+      default: "plugins",
+    },
+    PLUGIN_REGISTRY_URL: {
+      description: "Remote plugin registry base URL.",
+      type: "string",
+      required: false,
+      default: "https://registry.brain-api.dev",
+    },
+    PLUGIN_PUBLISHER_ID: {
+      description:
+        "Publisher ID used for authenticated publishing and deletion.",
+      type: "string",
+      required: false,
+    },
+    PLUGIN_PUBLISHER_API_KEY: {
+      description:
+        "Publisher API key used for authenticated publishing and deletion.",
+      type: "string",
+      required: false,
+    },
+  }}
+/>
+
+Example:
+
+```bash
+export PLUGINS_DIR=plugins
+export PLUGIN_REGISTRY_URL=https://registry.brain-api.dev
+export PLUGIN_PUBLISHER_ID=my-team
+export PLUGIN_PUBLISHER_API_KEY=your-api-key
+```
+
+## Common workflows
+
+<Tabs items={["Install", "Inspect", "Publish", "Depublish"]}>
+  <Tab value="Install">
+    ```bash
+    ./bin/brainapi install my-plugin
+    ./bin/brainapi list
+    ```
+  </Tab>
+  <Tab value="Inspect">
+    ```bash
+    ./bin/brainapi list --remote
+    ./bin/brainapi info my-plugin
+    ./bin/brainapi install my-plugin --version 1.0.0
+    ```
+  </Tab>
+  <Tab value="Publish">
+    ```bash
+    ./bin/brainapi register --id my-team
+    export PLUGIN_PUBLISHER_ID=my-team
+    export PLUGIN_PUBLISHER_API_KEY=your-issued-api-key
+    ./bin/brainapi publish dist/my-plugin.tar.gz
+    ```
+  </Tab>
+  <Tab value="Depublish">
+    ```bash
+    ./bin/brainapi depublish my-plugin --version 1.0.0
+    ```
+  </Tab>
+</Tabs>
+
+## CLI reference
+
+All commands use this shape:
+
+```bash
+./bin/brainapi <command> [options]
+```
+
+### Install and manage local plugins
+
+<Tabs items={["install", "uninstall", "list", "update"]}>
+  <Tab value="install">
+    Install a plugin from the remote registry.
+
+    ```bash
+    ./bin/brainapi install <name> [--version <version>]
+    ```
+
+    - Downloads plugin files from the registry
+    - Installs into `PLUGINS_DIR/<name>`
+    - Validates `plugin.yaml`
+    - Skips installation if the same version already exists
+
+  </Tab>
+  <Tab value="uninstall">
+    Remove a locally installed plugin.
+
+    ```bash
+    ./bin/brainapi uninstall <name>
+    ```
+
+    - Deletes `PLUGINS_DIR/<name>`
+    - Returns an error if the plugin is not installed
+
+  </Tab>
+  <Tab value="list">
+    List local plugins or remote registry plugins.
+
+    ```bash
+    ./bin/brainapi list [--remote]
+    ```
+
+    - Without `--remote`, reads plugin manifests in `PLUGINS_DIR`
+    - With `--remote`, queries the registry
+
+  </Tab>
+  <Tab value="update">
+    Update an installed plugin to the latest version.
+
+    ```bash
+    ./bin/brainapi update <name>
+    ```
+
+    - Equivalent to reinstalling the plugin with `latest`
+
+  </Tab>
+</Tabs>
+
+### Inspect remote plugins
+
+Show metadata for a plugin:
+
+```bash
+./bin/brainapi info <name>
+```
+
+The output includes plugin name, current version, author, description, and available versions when provided by the registry.
+
+### Register and publish
+
+<Tabs items={["register", "publish", "depublish"]}>
+  <Tab value="register">
+    Create a publisher account in the registry.
+
+    ```bash
+    ./bin/brainapi register [--id <publisher-id>]
+    ```
+
+    If `--id` is omitted, the registry generates one.
+
+  </Tab>
+  <Tab value="publish">
+    Publish a `.tar.gz` plugin archive.
+
+    ```bash
+    ./bin/brainapi publish <archive> [--name <name>] [--force]
+    ```
+
+    Required environment variables:
+
+    - `PLUGIN_REGISTRY_URL`
+    - `PLUGIN_PUBLISHER_ID`
+    - `PLUGIN_PUBLISHER_API_KEY`
+
+  </Tab>
+  <Tab value="depublish">
+    Remove one version or the whole plugin from the registry.
+
+    ```bash
+    ./bin/brainapi depublish <name> [--version <version>]
+    ```
+
+    Required environment variables:
+
+    - `PLUGIN_REGISTRY_URL`
+    - `PLUGIN_PUBLISHER_ID`
+    - `PLUGIN_PUBLISHER_API_KEY`
+
+  </Tab>
+</Tabs>
+
+<Callout type="info">
+  The CLI exits with status code `1` when a command fails.
+</Callout>
+
+## Building plugins
+
+## Developing plugins
+
+A plugin is a folder inside `plugins` containing:
+
+- `plugin.yaml`
+- a Python entrypoint file
+- a callable `register(context)` function
+
+### Minimum structure
+
+```text
+plugins/
+  my_plugin/
+    plugin.yaml
+    main.py
+```
+
+`plugin.yaml`:
+
+```yaml
+name: my_plugin
+version: 0.1.0
+entry_point: main.py
+```
+
+`main.py`:
+
+```python
+def register(context):
+    print("my_plugin loaded")
+```
+
+### Manifest reference
+
+`plugin.yaml` supports:
+
+```yaml
+name: my_plugin
+version: 0.1.0
+entry_point: main.py
+description: Example BrainAPI plugin
+author: Your Name
+brainapi_version: ""
+priority: 100
+pip_dependencies:
+  - requests
+  - pydantic
+tags:
+  - example
+  - plugin
+```
+
+<TypeTable
+  type={{
+    name: {
+      description: "Plugin name.",
+      type: "string",
+      required: true,
+    },
+    version: {
+      description: "Plugin version.",
+      type: "string",
+      required: true,
+    },
+    entry_point: {
+      description: "Entrypoint file path inside the plugin folder.",
+      type: "string",
+      required: true,
+    },
+    description: {
+      description: "Human-readable plugin description.",
+      type: "string",
+      required: false,
+    },
+    author: {
+      description: "Plugin author name.",
+      type: "string",
+      required: false,
+    },
+    brainapi_version: {
+      description: "Optional BrainAPI compatibility hint.",
+      type: "string",
+      required: false,
+    },
+    priority: {
+      description: "Load order priority. Lower values load first.",
+      type: "number",
+      required: false,
+      default: 100,
+    },
+    pip_dependencies: {
+      description: "Python dependencies installed before plugin import.",
+      type: "string[]",
+      required: false,
+    },
+    tags: {
+      description: "Free-form tags.",
+      type: "string[]",
+      required: false,
+    },
+  }}
+/>
+
+<Callout type="info">
+  `entry_point` can be a nested path such as `src/plugin_entry.py`.
+</Callout>
+
+### Plugin loading lifecycle
+
+When BrainAPI starts, it:
+
+1. scans the plugins directory
+2. reads each `plugin.yaml`
+3. validates required fields
+4. sorts plugins by `priority`
+5. installs declared `pip_dependencies`
+6. imports the configured `entry_point`
+7. calls `register(context)`
+
+If one step fails, that plugin is marked as failed and is not activated.
+
+### Registration contract
+
+```text
+plugins/
+  my_plugin/
+    plugin.yaml
+    main.py
+    routes.py
+    tools.py
+    services.py
+```
+
+```python
+from .routes import router
+from .tools import ping
+
+def register(context):
+    context.include_router(router, prefix="/plugins/my-plugin")
+    context.register_mcp_tool(ping, name="ping")
+```
+
+## PluginContext reference
+
+Inside `register(context)`, `context` exposes runtime integration points.
+
+### Core properties
+
+<TypeTable
+  type={{
+    adapters: {
+      description:
+        "Access to shared BrainAPI adapters for data, graph, cache, vectors, embeddings, and LLMs.",
+      type: "object",
+      required: true,
+    },
+    prompts: {
+      description: "Prompt registry for defaults, overrides, and extensions.",
+      type: "object",
+      required: true,
+    },
+    config: {
+      description: "Application configuration object.",
+      type: "object",
+      required: true,
+    },
+    mcp: {
+      description: "MCP integration surface in MCP runtime.",
+      type: "object",
+      required: false,
+    },
+  }}
+/>
+
+### Core methods
+
+<TypeTable
+  type={{
+    include_router: {
+      description: "Include a FastAPI router in API runtime.",
+      type: "function",
+      required: true,
+    },
+    add_middleware: {
+      description: "Register FastAPI middleware in API runtime.",
+      type: "function",
+      required: true,
+    },
+    register_mcp_tool: {
+      description: "Register callable functions as MCP tools in MCP runtime.",
+      type: "function",
+      required: true,
+    },
+    add_event_handler: {
+      description: "Register lifecycle handlers such as startup and shutdown.",
+      type: "function",
+      required: true,
+    },
+  }}
+/>
+
+### Runtime-aware examples
+
+<Tabs items={["API routes", "MCP tool", "Prompt extension", "Adapters"]}>
+  <Tab value="API routes">
+    ```python
+    from fastapi import APIRouter
+
+    router = APIRouter()
+
+    @router.get("/status")
+    async def status():
+        return {"ok": True}
+
+    def register(context):
+        context.include_router(router, prefix="/plugins/status")
+    ```
+
+  </Tab>
+  <Tab value="MCP tool">
+    ```python
+    def echo(text: str) -> str:
+        return text
+
+    def register(context):
+        context.register_mcp_tool(echo, name="echo")
+    ```
+
+  </Tab>
+  <Tab value="Prompt extension">
+    ```python
+    def register(context):
+        context.prompts.extend(
+            "system_prompt",
+            "When relevant, mention data added by the custom plugin."
+        )
+    ```
+  </Tab>
+  <Tab value="Adapters">
+    ```python
+    def register(context):
+        summary = context.adapters.llm_small.generate_text(
+            "Summarize BrainAPI plugin capabilities in one sentence."
+        )
+        context.adapters.cache.set("plugin_summary", summary)
+    ```
+  </Tab>
+</Tabs>
+
+## Runtime behavior
+
+Plugins can run in API runtime, MCP runtime, or both.
+
+- `include_router(...)` and `add_middleware(...)` are effective only in API runtime
+- `register_mcp_tool(...)` is effective only in MCP runtime
+- `context.mcp` is meaningful only in MCP runtime
+- `add_event_handler(...)` is currently executed by API lifecycle only
+
+Currently supported lifecycle event names are:
+
+- `startup`
+- `shutdown`
+
+## Troubleshooting
+
+Common failure cases:
+
+- registry is unreachable or misconfigured
+- publisher credentials are missing for `publish` or `depublish`
+- plugin is not found locally during `uninstall`
+- `plugin.yaml` is missing or invalid
+- remote plugin is not found for `info`, `install`, or `update`
+
+## Best practices
+
+- keep plugin root simple and explicit
+- keep `register(context)` lightweight
+- move heavy logic into separate modules
+- use `priority` only when load order matters
+- keep `pip_dependencies` minimal
+- fail clearly when required external services are unavailable

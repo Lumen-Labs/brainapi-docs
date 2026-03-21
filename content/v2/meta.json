@@ -11,14 +11,12 @@
     "---Ingestion---",
     "ingestion/structured-data",
     "ingestion/text.mdx",
-    "ingestion/backups",
+    "ingestion/files",
     "---Retrieval---",
     "retrieval/synergies",
     "retrieval/entities",
     "retrieval/context",
-    "retrieval/export-backups",
     "---Agentic---",
-    "agentic/streaming-client",
     "agentic/MCP"
   ]
 }
