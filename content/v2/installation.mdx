@@ -1,7 +1,136 @@
 ---
 title: Installation
-description: How to install BrainAPI V2
+description: Install BrainAPI v2 for development or production
 icon: Package
 ---
 
-BrainAPI V2 documentation.
+BrainAPI v2 supports two common installation flows: local development and Docker-based production deployment.
+
+<Tabs items={["Development", "Production (Docker Compose)"]}>
+  <Tab value="Development">
+  Use this flow if you are working on the BrainAPI codebase or building plugins.
+
+```bash
+git clone git@github.com:Lumen-Labs/brainapi2.git
+cd brainapi2
+cp .env.example .env
+chmod +x bin/brainapi.sh
+./bin/brainapi <command> [options]
+```
+
+Fill the values in `.env` before running API, worker, MCP, or plugin workflows.
+  </Tab>
+  <Tab value="Production (Docker Compose)">
+  Use this flow for self-hosted environments. The `example-docker-compose.yaml` file starts the full stack used by BrainAPI v2.
+  Compose file: [https://github.com/Lumen-Labs/brainapi2/blob/main/example-docker-compose.yaml](https://github.com/Lumen-Labs/brainapi2/blob/main/example-docker-compose.yaml)
+  </Tab>
+</Tabs>
+
+## Production stack overview
+
+The provided `version: "3.8"` compose stack includes:
+
+- `nginx` as reverse proxy and TLS termination
+- `redis` for cache and task queue backend
+- `mongo` for document storage
+- `neo4j` for graph relationships
+- `etcd` and `minio` as Milvus dependencies
+- `milvus` as vector database
+- `brainapi` as API gateway (`:8000`)
+- `brainapi-worker` as Celery worker
+- `brainapi-mcp` as MCP server (`:8001`)
+
+<Callout type="info">
+  The API, worker, and MCP containers share the same image and rely on the same
+  environment variables and plugin volume. Keep these values aligned across all
+  three services.
+</Callout>
+
+## Production setup
+
+### 1) Prepare host paths referenced by compose
+
+```bash
+mkdir -p /srv/nginx/conf/conf.d
+mkdir -p /srv/nginx/logs
+mkdir -p /root
+```
+
+The compose file expects these host mounts:
+
+- `/srv/nginx/conf/nginx.conf`
+- `/srv/nginx/conf/conf.d`
+- `/etc/letsencrypt`
+- `/srv/nginx/logs`
+- `/root/.env`
+- `/root/gcp_credentials.json`
+
+### 2) Configure environment variables
+
+Copy your environment file to `/root/.env` and set production values.
+
+```bash
+cp .env.example /root/.env
+```
+
+At minimum, verify:
+
+<TypeTable
+  type={{
+    BRAINPAT_TOKEN: {
+      description: "Token used by protected health checks and authenticated API calls.",
+      type: "string",
+      required: true,
+    },
+    BRAINAPI_PLUGINS: {
+      description: "Comma-separated plugin list loaded at startup.",
+      type: "string",
+      required: false,
+      default: "my-plugin:1.0.0,analytics-plugin",
+    },
+    PLUGIN_REGISTRY_URL: {
+      description: "Custom plugin registry URL if not using the default.",
+      type: "string",
+      required: false,
+    },
+    PLUGIN_PUBLISHER_ID: {
+      description: "Publisher identifier for registry operations.",
+      type: "string",
+      required: false,
+    },
+    PLUGIN_PUBLISHER_API_KEY: {
+      description: "Publisher API key for registry operations.",
+      type: "string",
+      required: false,
+    },
+  }}
+/>
+
+### 3) Review service credentials before startup
+
+The example compose file ships with development defaults. Update these values before production usage:
+
+- `NEO4J_AUTH=neo4j/your_password`
+- `MONGO_INITDB_ROOT_USERNAME`
+- `MONGO_INITDB_ROOT_PASSWORD`
+- `MINIO_ACCESS_KEY`
+- `MINIO_SECRET_KEY`
+
+### 4) Start the stack
+
+```bash
+docker compose -f example-docker-compose.yaml pull
+docker compose -f example-docker-compose.yaml up -d
+docker compose -f example-docker-compose.yaml ps
+```
+
+### 5) Verify endpoints
+
+```bash
+curl -f http://localhost:8000/ -H "BrainPAT: $BRAINPAT_TOKEN"
+curl -f http://localhost:8001/
+curl -f http://localhost:9091/healthz
+curl -f http://localhost:9000/minio/health/live
+```
+
+If all checks pass, BrainAPI API, worker, and MCP services are running with Redis, MongoDB, Neo4j, and Milvus.
