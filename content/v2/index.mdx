@@ -4,4 +4,135 @@ description: Get started with BrainAPI V2
 icon: BookOpen
 ---
 
-BrainAPI V2 documentation.
+## BrainAPI
+
+BrainAPI turns raw documents, plain text and events into a queryable knowledge graph you can use to power memory, recommendations, and retrieval without building the full data pipeline yourself.
+
+Build once, ingest continuously, query with APIs or natural language.
+
+[Get Started](/v2/installation)  
+[GitHub](https://github.com/Lumen-Labs/brainapi2)
+
+![Dash Example 1](/images/dash-example-1.png)
+
+## Mental Model (How it works)
+
+1. Receives ingested data from files, text, APIs, or event streams.
+2. Annotates the ingested data with observations.
+3. Processes the input to extract entities, events, facts, and links.
+4. Store results as a connected graph.
+5. Query the graph through API, SDK, MCP, or natural language.
+
+![Dash Example 2](/images/dash-example-2.png)
+
+## What You Can Build
+
+- AI assistants with long-term user memory across sessions.
+- Recommendation systems based on entity relationships, not only clicks.
+- Knowledge search over docs, tickets, and chat history.
+- Community mapping for experts, topics, and collaboration paths.
+- Business intelligence over customer feedback, product usage, and support data.
+- Investigation workflows that connect people, events, and sources.
+
+## Architecture Overview
+
+BrainAPI runs a multi-agent pipeline (what we call "the round table of agents") where each role does one clear job:
+
+- Scout: reads incoming data and identifies candidate signals.
+- Architect: transforms signals into structured entities and relations.
+- Janitor: cleans duplicates, resolves conflicts, and keeps graph quality stable.
+- KG: writes and maintains the final knowledge graph for retrieval and reasoning.
+
+This separation keeps ingestion reliable while preserving a consistent graph over time, the agents read the ingested data
+and they talk together to build the graph collaboratively.
+
+## Quickstart
+
+### 1) Run BrainAPI
+
+```bash
+git clone git@github.com:Lumen-Labs/brainapi2.git
+cd brainapi2
+cp .env.example .env
+docker compose -f example-docker-compose.yaml up -d
+```
+
+### 2) Ingest data
+
+```bash
+curl -X POST "http://localhost:8000/ingest/text" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -d '{
+    "source_id": "quickstart-doc-1",
+    "text": "Alice leads the backend team at Acme. Acme launched Project Atlas in 2025."
+  }'
+```
+
+### 3) Query results
+
+```bash
+curl -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -d '{
+    "question": "Who leads the backend team and what did their company launch?"
+  }'
+```
+
+## Interaction Modes
+
+Use BrainAPI through the interface that matches your stack:
+
+- REST API for backend services and scheduled jobs.
+- MCP for tool-driven AI runtimes that need direct system access.
+- SDKs for application-level integration with typed client workflows.
+- Natural language querying for fast exploratory analysis.
+
+You can mix modes in one system, such as API ingestion plus MCP-based retrieval.
+
+## Extensibility (Plugins)
+
+BrainAPI is designed as a platform:
+
+- Add custom endpoints to expose domain-specific operations.
+- Customize agent behavior with plugin prompts and logic.
+- Register MCP tools so external AI runtimes can call your functions.
+- Install and publish plugins through the BrainAPI plugin registry.
+
+This lets teams keep a stable core while extending behavior per product domain.
+
+## Concrete Example
+
+- Input: "User `u123` watched 3 videos about graph databases and bookmarked a Neo4j tutorial."
+- Extracted entities/relations:
+  - `u123` -> interested_in -> `graph databases`
+  - `u123` -> engaged_with -> `Neo4j tutorial`
+  - `Neo4j tutorial` -> belongs_to -> `database learning content`
+- What becomes possible afterward:
+  - Recommend the next most relevant content.
+  - Personalize onboarding for similar users.
+  - Answer: "Why did we suggest this course?" with traceable graph links.
+
+## When to Use / Not Use
+
+### Use if:
+
+- You need structured knowledge from messy, changing data sources.
+- You need memory and retrieval across documents, events, and users.
+- You want explainable relationships behind recommendations or answers.
+- You expect to extend behavior with plugins over time.
+
+### Do not use if:
+
+- You only need basic CRUD over fixed schemas.
+- Your data has no relationship logic beyond simple key-value lookup.
+- A single SQL query solves the problem end to end.
+- You do not need extraction, linking, or graph-based retrieval.
+
+## Next Steps
+
+- [Quickstart](/v2/installation)
+- [API Reference](/v2/api)
+- [Plugin Development](/v2/plugins)
+- [Architecture Deep Dive](/v2/core-philosophy)
