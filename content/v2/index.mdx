@@ -60,24 +60,55 @@ docker compose -f example-docker-compose.yaml up -d
 ### 2) Ingest data
 
 ```bash
-curl -X POST "http://localhost:8000/ingest/text" \
+curl -X POST "http://localhost:8000/ingest" \
   -H "Content-Type: application/json" \
   -H "BrainPAT: $BRAINPAT_TOKEN" \
   -d '{
-    "source_id": "quickstart-doc-1",
-    "text": "Alice leads the backend team at Acme. Acme launched Project Atlas in 2025."
+    "brain_id": "quickstart-doc-1",
+    "data": {
+      "data_type": "text",
+      "text_data": "Alice leads the backend team at Acme. Acme launched Project Atlas in 2025."
+    }
   }'
 ```
 
 ### 3) Query results
 
 ```bash
-curl -X POST "http://localhost:8000/query" \
+curl -X GET "http://localhost:8000/retrieve?brain_id=quickstart-doc-1&text=Who leads the backend team and what did their company launch?" \
   -H "Content-Type: application/json" \
   -H "BrainPAT: $BRAINPAT_TOKEN" \
-  -d '{
-    "question": "Who leads the backend team and what did their company launch?"
-  }'
+```
+
+The response will be the following:
+
+```json
+{
+  "data": [
+    {
+      "text": "Alice leads the backend team at Acme. Acme launched Project Atlas in 2025.",
+      "entities": [
+        {
+          "name": "Alice",
+          "type": "person"
+        }
+      ]
+    }
+  ],
+  "observations": ["Alice is the backend team lead at Acme."],
+  "relationships": [
+    {
+      "name": "leads",
+      "description": "Alice leads the backend team at Acme.",
+      "type": "relationship"
+    },
+    {
+      "name": "launched",
+      "description": "Acme launched Project Atlas in 2025.",
+      "type": "relationship"
+    }
+  ]
+}
 ```
 
 ## Interaction Modes
