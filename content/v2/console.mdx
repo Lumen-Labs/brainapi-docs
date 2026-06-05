@@ -1,0 +1,78 @@
+---
+title: Console
+description: Local web UI to inspect and operate a BrainAPI instance
+icon: LayoutDashboard
+---
+
+The BrainAPI Console is a small React + Vite + Tailwind SPA (`brainapi-console`) for inspecting and operating a local BrainAPI instance.
+It is a browser dashboard for data already in a brain, not the setup TUI and not a chat UI.
+
+Use it to browse the graph, text chunks, vectors, observations, and tasks, and to run quick ingests.
+
+## How it is served
+
+- Built output goes to `console/dist/`.
+- The FastAPI app mounts it at `/console/` when `CONSOLE_ENABLED` is not `false` and `dist` exists (`make build-console`).
+- Console static assets and routes are excluded from BrainPAT middleware. You still authenticate inside the SPA.
+
+<Tabs items={["Production", "Development"]}>
+  <Tab value="Production">
+    Build the console, then open it from your running BrainAPI instance.
+
+    ```bash
+    make build-console
+    # then visit
+    # http://localhost:8000/console/
+    ```
+  </Tab>
+  <Tab value="Development">
+    Vite runs on port `5173` with `base: "/console/"` and proxies API paths to `localhost:8000`.
+
+    ```bash
+    cd console
+    npm install
+    npm run dev
+    # http://localhost:5173/console/
+    ```
+
+    Proxied API paths: `/retrieve`, `/ingest`, `/meta`, `/tasks`, `/system`.
+  </Tab>
+</Tabs>
+
+## Auth and brain scoping
+
+Login stores a session (API base URL + BrainPAT) in local storage:
+
+1. `GET /meta/login-info` resolves whether the token is system-wide or brain-scoped and which `brain_id` applies.
+2. Validates with `GET /meta/entity-labels`.
+3. Every API call sends `BrainPAT`, `Authorization: Bearer …`, and `X-Brain-ID` for non-`/system` routes.
+
+<TypeTable
+  type={{
+    "System PAT": {
+      description: "Enables the sidebar brain switcher via GET /system/brains-list.",
+      type: "token scope",
+    },
+    "Per-brain PAT": {
+      description: "Fixed to that brain only; no brain switching.",
+      type: "token scope",
+    },
+  }}
+/>
+
+## Pages
+
+| Route | Purpose |
+| --- | --- |
+| Overview | Counts for entities, relationships, text chunks, observations, tasks, and vector stores via `/retrieve/*` and `/tasks/`. |
+| Graph | Interactive `vis-network` graph: load entities/relationships, filter by label/query, expand neighbors, merge graph state. |
+| Data | Paginated text chunks and structured data (`/retrieve/text-chunks`, `/retrieve/structured-data`), with type filter for structured rows. |
+| Observations | Browse and filter observations (`/retrieve/observations`). |
+| Vectors | List vector stores and browse vectors. |
+| Tasks | List ingestion/Celery tasks (`/tasks/`), expand details, poll non-terminal statuses. |
+| Ingest | `POST /ingest/` with raw text; optional create brain via `POST /system/brains` when using a system PAT. |
+
+<Callout type="info">
+  The console is an operator and debug UI for graph, chunks, vectors, observations, tasks, and quick ingest.
+  For conversational interfaces, see the [Chatbot](/v2/chatbot) plugin.
+</Callout>

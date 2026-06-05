@@ -1,0 +1,172 @@
+---
+title: TUI Installer
+description: Install, configure, and run BrainAPI locally with the brainapi-tui CLI
+icon: Terminal
+---
+
+The TUI is the `brainapi-tui` npm package: a Node.js terminal CLI (built with `@clack/prompts`) that installs, configures, and runs BrainAPI on your machine.
+
+Instead of manually cloning the repo, creating a venv, writing `.env`, starting Docker, and running `uvicorn`/Celery, you run a small global command.
+
+```bash
+npm install -g brainapi-tui   # installs `brainapi` on PATH
+```
+
+<Callout type="info">
+  This is not the same binary as `bin/brainapi` in the repo root, which is a Python entry point for [plugin management](/v2/plugins) (`src/core/plugins/cli.py`).
+</Callout>
+
+## Managed install layout
+
+The CLI keeps a managed install under `~/.brainapi/` (or `$BRAINAPI_HOME`):
+
+| Path | Purpose |
+| --- | --- |
+| `~/.brainapi/source/` | Cloned `brainapi2` repo |
+| `~/.brainapi/source/.venv/` | Python virtualenv |
+| `~/.brainapi/source/.env` | Generated configuration |
+| `~/.brainapi/state.json` | Install metadata (repo URL, branch, chosen services, etc.) |
+
+## Commands
+
+<Tabs items={["init", "start", "config", "doctor", "update"]}>
+  <Tab value="init">
+    Full bootstrap:
+
+    - Ensures Python ≥ 3.11 and Docker (with recovery flows if missing).
+    - Clones the repo (`$BRAINAPI_REPO_URL`, branch `$BRAINAPI_BRANCH` or `main`).
+    - Creates the venv and installs Python deps (including extras based on your choices).
+    - Runs the setup wizard and writes `.env`.
+    - Optionally installs plugins (registry or local paths).
+    - Optionally starts Docker Compose for backing services (Postgres, Redis, Neo4j, Milvus, Mongo, etc.).
+
+    ```bash
+    brainapi init
+    ```
+
+    Options: `-r/--repo`, `-b/--branch`, `-f/--force` (re-init even if state exists).
+
+    <Callout type="info">
+      If you run any other command first (`start`, `doctor`, …), it auto-runs `init` when no install exists.
+    </Callout>
+  </Tab>
+  <Tab value="start">
+    Starts your stack in one terminal (Ctrl-C stops everything):
+
+    - Optionally syncs dev source if you're developing the TUI against a local tree.
+    - Brings up backing services (Docker or manual health checks).
+    - Runs in parallel by default:
+      - API — `uvicorn src.services.api.app:app` on port `8000`
+      - MCP — `uvicorn src.services.mcp.app:app` on port `8001`
+      - Celery worker — `celery -A src.workers.app worker`
+    - Builds/enables the web [console](/v2/console) at `http://localhost:8000/console` when the API starts.
+
+    ```bash
+    brainapi start
+    ```
+
+    Flags:
+
+    - `--no-api`, `--no-mcp`, `--no-worker`, `--no-services`
+    - `--only api,mcp,worker,services`
+    - `--pipeline accurate|lightweight` — sets `PIPELINE_MODE` in `.env` before start
+  </Tab>
+  <Tab value="config">
+    Re-runs the setup wizard and rewrites `~/.brainapi/source/.env` (no full re-clone).
+
+    ```bash
+    brainapi config
+    ```
+  </Tab>
+  <Tab value="doctor">
+    Read-only checks: Python, venv, Docker, Ollama, GCP creds, TCP reachability of configured DBs/services, env keys, etc.
+
+    ```bash
+    brainapi doctor
+    ```
+  </Tab>
+  <Tab value="update">
+    `git pull` in the managed source tree, then reinstall Python dependencies.
+
+    ```bash
+    brainapi update
+    ```
+  </Tab>
+</Tabs>
+
+## Setup wizard
+
+Both `init` and `config` walk you through:
+
+- Defaults vs custom stack (e.g. NetworkX + Postgres + pgvector + remote GCP Vertex).
+- Vector DB, data DB, graph DB, and models mode (local Ollama vs remote providers).
+- Pipeline (OCR, accurate vs lightweight ingestion).
+- Connection details for only the services you picked.
+- Services runtime: Docker Compose vs manual (you run services yourself).
+- `BRAINPAT_TOKEN` (generate or paste).
+- Plugins (search/install, e.g. [chatbot](/v2/chatbot)).
+- Whether to bring up containers now.
+
+## Typical end-user flow
+
+```bash
+npm install -g brainapi-tui
+brainapi init          # first time
+brainapi start         # daily dev / local server
+brainapi doctor        # troubleshoot
+brainapi config        # change DB/models/plugins
+brainapi update        # pull latest BrainAPI
+```
+
+### Environment overrides
+
+<TypeTable
+  type={{
+    BRAINAPI_HOME: {
+      description: "Install root.",
+      type: "string",
+      default: "~/.brainapi",
+    },
+    BRAINAPI_REPO_URL: {
+      description: "What init clones.",
+      type: "string",
+      default: "upstream GitHub repo",
+    },
+    BRAINAPI_BRANCH: {
+      description: "Branch to checkout.",
+      type: "string",
+      default: "main",
+    },
+  }}
+/>
+
+## Developing the TUI itself
+
+```bash
+cd tui
+npm install
+npm run dev              # watch build
+node dist/index.js init  # or: npm start -- init
+```
+
+## Mental model
+
+```text
+brainapi (TUI)  →  ~/.brainapi/source/  →  Python BrainAPI (API, MCP, worker, plugins)
+                 ↑
+         interactive prompts + Docker + .env
+```
+
+The TUI is ops/dev ergonomics: it does not implement graph logic or chatbot inference.
+It gets BrainAPI running locally with the right `.env` and processes.
+The [chatbot](/v2/chatbot) plugin and [MCP server](/v2/agentic/MCP) are started by `brainapi start` as separate processes (API on `8000`, MCP on `8001`).
+
+### Relation to `bin/brainapi`
+
+| Entry | Tech | Role |
+| --- | --- | --- |
+| `brainapi-tui` → `brainapi` | Node | Install, configure, start stack |
+| `bin/brainapi` | Python | Plugin CLI inside an already-set-up project |
+
+For a fresh machine, you typically use the TUI first.
+Once `~/.brainapi/source` exists, you can also work inside that tree with Poetry / `bin/brainapi` for [plugin-specific tasks](/v2/plugins).
