@@ -1,0 +1,160 @@
+---
+title: Chatbot
+description: Official inference plugin with optional memory and MCP tools
+icon: MessageSquare
+---
+
+The **chatbot** plugin adds a ready-made chat inference API on top of BrainAPI. It talks to your configured LLM providers, can call MCP tools for the current brain, and optionally persists turns when [chatbot-memory](/v2/chatbot-memory) is installed.
+
+- Package dir: `plugins/chatbot`
+- Manifest: `name: chatbot`, `version: 1.0.0`, requires BrainAPI `>=2.13.0`
+- Route prefix: `/chatbot`
+
+## Install
+
+The repo already vendors the plugin under `plugins/chatbot`. For a registry install:
+
+```bash
+./bin/brainapi install chatbot
+# or via TUI: brainapi plugins install chatbot
+```
+
+Restart the API (and MCP if you rely on tool-calling) after install. See [Plugins](/v2/plugins) for CLI details.
+
+## Endpoint
+
+### `POST /chatbot/inference`
+
+Auth: same as other BrainAPI routes (`BrainPAT` or `Authorization: Bearer …`, plus brain scoping / `X-Brain-ID` as configured).
+
+<Tabs items={["cURL", "JSON body"]}>
+  <Tab value="cURL">
+    <DynamicCodeBlock
+      lang="bash"
+      code={`curl -X POST "<DEPLOYMENT_URL>/chatbot/inference" \\
+  -H "Content-Type: application/json" \\
+  -H "BrainPAT: YOUR_BRAIN_PAT" \\
+  -H "X-Brain-ID: example01" \\
+  -d '{
+    "model": "openai::gpt-4o-mini",
+    "input": "Write a one-line greeting",
+    "stream": false,
+    "max_tokens": 64
+  }'`}
+    />
+  </Tab>
+  <Tab value="JSON body">
+    <DynamicCodeBlock
+      lang="json"
+      code={`{
+  "model": "azureopenai::gpt-4o-mini",
+  "input": "Write a one-line greeting",
+  "stream": false,
+  "max_tokens": 64,
+  "conversation_id": "conv-123",
+  "user_id": "user-456"
+}`}
+    />
+  </Tab>
+</Tabs>
+
+### Request fields
+
+<TypeTable
+  type={{
+    model: {
+      description:
+        "Provider and model in api_provider::llm_name form (e.g. openai::gpt-4o-mini, deepseek::deepseek-v4-flash).",
+      type: "string",
+      required: true,
+    },
+    input: {
+      description: "User message / prompt.",
+      type: "string",
+      required: true,
+    },
+    stream: {
+      description: "When true, respond as text/event-stream (OpenAI-style SSE).",
+      type: "boolean",
+      required: false,
+      default: "false",
+    },
+    max_tokens: {
+      description: "Optional generation cap passed to the provider.",
+      type: "number",
+      required: false,
+    },
+    conversation_id: {
+      description:
+        "When set and chatbot-memory is installed, loads prior context and saves user/agent turns.",
+      type: "string",
+      required: false,
+    },
+    user_id: {
+      description:
+        "Optional user id for preference lookup via chatbot-memory.",
+      type: "string",
+      required: false,
+    },
+  }}
+/>
+
+### Model string
+
+`model` must be `api_provider::llm_name`. Providers resolve through BrainAPI’s runtime registry. Aliases include:
+
+| Alias | Resolves to |
+| --- | --- |
+| `azureopenai`, `azure_openai` | `azure` |
+| `claude` | `anthropic` |
+| `bedrock` | `amazon_bedrock` |
+| `vertex`, `gcp` | `gcp_vertex` |
+
+Supported providers include: `ollama`, `azure`, `openai`, `anthropic`, `deepseek`, `gcp_vertex`, `amazon_bedrock`. Configure keys/endpoints in `.env` the same way as core LLM adapters (see [Installation](/v2/installation#deepseek-chat-only) for DeepSeek).
+
+Invalid format or unsupported provider → **422**.
+
+### Non-stream response
+
+```json
+{
+  "message": "Inference completed successfully",
+  "data": {
+    "model": "azure::gpt-4o-mini",
+    "provider": "azure",
+    "output": "Hello there!",
+    "stream": false
+  }
+}
+```
+
+### Stream response
+
+- Set `"stream": true`
+- Content-Type: `text/event-stream`
+- Chunks: OpenAI-style `data: {...}` lines, ended by `data: [DONE]`
+- Header `X-Model: provider::llm_name`
+
+## Memory integration
+
+If the **chatbot-memory** plugin directory is present, inference:
+
+1. Builds a richer prompt from last messages, conversation meta summary, and user preferences (when `conversation_id` / `user_id` are set).
+2. Saves the user message before generation and the agent reply after (including streamed replies once the stream finishes).
+
+Without chatbot-memory, `conversation_id` does not load memory context; bare text chunks are not written through the memory pipeline.
+
+Pair both plugins for multi-turn assistants. Details: [Chatbot memory](/v2/chatbot-memory).
+
+## MCP tool calling
+
+By default, when a `brain_id` is available, inference prepends MCP tool instructions and may iterate tool calls (env `CHATBOT_MCP_TOOL_MAX_ITERATIONS`, default `5`). The agent uses the same BrainPAT as the HTTP request to execute tools.
+
+Ensure the [MCP server](/v2/agentic/MCP) is running if you expect tool use. Streaming with MCP still runs the tool loop first, then emits the final answer as SSE.
+
+## Related
+
+- [Chatbot memory](/v2/chatbot-memory)
+- [Plugins CLI](/v2/plugins)
+- [MCP](/v2/agentic/MCP)
+- [Retrieve context](/v2/retrieval/context)

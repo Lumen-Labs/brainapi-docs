@@ -11,6 +11,15 @@ This behavior is often useful, but not always desirable: in some cases, you may 
 For this reason, BrainAPI supports third-party plugins that can extend and modify its functionality.
 Plugins can currently be used to constrain the ontology, add API routes, customize orchestrated agents' prompts, and add MCP tools.
 
+### Official plugins
+
+| Plugin | Docs | Role |
+| --- | --- | --- |
+| `chatbot` | [Chatbot](/v2/chatbot) | `POST /chatbot/inference` with LLM providers, SSE, and MCP tools |
+| `chatbot-memory` | [Chatbot memory](/v2/chatbot-memory) | Conversation-isolated messages, summaries, and preferences in one brain |
+
+Vendored under `plugins/` in the BrainAPI repo (`>=2.13.0`). Install via `./bin/brainapi install …` or keep the local directories and restart API + worker.
+
 Plugins can be installed, uninstalled, and published through the BrainAPI Plugins CLI.
 By default, they are hosted in the BrainAPI plugin registry at https://registry.brain-api.dev, but you can also use a custom registry by changing the `PLUGIN_REGISTRY_URL` environment variable before using the CLI.
 

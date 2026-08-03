@@ -1,0 +1,153 @@
+---
+title: Chatbot memory
+description: Conversation-isolated memory for chatbot turns in a single brain
+icon: Brain
+---
+
+The **chatbot-memory** plugin stores multiple isolated chatbot conversations inside one brain. Messages are text chunks tagged by `conversation_id`; rolling summaries and per-user preferences live as structured data. The [chatbot](/v2/chatbot) plugin uses these hooks automatically when both are installed.
+
+- Package dir: `plugins/chatbot-memory`
+- Manifest name: `chatbot-memory-single-brain` (folder / install id: `chatbot-memory`)
+- Requires BrainAPI `>=2.13.0`
+- Route prefix: `/conversations`
+- Celery task: `chatbot_memory.update_conversation_after_message` (queue `chatbot_memory`)
+
+Ideal for “one brain per user (or tenant), many conversation threads.”
+
+## Install
+
+```bash
+./bin/brainapi install chatbot-memory
+```
+
+Or keep the vendored tree under `plugins/chatbot-memory`. Restart API **and** the Celery worker so the memory queue is consumed (workers must include the `chatbot_memory` queue).
+
+The chatbot plugin detects this package by directory name `chatbot-memory` and wires:
+
+- `context.save_chatbot_memory_message`
+- `context.get_chatbot_memory_conversation_context`
+
+## How it works
+
+```text
+POST /conversations/messages  (or chatbot inference with conversation_id)
+        │
+        ▼
+  save text chunk (metadata: role, conversation_id, kind=chatbot_message)
+        │
+        ▼
+  Celery: update meta summary + user preferences
+        │
+        ▼
+  GET .../context → last messages + meta + preferences
+```
+
+- While the conversation summary stays under ~20k characters (`SUMMARY_CTX_MAX_LENGTH`), meta is an id→text map of recent turns.
+- When it overflows, an updater agent compresses the summary and can emit observations.
+- User preferences (when `user_id` is present on the chunk) are updated asynchronously the same way.
+
+## API
+
+All routes use normal BrainAPI auth and brain scoping.
+
+### Save a message
+
+`POST /conversations/messages`
+
+```json
+{
+  "message": "Hello",
+  "role": "user",
+  "conversation_id": "conv-123"
+}
+```
+
+Response includes the saved text chunk. Triggers the async meta/preferences updater.
+
+### List conversation metadata
+
+`GET /conversations/meta?limit=100&skip=0`
+
+Returns `{ data: ConversationMeta[], total }`.
+
+### Conversation meta CRUD
+
+| Method | Path | Notes |
+| --- | --- | --- |
+| `POST` | `/conversations/{conversation_id}/meta` | Body `{ "summary": { "...": "..." } }` |
+| `GET` | `/conversations/{conversation_id}/meta` | **404** if missing |
+| `PUT` | `/conversations/{conversation_id}/meta` | **404** if missing; same body as POST |
+
+`ConversationMeta`:
+
+<TypeTable
+  type={{
+    conversation_id: {
+      description: "Conversation thread id.",
+      type: "string",
+      required: true,
+    },
+    summary: {
+      description: "Map of summary entries (string keys to string values).",
+      type: "Record<string, string>",
+      required: true,
+    },
+  }}
+/>
+
+### List messages
+
+`GET /conversations/{conversation_id}/messages?limit=100&skip=0`
+
+Returns ordered turns with `id`, `message`, `role`, `conversation_id`, `inserted_at`.
+
+### Conversation context pack
+
+`GET /conversations/{conversation_id}/context`
+
+Returns `meta`, `preferences` (if resolved), and up to 10 `last_messages` for prompt injection. Used by chatbot inference when `conversation_id` is set.
+
+### User preferences
+
+`GET /conversations/{user_id}/preferences`
+
+Loads the `user_preferences` structured row for that user in the brain (may be empty/null if never written).
+
+## Data model (storage)
+
+| Kind | Storage | Discriminator |
+| --- | --- | --- |
+| Chat turns | Text chunks | `metadata.kind = chatbot_message`, `metadata.conversation_id` |
+| Conversation summary | Structured data | `types: [conversation_meta]` |
+| User preferences | Structured data | `types: [user_preferences]` |
+
+## Use with the chatbot plugin
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/chatbot/inference" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -H "X-Brain-ID: example01" \
+  -d '{
+    "model": "openai::gpt-4o-mini",
+    "input": "What did we decide last time?",
+    "conversation_id": "conv-123",
+    "user_id": "user-456",
+    "stream": false
+  }'
+```
+
+With both plugins loaded, that call loads memory context, saves the user turn, generates a reply (optionally with MCP tools), and saves the agent turn.
+
+## Ops notes
+
+- Worker must listen on queue **`chatbot_memory`** or meta/preferences will not update after saves.
+- KG enrichment from updater observations is currently disabled in code; summaries and preferences still persist.
+- Isolation is by `conversation_id` (and optional `user_id`) **within** a single `brain_id` — not separate brains per chat.
+
+## Related
+
+- [Chatbot](/v2/chatbot)
+- [Plugins CLI](/v2/plugins)
+- [Saving text](/v2/ingestion/text)
+- [MCP](/v2/agentic/MCP)
