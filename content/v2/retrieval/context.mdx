@@ -1,159 +1,287 @@
 ---
 title: Context
-description: This API provides a way to retrieve the context of an entity in the brain.
+description: Retrieve hybrid graph + passage context for a query
 ---
 
-The context API is available via REST API, Python SDK and Typescript SDK.
-It is primarly used to retrieve additional context given some text.
+The context API (`POST /retrieve/context`) returns a hybrid pack of curated graph facts and source passages for a natural-language query. It is the primary retrieval surface for assistants, RAG, and benchmark harnesses.
 
 ## Usage
-
-It can be called from the Typescript SDK, Python SDK and cURL.
 
 <Tabs items={["Typescript", "Python", "cURL"]}>
   <Tab value="Typescript">
     <DynamicCodeBlock
       lang="ts"
-      code={`const result = await brain.retrieveContext("Who's the CEO of Apple inc.?", "example1");`}
-    />
-    <TypeTable
-      type={{
-        text: {
-          description:
-            "The text to retrieve the context for. This is the first parameter.",
-          type: "string",
-          required: true,
-        },
-        brain_id: {
-          description:
-            "The brain identifier to retrieve the context from. This is the second parameter.",
-          type: "string",
-          required: true,
-          default: "default",
-        },
-        historical_limit: {
-          description:
-            "The number of historical context to retrieve. This is the third parameter.",
-          type: "number",
-          required: false,
-          default: 10,
-        },
-      }}
+      code={`const result = await brain.retrieveContext({
+  text: "Who's the CEO of Apple inc.?",
+  brain_id: "example1",
+  max_facts: 40,
+  max_passages: 8,
+  use_ppr: true,
+});`}
     />
   </Tab>
   <Tab value="Python">
     <DynamicCodeBlock
       lang="py"
-      code={`result = await client.retrieve_context("Who's the CEO of Apple inc.?", "example1");`}
-    />
-    <TypeTable
-      type={{
-        text: {
-          description:
-            "The text to retrieve the context for. This is the first parameter.",
-          type: "string",
-          required: true,
-        },
-        brain_id: {
-          description:
-            "The brain identifier to retrieve the context from. This is the second parameter.",
-          type: "string",
-          required: true,
-          default: "default",
-        },
-        historical_limit: {
-          description:
-            "The number of historical context to retrieve. This is the third parameter.",
-          type: "number",
-          required: false,
-          default: 10,
-        },
-      }}
+      code={`result = await client.retrieve_context(
+    text="Who's the CEO of Apple inc.?",
+    brain_id="example1",
+    max_facts=40,
+    max_passages=8,
+    use_ppr=True,
+)`}
     />
   </Tab>
   <Tab value="cURL">
     <DynamicCodeBlock
       lang="bash"
-      code={`curl -X POST "<DEPLOYMENT_URL>/retrieve/context" -d '{"text": "Who's the CEO of Apple inc.?", "brain_id": "example1"}'`}
-    />
-    <TypeTable
-      type={{
-        text: {
-          description: "The text to retrieve the context for.",
-          type: "string",
-          required: true,
-        },
-        brain_id: {
-          description: "The brain identifier to retrieve the context from.",
-          type: "string",
-          required: true,
-          default: "default",
-        },
-        historical_limit: {
-          description: "The number of historical context to retrieve.",
-          type: "number",
-          required: false,
-          default: 10,
-        },
-      }}
+      code={`curl -X POST "<DEPLOYMENT_URL>/retrieve/context" \\
+  -H "Content-Type: application/json" \\
+  -H "BrainPAT: YOUR_BRAIN_PAT" \\
+  -d '{
+    "text": "Who'\\''s the CEO of Apple inc.?",
+    "brain_id": "example1",
+    "max_facts": 40,
+    "max_passages": 8,
+    "use_ppr": true,
+    "profile_stages": false
+  }'`}
     />
   </Tab>
 </Tabs>
 
-The return type is the following:
+## Request body
 
-<Tabs items={["Typescript", "Python", "cURL"]}>
+<TypeTable
+  type={{
+    text: {
+      description: "Query text used for retrieval and history-mode detection.",
+      type: "string",
+      required: true,
+    },
+    brain_id: {
+      description: "Brain identifier to retrieve from.",
+      type: "string",
+      required: false,
+      default: "default",
+    },
+    historical_limit: {
+      description: "How much historical context to attach.",
+      type: "number",
+      required: false,
+      default: "10",
+    },
+    max_facts: {
+      description: "Cap on curated graph facts in the response (ge 0).",
+      type: "number",
+      required: false,
+      default: "40",
+    },
+    max_passages: {
+      description: "Passage budget for vector / text evidence.",
+      type: "number",
+      required: false,
+      default: "8",
+    },
+    apply_fact_filter: {
+      description: "Apply fact filtering when an LLM adapter is available (no-op on some paths without one).",
+      type: "boolean",
+      required: false,
+      default: "true",
+    },
+    use_ppr: {
+      description: "Run Personalized PageRank over the seed neighborhood.",
+      type: "boolean",
+      required: false,
+      default: "true",
+    },
+    sufficiency_retry: {
+      description: "Optional second retrieval pass. Off by default for product latency budgets.",
+      type: "boolean",
+      required: false,
+      default: "false",
+    },
+    profile_stages: {
+      description: "When true, attach stage_timings with per-stage latency.",
+      type: "boolean",
+      required: false,
+      default: "false",
+    },
+    cross_event_bridges: {
+      description: "How many cross-hub bridge expansions to allow (ge 0).",
+      type: "number",
+      required: false,
+      default: "3",
+    },
+  }}
+/>
+
+## Response
+
+`text_context` is a single string that mixes topic labels, `[passage]` lines, and fact lines. Structured fields carry the same evidence for clients that want typed access.
+
+<Tabs items={["Typescript", "Python", "JSON"]}>
   <Tab value="Typescript">
     <DynamicCodeBlock
       lang="ts"
       code={`export interface GetContextTriple {
-    identified_entity: string;
-    triple: [EntityNode, Predicate, EventNode, Predicate, EntityNode];
+  identified_entity: string;
+  triple: [EntityNode, Predicate, EventNode, Predicate, EntityNode];
+  source_chunk_ids?: string[];
+  source_session_ids?: string[];
 }
 
 export interface GetContextResponse {
-    text_context: string;
-    triples: GetContextTriple[];
-    historical_context: string[];
+  text_context: string;
+  triples: GetContextTriple[];
+  historical_context: string[];
+  source_passages: string[];
+  graph_session_ids?: string[];
+  temporal_conflicts?: Record<string, unknown>[];
+  paths?: Record<string, unknown>[];
+  topics?: Record<string, unknown>[];
+  stage_timings?: Record<string, unknown>;
 }`}
     />
   </Tab>
   <Tab value="Python">
     <DynamicCodeBlock
       lang="py"
-      code={
-        `class GetContextTriple(BaseModel):
-        
+      code={`class GetContextTriple(BaseModel):
     identified_entity: str
     triple: Tuple[EntityNode, Predicate, EventNode, Predicate, EntityNode]
+    source_chunk_ids: Optional[List[str]] = None
+    source_session_ids: Optional[List[str]] = None
 
 class GetContextResponse(BaseModel):
-
     text_context: str
     triples: List[GetContextTriple]
-    historical_context: List[str]`}
-
-/>
-
+    historical_context: List[str] = []
+    source_passages: List[str] = []
+    graph_session_ids: Optional[List[str]] = None
+    temporal_conflicts: Optional[List[dict]] = None
+    paths: Optional[List[dict]] = None
+    topics: Optional[List[dict]] = None
+    stage_timings: Optional[dict] = None`}
+    />
   </Tab>
-  <Tab value="cURL">
+  <Tab value="JSON">
     <DynamicCodeBlock
       lang="json"
       code={`{
-    "text_context": "The CEO of Apple inc. is Tim Cook.",
-    "triples": [
-        {
-            "identified_entity": "Apple inc.",
-            "triple": ["entity1", "relation", "event", "relation", "entity2"],
-            "historical_context": ["The CEO of Apple inc. is Tim Cook.", "Apple was founded in 1976 by Steve Jobs, Steve Wozniak and Ronald Wayne."]
-        }
-    ]
+  "text_context": "…topic labels, [passage] lines, and fact lines…",
+  "triples": [
+    {
+      "identified_entity": "Apple inc.",
+      "triple": ["entity1", "relation", "event", "relation", "entity2"],
+      "source_chunk_ids": ["chunk-…"],
+      "source_session_ids": ["session-…"]
+    }
+  ],
+  "historical_context": [],
+  "source_passages": ["…"],
+  "graph_session_ids": ["session-…"],
+  "temporal_conflicts": [],
+  "paths": [],
+  "topics": [],
+  "stage_timings": null
 }`}
     />
   </Tab>
 </Tabs>
 
-The response will be composed by a unified `text_content` string of all the textual information relevant to the input text,
-and a list of **event-centric** relationships rapresenting the information in the brain relevant to the identified noun or entity in the input text.
+### Response field reference
 
-The response will also contain a list of `historical_context` strings, which are the latest informations that were added to the brain.
+<TypeTable
+  type={{
+    text_context: {
+      description: "Unified text pack (topics + passages + facts) for prompt injection.",
+      type: "string",
+      required: true,
+    },
+    triples: {
+      description: "Event-centric graph facts with optional provenance ids.",
+      type: "GetContextTriple[]",
+      required: true,
+    },
+    historical_context: {
+      description: "Recent historical context strings.",
+      type: "string[]",
+      required: false,
+      default: "[]",
+    },
+    source_passages: {
+      description: "Passage evidence selected for the query.",
+      type: "string[]",
+      required: false,
+      default: "[]",
+    },
+    graph_session_ids: {
+      description: "Session ids that contributed graph evidence.",
+      type: "string[]",
+      required: false,
+    },
+    temporal_conflicts: {
+      description: "Detected conflicting temporal claims, when any.",
+      type: "object[]",
+      required: false,
+    },
+    paths: {
+      description: "Multi-hop path records across event hubs.",
+      type: "object[]",
+      required: false,
+    },
+    topics: {
+      description: "Topic hyperedge summaries related to the query.",
+      type: "object[]",
+      required: false,
+    },
+    stage_timings: {
+      description: "Per-stage latency when profile_stages is true (or server profiler is on).",
+      type: "object",
+      required: false,
+    },
+  }}
+/>
+
+Per-triple provenance:
+
+- `source_chunk_ids` — chunk ids that grounded the fact
+- `source_session_ids` — session ids tied to that triple
+
+## History-aware retrieve
+
+There is **no** request flag for history mode. Query phrasing decides whether superseded / invalidated edges are included.
+
+- Phrases that sound like **timeline, contradiction, or prior state** (e.g. "previously", "originally", "contradict", "walk me through the order") turn **history mode on**.
+- Phrases that ask for **current truth** (e.g. "now", "currently", "latest", "after the update") keep history mode **off**, even if a history-looking word also appears.
+
+Examples:
+
+| Query | Typical mode |
+| --- | --- |
+| "What is Alice's current title?" | Current truth |
+| "What did Alice previously work on before the promotion?" | History |
+| "Walk me through the order of the deadline changes" | History |
+| "What is the latest average response time?" | Current truth |
+
+## Event GraphRAG surfaces
+
+Context retrieval expands beyond a single hop:
+
+- **Topics** — soft groupings over related events (`topics` in the response).
+- **Paths** — multi-hop walks across event hubs (`paths`).
+- **Cross-event bridges** — controlled by `cross_event_bridges` (default `3`). Higher values can surface more multi-hop links at some latency cost.
+- **Provenance** — chunk and session ids on triples plus `graph_session_ids` / `source_passages` so you can cite sources.
+
+Tune `max_facts`, `max_passages`, and `use_ppr` for product latency; leave `sufficiency_retry` false unless you accept a second pass.
+
+## Stage profiler
+
+Set `profile_stages: true` on the request to receive `stage_timings`. Operators can also enable the server-side profiler with `TRACE_STAGE_PROFILER_ENABLED` (not in `.env.example` by default). See [Installation](/v2/installation#pipeline-and-ingest-tuning).
+
+## Related
+
+- [Structured ingestion](/v2/ingestion/structured-data)
+- [Entity synergies](/v2/retrieval/entities/synergies)
+- [Benchmarks](/v2/benchmarks)

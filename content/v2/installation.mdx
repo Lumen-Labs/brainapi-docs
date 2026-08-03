@@ -134,3 +134,95 @@ curl -f http://localhost:9000/minio/health/live
 ```
 
 If all checks pass, BrainAPI API, worker, and MCP services are running with Redis, MongoDB, Neo4j, and Milvus.
+
+## LLM providers
+
+BrainAPI selects chat and embedding adapters via `LLM_SMALL_PROVIDER`, `LLM_LARGE_PROVIDER`, and `EMBEDDINGS_PROVIDER` (see `.env.example`).
+
+### DeepSeek (chat only)
+
+DeepSeek is an OpenAI-compatible chat provider. It does **not** serve embeddings — keep `EMBEDDINGS_PROVIDER` on `openai`, `azure`, `gcp_vertex`, or another embedding-capable adapter.
+
+```bash
+LLM_SMALL_PROVIDER="deepseek"
+LLM_LARGE_PROVIDER="deepseek"
+DEEPSEEK_API_KEY="sk-..."
+DEEPSEEK_SMALL_LLM_MODEL="deepseek-v4-flash"
+DEEPSEEK_LARGE_LLM_MODEL="deepseek-v4-pro"
+# Embeddings stay elsewhere, for example:
+# EMBEDDINGS_PROVIDER="openai"
+```
+
+The [TUI setup wizard](/v2/tui) can also select DeepSeek as a remote chat provider when configuring models.
+
+## Pipeline and ingest tuning
+
+Defaults below match `.env.example`. Accurate pipeline mode no longer implies Observations or graph consolidation are always on.
+
+<TypeTable
+  type={{
+    PIPELINE_MODE: {
+      description: "Ingestion strength: accurate (full agents) or lightweight.",
+      type: "string",
+      required: false,
+      default: "accurate",
+    },
+    RUN_OBSERVATIONS: {
+      description: "When true, ObservationsAgent writes LLM notes (does not mutate the graph).",
+      type: "boolean",
+      required: false,
+      default: "false",
+    },
+    RUN_GRAPH_CONSOLIDATOR: {
+      description: "When true, consolidates the graph after ingest (LLM mutations). Keep false until audited.",
+      type: "boolean",
+      required: false,
+      default: "false",
+    },
+    INGEST_ARCHITECT_MODE: {
+      description: "Architect extract path: batch (default), schema, or tooler.",
+      type: "string",
+      required: false,
+      default: "batch",
+    },
+    INGEST_DEFER_JANITOR: {
+      description: "Batched post-Architect Janitor when true; per-create Janitor when false.",
+      type: "boolean",
+      required: false,
+      default: "true",
+    },
+    INGEST_JANITOR_MAX_LLM_CALLS: {
+      description: "Hard cap on Janitor LLM batches per session; remainder dropped with audit.",
+      type: "number",
+      required: false,
+      default: "2",
+    },
+    JANITOR_BATCH_SIZE: {
+      description: "Relationships per Janitor LLM call when batching.",
+      type: "number",
+      required: false,
+      default: "20",
+    },
+  }}
+/>
+
+### Advanced Architect knobs
+
+These are optional cost/latency controls (documented in `.env.example`):
+
+- `INGEST_ARCHITECT_PER_UNIT` (default `true`) — Architect sees Scout chunks plus a prior window
+- `INGEST_ARCHITECT_MAX_SCHEMA_CALLS` (default `3`)
+- `INGEST_ARCHITECT_ESCALATE` / `INGEST_ARCHITECT_ESCALATE_MAX_TURNS`
+- `INGEST_ARCHITECT_DENSE_ENTITY_THRESHOLD` / `INGEST_ARCHITECT_DENSE_MAX_CHARS`
+- `INGEST_ARCHITECT_PRIOR_CONTEXT` (`auto` | `scratchpad` | `raw`)
+- `INGEST_ARCHITECT_SCRATCHPAD_TOKEN_CAP`
+
+### Stage latency profiler
+
+For `/retrieve/context`, set `profile_stages: true` on the request to receive `stage_timings` (see [Context](/v2/retrieval/context#stage-profiler)). Operators can also set `TRACE_STAGE_PROFILER_ENABLED` on the server (not shipped in `.env.example`).
+
+## Next steps
+
+- [Structured ingestion](/v2/ingestion/structured-data)
+- [Retrieve context](/v2/retrieval/context)
+- [Run benchmarks](/v2/benchmarks)

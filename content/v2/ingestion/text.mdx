@@ -6,6 +6,8 @@ description: How to save text to the memory store
 Ingesting text is the simplest way to save information into a memory store. Storing simple text is useful in most of the cases,
 such as powering memory for chatbots and ai assistants, but also to power a RAG pipeline for a set of documents.
 
+`POST /ingest/` returns **202 Accepted** with `{ "message": "Ingestion accepted", "task_id": "…" }`. Poll progress with [ingestion tasks](/v2/ingestion/tasks). Optionally send a `Task-Identifier` header to pin the Celery task id.
+
 ## Usage
 
 The text ingestion API is available via the REST API, Python SDK, and TypeScript SDK.
@@ -37,10 +39,10 @@ const result = await brain.ingestText({
     />
   </Tab>
   <Tab value="cURL">
-    Call the POST endpoint with the payload to ingest plain text.
+    Call the POST endpoint with the payload to ingest plain text. Expect HTTP 202 and a `task_id`.
     <DynamicCodeBlock
       lang="bash"
-      code={`curl -X POST "<DEPLOYMENT_URL>/ingest" \\
+      code={`curl -X POST "<DEPLOYMENT_URL>/ingest/" \\
       -H "Content-Type: application/json" \\
       -H "X-Brain-ID: mybrain123" \\
       -H "BrainPAT: YOUR_BRAIN_PAT" \\
@@ -53,10 +55,16 @@ const result = await brain.ingestText({
         "identification_params": {"source": "crm"},
         "observate_for": ["people", "companies", "dates"],
         "preferred_extraction_entities": ["Person", "Company"]
-      }'`}
+      }'
+# → {"message":"Ingestion accepted","task_id":"…"}`}
     />
   </Tab>
 </Tabs>
+
+<Callout type="info">
+  After 202, poll `GET /tasks/` with the returned task id until the job finishes.
+  A missing task returns **404** (not soft pending). See [Ingestion tasks](/v2/ingestion/tasks).
+</Callout>
 
 ## Parameters information
 

@@ -1,0 +1,94 @@
+---
+title: Ingestion tasks
+description: Poll async ingest jobs and handle 202 / 404 correctly
+---
+
+Text, file, and structured ingest endpoints accept work asynchronously. They return **202 Accepted** with a `task_id`. Use the tasks API to wait until the graph write finishes.
+
+## How to poll a task
+
+1. Submit an ingest request and read `task_id` from the 202 body.
+2. Poll `GET /tasks/{task_id}` until `status` is a terminal value (for example `completed` or `failed`).
+3. Treat **404** as "task unknown" — not "still pending".
+
+```bash
+# 1) Ingest
+RESP=$(curl -s -X POST "<DEPLOYMENT_URL>/ingest/" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -H "X-Brain-ID: example01" \
+  -d '{
+    "data": { "data_type": "text", "text_data": "Alice met Bob at Acme in 2024." },
+    "brain_id": "example01"
+  }')
+echo "$RESP"
+TASK_ID=$(echo "$RESP" | jq -r .task_id)
+
+# 2) Poll
+curl -s "<DEPLOYMENT_URL>/tasks/$TASK_ID" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -H "X-Brain-ID: example01"
+```
+
+### Optional stable task id (text ingest)
+
+For `POST /ingest/`, you may send a `Task-Identifier` header. The server reuses that value as the Celery `task_id` so your client can correlate retries.
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/ingest/" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -H "X-Brain-ID: example01" \
+  -H "Task-Identifier: my-stable-job-001" \
+  -d '{
+    "data": { "data_type": "text", "text_data": "Alice met Bob at Acme in 2024." },
+    "brain_id": "example01"
+  }'
+```
+
+Structured and file ingest always mint a new UUID `task_id` in the 202 body.
+
+## Endpoints that return 202
+
+| Endpoint | Message | Notes |
+| --- | --- | --- |
+| `POST /ingest/` | `Ingestion accepted` | Honors `Task-Identifier` |
+| `POST /ingest/structured` | `Structured ingestion accepted` | New UUID each call |
+| `POST /ingest/file` | `File ingestion accepted` | New UUID each call |
+
+Queue unavailable → **503** `Task queue unavailable`.
+
+## Task status API
+
+### `GET /tasks/{task_id}`
+
+Returns the cached task payload plus `task_id` and `status`.
+
+| HTTP | Meaning |
+| --- | --- |
+| **200** | Task record found |
+| **404** | `Task not found` — id never queued, expired from cache, or wrong brain |
+
+<Callout type="warn">
+  Older clients that treated a missing task as soft `pending` will break.
+  On 404, stop polling and decide whether to re-submit.
+</Callout>
+
+### `GET /tasks/`
+
+Lists known tasks for the brain (from the task key index). Useful for the console and ops dashboards.
+
+## Troubleshooting
+
+| Symptom | Fix |
+| --- | --- |
+| Immediate 404 after 202 | Wrong `X-Brain-ID` / brain header vs the brain used at ingest |
+| Stuck on `queued` | Worker not running or Redis/Celery down |
+| 503 on ingest | Broker unavailable — retry with backoff |
+| File ingest 202 but no progress | Check OCR mode (`docling` vs `docparser`) and worker logs |
+
+## Related
+
+- [Saving text](/v2/ingestion/text)
+- [Saving files](/v2/ingestion/files)
+- [Structured data](/v2/ingestion/structured-data)

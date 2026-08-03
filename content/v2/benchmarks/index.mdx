@@ -1,0 +1,61 @@
+---
+title: Benchmarks
+description: HTTP-only harnesses for LoCoMo, LongMemEval, and BEAM
+icon: FlaskConical
+---
+
+BrainAPI ships standalone benchmark harnesses under `benchmarks/` in the [brainapi2](https://github.com/Lumen-Labs/brainapi2) repo. They talk to a **running** API over HTTP only — no imports from `src/`.
+
+| Suite | Wrapper | Ledger key |
+| --- | --- | --- |
+| [LoCoMo](/v2/benchmarks/locomo) | `./locomo.sh` | `benchmarks.locomo` |
+| [LongMemEval](/v2/benchmarks/longmemeval) | `./longmemeval.sh` | `benchmarks.longmemeval` |
+| [BEAM](/v2/benchmarks/beam) | `./beam.sh` | `benchmarks.beam` |
+
+Published scores live in [`REPORTS.json`](/v2/benchmarks/reports-ledger).
+
+## Prerequisites
+
+1. BrainAPI running locally (`brainapi start`, `make start-all`, or Docker Compose). See [Installation](/v2/installation) and [TUI](/v2/tui).
+2. `BRAIN_CREATION_ALLOWED="true"` so harness brains can be auto-created.
+3. `BRAINPAT_TOKEN` matching the server.
+4. An answerer/judge LLM key (defaults use [DeepSeek](/v2/installation#deepseek-chat-only)).
+
+Shared setup:
+
+```bash
+cd benchmarks
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+# edit .env: BRAINPAT_TOKEN, DEEPSEEK_API_KEY (or OpenAI-compatible keys)
+```
+
+Prefer the shell wrappers (`./locomo.sh`, …) or `.venv/bin/python -m …` if your shell aliases `python`.
+
+## Mental model
+
+```text
+download → smoke → ingest → evaluate → report
+                ↓
+         runs/<run_id>/
+                ↓
+         REPORTS.json (on successful scored report)
+```
+
+Harnesses call `POST /ingest/` and `POST /retrieve/context` — the same product surfaces documented under [Ingestion](/v2/ingestion/text) and [Context](/v2/retrieval/context).
+
+## Tracks (LoCoMo)
+
+| Track | `BENCH_PROFILE` | Intent |
+| --- | --- | --- |
+| **Product** | `product` (default) | Sub-second `/retrieve/context` path — greedy, no online LLM loops in the product path |
+| **SOTA** | `sota` | Maximize judge accuracy (e.g. HyperMem-class LoCoMo). Self-consistency / gap-fill live in the **harness**, not the product latency path |
+
+## Next
+
+- [LoCoMo tutorial](/v2/benchmarks/locomo)
+- [LongMemEval](/v2/benchmarks/longmemeval)
+- [BEAM](/v2/benchmarks/beam)
+- [Results ledger](/v2/benchmarks/reports-ledger)

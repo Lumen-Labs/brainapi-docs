@@ -18,10 +18,10 @@ Build once, ingest continuously, query with APIs or natural language.
 ## Mental Model (How it works)
 
 1. Receives ingested data from files, text, APIs, or event streams.
-2. Annotates the ingested data with observations.
+2. Annotates the ingested data with observations when `RUN_OBSERVATIONS` is enabled (off by default).
 3. Processes the input to extract entities, events, facts, and links.
 4. Store results as a connected graph.
-5. Query the graph through API, SDK, MCP, or natural language.
+5. Query the graph through API, SDK, MCP, or natural language — including hybrid [context retrieve](/v2/retrieval/context).
 
 ![Dash Example 2](/images/dash-example-2.png)
 
@@ -60,7 +60,7 @@ docker compose -f example-docker-compose.yaml up -d
 ### 2) Ingest data
 
 ```bash
-curl -X POST "http://localhost:8000/ingest" \
+curl -X POST "http://localhost:8000/ingest/" \
   -H "Content-Type: application/json" \
   -H "BrainPAT: $BRAINPAT_TOKEN" \
   -d '{
@@ -70,6 +70,8 @@ curl -X POST "http://localhost:8000/ingest" \
       "text_data": "Alice leads the backend team at Acme. Acme launched Project Atlas in 2025."
     }
   }'
+# → 202 {"message":"Ingestion accepted","task_id":"…"}
+# Poll: GET /tasks/<task_id>  (see /v2/ingestion/tasks)
 ```
 
 ### 3) Query results
@@ -163,7 +165,9 @@ This lets teams keep a stable core while extending behavior per product domain.
 
 ## Next Steps
 
-- [Quickstart](/v2/installation)
-- [API Reference](/v2/api)
+- [Installation](/v2/installation)
+- [Structured ingestion](/v2/ingestion/structured-data)
+- [Retrieve context](/v2/retrieval/context)
+- [Benchmarks](/v2/benchmarks)
 - [Plugin Development](/v2/plugins)
 - [Architecture Deep Dive](/v2/core-philosophy)

@@ -100,7 +100,8 @@ Both `init` and `config` walk you through:
 
 - Defaults vs custom stack (e.g. NetworkX + Postgres + pgvector + remote GCP Vertex).
 - Vector DB, data DB, graph DB, and models mode (local Ollama vs remote providers).
-- Pipeline (OCR, accurate vs lightweight ingestion).
+- Remote chat providers include OpenAI-compatible options such as **DeepSeek** (chat only — embeddings stay on another provider). See [Installation → DeepSeek](/v2/installation#deepseek-chat-only).
+- Pipeline (OCR, accurate vs lightweight ingestion via `PIPELINE_MODE`). Observations and graph consolidation default **off** unless you enable them in `.env`.
 - Connection details for only the services you picked.
 - Services runtime: Docker Compose vs manual (you run services yourself).
 - `BRAINPAT_TOKEN` (generate or paste).

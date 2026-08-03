@@ -73,6 +73,12 @@ Login stores a session (API base URL + BrainPAT) in local storage:
 | Ingest | `POST /ingest/` with raw text; optional create brain via `POST /system/brains` when using a system PAT. |
 
 <Callout type="info">
+  Console text ingest posts to `POST /ingest/` (async 202). For event-centric
+  structured triples, use the REST [structured ingestion](/v2/ingestion/structured-data)
+  API. Task polling uses `GET /tasks/` — missing ids return **404**.
+</Callout>
+
+<Callout type="info">
   The console is an operator and debug UI for graph, chunks, vectors, observations, tasks, and quick ingest.
   For conversational interfaces, see the [Chatbot](/v2/chatbot) plugin.
 </Callout>

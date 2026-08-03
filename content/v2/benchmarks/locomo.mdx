@@ -1,0 +1,82 @@
+---
+title: LoCoMo
+description: Run the LoCoMo conversational memory benchmark against BrainAPI
+---
+
+You will download LoCoMo, ingest one conversation into BrainAPI, answer annotated QA with `/retrieve/context`, and produce a scored report.
+
+Upstream dataset: [snap-research/LoCoMo](https://github.com/snap-research/LoCoMo).
+
+## What you'll need
+
+- Running BrainAPI + harness setup from [Benchmarks](/v2/benchmarks)
+- Brain IDs must be alphanumeric (`conv-26` → `locomoconv26`)
+
+## Step 1: Download the dataset
+
+```bash
+cd benchmarks
+./locomo.sh download
+./locomo.sh dataset-stats
+```
+
+## Step 2: Smoke-test the API
+
+```bash
+./locomo.sh smoke --brain locomosmoke
+```
+
+You should see a successful ingest + retrieve round-trip.
+
+## Step 3: Ingest and evaluate one conversation
+
+```bash
+./locomo.sh ingest --sample conv-26 --run locomo-conv26
+./locomo.sh evaluate --sample conv-26 --run locomo-conv26 --limit 20
+./locomo.sh evaluate --sample conv-26 --run locomo-conv26
+./locomo.sh report --run locomo-conv26
+```
+
+Artifacts land in `runs/<run_id>/`: `ingest.jsonl`, `answers.jsonl`, `manifest.json`, `report.md` / `report.json`.
+
+## What you built
+
+A reproducible LoCoMo arm you can compare with `./locomo.sh compare`, and (on successful report) an upsert into [`REPORTS.json`](/v2/benchmarks/reports-ledger).
+
+Illustrative published score (ledger): **95.39%** judge accuracy on `conv-26` SOTA track — run `locomo-compose-sota-conv26-v4d`.
+
+## Tracks
+
+| Track | Profile | Notes |
+| --- | --- | --- |
+| Product | `BENCH_PROFILE=product` | Default; measures the product retrieve path |
+| SOTA | `BENCH_PROFILE=sota` | Prefer deepseek-v4-flash answerer/judge; harness-side SC / gap-fill |
+
+## Commands reference
+
+| Command | Purpose |
+| --- | --- |
+| `download` | Fetch `data/locomo10.json` |
+| `dataset-stats` | Sessions / turns / QA per sample |
+| `smoke` | One-shot ingest + retrieve health check |
+| `ingest` | Push sessions (or turns) into BrainAPI |
+| `evaluate` | Retrieve → answer → judge |
+| `report` | Aggregate `answers.jsonl` |
+| `compare` | Paired McNemar between run arms |
+| `prompt-audit` | Fail if answer prompt n-grams overlap gold |
+
+Useful flags: `--sample conv-26`, `--granularity session|turn`, `--concurrency 2`, `--limit`, `--include-adversarial`, `--run <id>`, evaluate knobs aligned with [context API](/v2/retrieval/context) (`--max-facts`, `--max-passages`, `--use-ppr`, …).
+
+## Scoring
+
+- **Headline**: LLM-judge accuracy excluding category 5 (adversarial)
+- Also: per-category breakdown, F1, BLEU-1, retrieval latency, tokens
+- Categories: `1` multi-hop, `2` temporal, `3` open-domain, `4` single-hop, `5` adversarial
+
+Judge accuracy is noisy across identical-config runs. Use `compare` for paired tests; do not A/B graph evidence-session recall until identical-config session-set agreement clears **≥95%**.
+
+## Related
+
+- [Benchmarks overview](/v2/benchmarks)
+- [Results ledger](/v2/benchmarks/reports-ledger)
+- [Context retrieve](/v2/retrieval/context)

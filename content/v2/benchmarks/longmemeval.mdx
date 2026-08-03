@@ -1,0 +1,69 @@
+---
+title: LongMemEval
+description: Run LongMemEval (ICLR 2025) against BrainAPI
+---
+
+[LongMemEval](https://github.com/xiaowu0162/LongMemEval) stress-tests long-term conversational memory. The BrainAPI harness lives in `benchmarks/longmemeval/` and follows the same HTTP-only contract as LoCoMo.
+
+## Prerequisites
+
+Same as [Benchmarks](/v2/benchmarks). One **brain per `question_id`** (`lme{alnum}`, e.g. `e47b4ab3aa_abs` → `lmee47b4ab3aaabs`).
+
+## Corpus variants
+
+| Variant | Role |
+| --- | --- |
+| `s` (default) | LongMemEval_S (~40 sessions / ~115k tokens) — primary claim corpus |
+| `oracle` | Evidence sessions only — retrieval ablation upper bound |
+| `m` | ~500 sessions; available, not first-run scope |
+
+Source: Hugging Face [`xiaowu0162/longmemeval-cleaned`](https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned).
+
+Question types include single-session user/assistant/preference, temporal reasoning, knowledge update, multi-session, plus abstention (`question_id` ends with `_abs`).
+
+## How to run
+
+```bash
+cd benchmarks
+./longmemeval.sh download --variant s
+./longmemeval.sh dataset-stats --variant s
+./longmemeval.sh smoke --limit 1
+./longmemeval.sh ingest --run lme-s-smoke --limit 3
+./longmemeval.sh evaluate --run lme-s-smoke --limit 3
+./longmemeval.sh report --run lme-s-smoke
+```
+
+### Ingest rules
+
+- Ingest haystack sessions only (timestamps + session ids).
+- **Never** ingest answers or `has_answer` labels.
+
+### Evaluate knobs
+
+Aligned with [context retrieve](/v2/retrieval/context): `--historical-limit`, `--max-passages`, `--max-facts`, `--use-ppr`, `--sufficiency-retry`, `--no-fact-filter`.
+
+## Scoring
+
+- **Headline**: official LongMemEval LLM yes/no judge accuracy over **all** questions (including abstention), with per-type breakdown
+- Secondary: session recall vs `answer_session_ids` (skip abstention)
+- Answerer/judge follow `BENCH_*` / `BENCH_PROFILE` (same env pattern as LoCoMo)
+
+Always record answer model, judge model, variant, and profile in claims. Successful scored runs with enough questions upsert `benchmarks.longmemeval` in [`REPORTS.json`](/v2/benchmarks/reports-ledger).
+
+## Commands
+
+| Command | Purpose |
+| --- | --- |
+| `download` | Fetch variant dataset |
+| `dataset-stats` | Question / session stats |
+| `smoke` | Health check |
+| `ingest` | Push sessions for selected questions |
+| `evaluate` | Answer + judge |
+| `report` | Aggregate metrics |
+| `prompt-audit` | Prompt/gold overlap check |
+
+## Related
+
+- [Benchmarks overview](/v2/benchmarks)
+- [LoCoMo](/v2/benchmarks/locomo)
+- [Results ledger](/v2/benchmarks/reports-ledger)

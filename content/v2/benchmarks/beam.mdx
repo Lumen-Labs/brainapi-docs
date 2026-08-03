@@ -1,0 +1,63 @@
+---
+title: BEAM
+description: Run the BEAM long-context memory benchmark against BrainAPI
+---
+
+[BEAM](https://github.com/mohammadtavakoli78/BEAM) (ICLR 2026) evaluates long-term memory over large chat histories. BrainAPI uses `POST /ingest/` + `POST /retrieve/context` — not a LIGHT/RAG port.
+
+Dataset: Hugging Face [`Mohammadta/BEAM`](https://huggingface.co/datasets/Mohammadta/BEAM) (CC BY-SA 4.0). Splits: `100K`, `500K`, `1M` (paper “128K” ≡ HF `100K`). BEAM-10M is deferred.
+
+## Prerequisites
+
+Same as [Benchmarks](/v2/benchmarks). Brain IDs: `beam{size}{convid}` → e.g. `beam100k1`.
+
+## How to run
+
+```bash
+cd benchmarks
+./beam.sh download --size 100K
+./beam.sh smoke --size 100K --sample 1
+./beam.sh ingest --size 100K --sample 1 --run beam-100k-1
+./beam.sh evaluate --size 100K --sample 1 --run beam-100k-1
+./beam.sh report --run beam-100k-1
+```
+
+### Ingest rules
+
+- Ingest **turns only** (user + assistant messages), with `time_anchor` as `source_timestamp` when present.
+- **Never** ingest probing questions, rubrics, or ideal answers.
+
+### Parallel ingest
+
+| Knob | Recommendation |
+| --- | --- |
+| `--concurrency` | **2** default safe; ≤4 soft max |
+| Resume | On by default; skips completed / permanent embed failures |
+| Worker | `CELERY_WORKER_CONCURRENCY` ≥ harness concurrency |
+
+Prefer a **new brain id** for full re-ingests. Do not wipe brains mid-eval. Large 1M runs can take many hours even at concurrency 2.
+
+## Scoring
+
+- Rubric LLM-judge (`judge_prompt_variant: beam-rubric-v1-question-aware`)
+- **Headline**: mean of 10 ability means (continuous `[0,1]`); `event_ordering` uses `tau_norm`
+- Successful reports upsert `benchmarks.beam` in [`REPORTS.json`](/v2/benchmarks/reports-ledger)
+
+Illustrative published score (ledger): **0.790** headline on `1M/1` product track — run `beam-1m-1-product-v3c-compose`.
+
+## Commands
+
+| Command | Purpose |
+| --- | --- |
+| `download` | Fetch HF split locally under `data/beam/` |
+| `dataset-stats` | Corpus stats for a size |
+| `smoke` | Small turn ingest + retrieve |
+| `ingest` | Push turns (`--size` required) |
+| `evaluate` | Answer + rubric judge |
+| `report` | Aggregate metrics |
+
+## Related
+
+- [Benchmarks overview](/v2/benchmarks)
+- [Results ledger](/v2/benchmarks/reports-ledger)
+- [Context retrieve](/v2/retrieval/context)

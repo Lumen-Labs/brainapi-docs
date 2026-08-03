@@ -6,6 +6,8 @@ description: How to save files to the memory store
 Ingesting files is useful when you have information stored in documents and you don't want to implement a pipeline yourself to extract textual information from them.
 You just need to send the files to the ingestion API and the system will take care of going through a complete OCR process to extract the textual information from the files.
 
+`POST /ingest/file` returns **202 Accepted** with `{ "message": "File ingestion accepted", "task_id": "…" }`. Poll with [ingestion tasks](/v2/ingestion/tasks).
+
 <Callout type="info">
   The accepted file types are: PDF (.pdf), DOC (.doc), DOCX (.docx), XLS (.xls),
   XLSX (.xlsx), TXT (.txt), CSV (.csv), JSON (.json), JPG (.jpg), and PNG
@@ -40,14 +42,19 @@ const result = await brain.ingestFile({
     />
   </Tab>
   <Tab value="cURL">
-    Call the POST endpoint with the payload to ingest plain text.
+    Upload a multipart file to `POST /ingest/file`. Expect HTTP 202 and a `task_id`.
     <DynamicCodeBlock
       lang="bash"
-      code={`curl -X POST "<DEPLOYMENT_URL>/ingest" \\
-      -H "Content-Type: application/json" \\
+      code={`curl -X POST "<DEPLOYMENT_URL>/ingest/file" \\
       -H "X-Brain-ID: mybrain123" \\
       -H "BrainPAT: YOUR_BRAIN_PAT" \\
-      -F "file=@/absolute/path/to/your-file.pdf"`}
+      -F "file=@/absolute/path/to/your-file.pdf"
+# → {"message":"File ingestion accepted","task_id":"…"}`}
     />
   </Tab>
 </Tabs>
+
+<Callout type="info">
+  After 202, poll `GET /tasks/` with the returned task id until the job finishes.
+  A missing task returns **404**. See [Ingestion tasks](/v2/ingestion/tasks).
+</Callout>
