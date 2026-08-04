@@ -5,6 +5,13 @@ description: Poll async ingest jobs and handle 202 / 404 correctly
 
 Text, file, and structured ingest endpoints accept work asynchronously. They return **202 Accepted** with a `task_id`. Use the tasks API to wait until the graph write finishes.
 
+<AgentNote>
+- After ingest: read `task_id` from **202** body
+- Poll `GET /tasks/{task_id}` with `BrainPAT` (+ brain headers) until terminal `status` (`completed` / `failed`)
+- **404** = task unknown — do not treat as "still running"
+- Optional on text ingest: `Task-Identifier` header to pin Celery id
+</AgentNote>
+
 ## How to poll a task
 
 1. Submit an ingest request and read `task_id` from the 202 body.

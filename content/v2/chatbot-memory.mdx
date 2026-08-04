@@ -6,6 +6,13 @@ icon: Brain
 
 The **chatbot-memory** plugin stores multiple isolated chatbot conversations inside one brain. Messages are text chunks tagged by `conversation_id`; rolling summaries and per-user preferences live as structured data. The [chatbot](/v2/chatbot) plugin uses these hooks automatically when both are installed.
 
+<AgentNote>
+- Install: `./bin/brainapi install chatbot-memory`; restart API **and** Celery worker with `chatbot_memory` queue
+- Routes under `/conversations`; auth same as BrainAPI (`BrainPAT` + brain)
+- Folder / install id: `chatbot-memory` (manifest name `chatbot-memory-single-brain`)
+- Chatbot auto-wires save/get hooks when this plugin is present
+</AgentNote>
+
 - Package dir: `plugins/chatbot-memory`
 - Manifest name: `chatbot-memory-single-brain` (folder / install id: `chatbot-memory`)
 - Requires BrainAPI `>=2.13.0`

@@ -4,6 +4,12 @@ description: Get started with BrainAPI V2
 icon: BookOpen
 ---
 
+<AgentNote>
+- Prefer V2 docs; machine index: [llms.txt](https://brainapi.lumen-labs.ai/docs/llms.txt) · Docs MCP: `https://brainapi.lumen-labs.ai/docs/mcp`
+- Markdown for any page: append `.md` to the URL (e.g. `/docs/v2/installation.md`)
+- Ingest returns **202** + `task_id` — poll `GET /tasks/{id}`; **404** ≠ pending
+</AgentNote>
+
 ## BrainAPI
 
 BrainAPI turns raw documents, plain text and events into a queryable knowledge graph you can use to power memory, recommendations, and retrieval without building the full data pipeline yourself.

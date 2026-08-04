@@ -8,6 +8,12 @@ You just need to send the files to the ingestion API and the system will take ca
 
 `POST /ingest/file` returns **202 Accepted** with `{ "message": "File ingestion accepted", "task_id": "…" }`. Poll with [ingestion tasks](/v2/ingestion/tasks).
 
+<AgentNote>
+- `POST /ingest/file` as multipart form (`file` + brain fields), auth with `BrainPAT`
+- One file per request; accepted: pdf, doc/docx, xls/xlsx, txt, csv, json, jpg, png
+- **202** + `task_id` → poll `GET /tasks/{id}`; **404** ≠ pending
+</AgentNote>
+
 <Callout type="info">
   The accepted file types are: PDF (.pdf), DOC (.doc), DOCX (.docx), XLS (.xls),
   XLSX (.xlsx), TXT (.txt), CSV (.csv), JSON (.json), JPG (.jpg), and PNG

@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "transport": "http",
+  "url": "https://brainapi.lumen-labs.ai/docs/mcp",
+  "servers": [
+    {
+      "name": "brainapi-docs",
+      "url": "https://brainapi.lumen-labs.ai/docs/mcp",
+      "transport": "http",
+      "description": "Search and fetch BrainAPI public documentation for coding agents"
+    }
+  ]
+}

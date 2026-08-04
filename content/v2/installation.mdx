@@ -4,6 +4,13 @@ description: Install BrainAPI v2 for development or production
 icon: Package
 ---
 
+<AgentNote>
+- Clone `Lumen-Labs/brainapi2`, copy `.env.example` → `.env`, fill keys before start
+- Dev: `./bin/brainapi <command>` · Prod: `docker compose -f example-docker-compose.yaml up -d`
+- API default `:8000`; product MCP often `:8001`; docs MCP is separate at `/docs/mcp`
+- After plugin install, restart API (and worker/MCP when those surfaces change)
+</AgentNote>
+
 BrainAPI v2 supports two common installation flows: local development and Docker-based production deployment.
 
 <Tabs items={["Development", "Production (Docker Compose)"]}>

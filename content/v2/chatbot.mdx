@@ -6,6 +6,13 @@ icon: MessageSquare
 
 The **chatbot** plugin adds a ready-made chat inference API on top of BrainAPI. It talks to your configured LLM providers, can call MCP tools for the current brain, and optionally persists turns when [chatbot-memory](/v2/chatbot-memory) is installed.
 
+<AgentNote>
+- Install: `./bin/brainapi install chatbot` then restart API (and MCP if using tools)
+- `POST /chatbot/inference` with `BrainPAT` + brain scope; requires BrainAPI `>=2.13.0`
+- Pair with [chatbot-memory](/v2/chatbot-memory) for conversation persistence
+- Product MCP ≠ docs MCP — docs tools live at `/docs/mcp`
+</AgentNote>
+
 - Package dir: `plugins/chatbot`
 - Manifest: `name: chatbot`, `version: 1.0.0`, requires BrainAPI `>=2.13.0`
 - Route prefix: `/chatbot`

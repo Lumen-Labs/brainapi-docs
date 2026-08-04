@@ -7,6 +7,13 @@ Structured ingestion lets you push **already-shaped facts** into the brain as ev
 
 `POST /ingest/structured` accepts a list of `IngestionTripleSet` objects, an optional **anchor** that ties the new facts into an existing node, and optional **text** for extra context. The API returns **202 Accepted** with a `task_id`. Poll status with [task polling](/v2/ingestion/tasks).
 
+<AgentNote>
+- `POST https://brainapi.lumen-labs.ai/ingest/structured` (or your deploy URL) with `BrainPAT` + brain scope (`X-Brain-ID` / `brain_id`)
+- Body: `{ "data": [IngestionTripleSet, …], "anchor"?, "text"?, "brain_id"? }` — **not** old `json_data` / element schema
+- Expect **202** + `task_id`; poll `GET /tasks/{id}`; **404** = unknown task
+- Each triple: optional `subject` + `subj_event`, required `event` + `event_obj` + `object`
+</AgentNote>
+
 <Callout type="warn">
   The previous element-based payload (`json_data`, `metadata`, `types`,
   `identification_params`, `textual_data`, `observate_for`) is removed. Send

@@ -26,6 +26,7 @@
     "benchmarks/beam",
     "benchmarks/reports-ledger",
     "---Agentic---",
-    "agentic/MCP"
+    "agentic/MCP",
+    "agentic/docs-mcp"
   ]
 }

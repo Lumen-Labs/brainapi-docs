@@ -5,6 +5,12 @@ description: Retrieve hybrid graph + passage context for a query
 
 The context API (`POST /retrieve/context`) returns a hybrid pack of curated graph facts and source passages for a natural-language query. It is the primary retrieval surface for assistants, RAG, and benchmark harnesses.
 
+<AgentNote>
+- `POST /retrieve/context` with `BrainPAT`; JSON body includes `text`, `brain_id`, optional `max_facts`, `max_passages`, `use_ppr`
+- Synchronous retrieve (not a 202 task) — use for RAG / assistant context packs
+- Prefer this over plain `/retrieve` when you need both graph facts and passages
+</AgentNote>
+
 ## Usage
 
 <Tabs items={["Typescript", "Python", "cURL"]}>

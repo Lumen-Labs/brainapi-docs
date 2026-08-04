@@ -9,6 +9,7 @@
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@next/third-parties": "^15.4.6",
     "fumadocs-core": "15.6.7",
     "fumadocs-mdx": "11.7.1",

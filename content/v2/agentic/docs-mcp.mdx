@@ -1,0 +1,67 @@
+---
+title: Docs MCP
+description: Connect coding agents to BrainAPI documentation over streamable HTTP
+---
+
+This is the **documentation** MCP — search and fetch public docs as markdown. It is separate from the [product MCP](/v2/agentic/MCP) that exposes BrainAPI graph tools on your API host (typically `:8001`).
+
+**Endpoint:** `https://brainapi.lumen-labs.ai/docs/mcp`  
+**Discovery:** `https://brainapi.lumen-labs.ai/docs/.well-known/mcp.json`  
+**Machine index:** [/docs/llms.txt](/llms.txt) · append `.md` to any docs URL for markdown
+
+## Tools
+
+| Tool | Purpose |
+|---|---|
+| `search_docs` | Full-text search (`tag`: `v1` or `v2`) |
+| `list_sections` | List pages by version (default `v2`) |
+| `get_page` | Fetch a page as markdown |
+| `get_code_example` | Extract the first (or language-matched) fenced code block |
+
+## Cursor
+
+Add to `.cursor/mcp.json` (or Cursor Settings → MCP):
+
+```json
+{
+  "mcpServers": {
+    "brainapi-docs": {
+      "url": "https://brainapi.lumen-labs.ai/docs/mcp"
+    }
+  }
+}
+```
+
+## Claude Desktop / Claude Code
+
+If your client supports streamable HTTP MCP natively, point it at the same URL. Otherwise use a stdio→HTTP adapter:
+
+```json
+{
+  "mcpServers": {
+    "brainapi-docs": {
+      "command": "npx",
+      "args": ["-y", "@pyroprompts/mcp-stdio-to-streamable-http-adapter"],
+      "env": {
+        "URI": "https://brainapi.lumen-labs.ai/docs/mcp",
+        "MCP_NAME": "brainapi-docs"
+      }
+    }
+  }
+}
+```
+
+No `BrainPAT` is required — this server only serves public documentation.
+
+## Agent workflow
+
+1. Prefer **V2** (`search_docs` with `tag: "v2"`, or start from [/docs/llms/v2.txt](/llms/v2.txt)).
+2. `get_page` with a path like `/v2/ingestion/tasks`.
+3. For API calls: expect ingest **202** + `task_id`; poll `GET /tasks/{id}`; **404** means unknown task, not pending.
+4. Optional skill summary: [/docs/skill.md](/skill.md)
+
+## Related
+
+- [Product MCP](/v2/agentic/MCP) — tools against a live BrainAPI instance
+- [llms.txt](/llms.txt) — short TOC for agents
+- [Ingestion tasks](/v2/ingestion/tasks) — async poll contract

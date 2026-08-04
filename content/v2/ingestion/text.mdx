@@ -8,6 +8,13 @@ such as powering memory for chatbots and ai assistants, but also to power a RAG 
 
 `POST /ingest/` returns **202 Accepted** with `{ "message": "Ingestion accepted", "task_id": "…" }`. Poll progress with [ingestion tasks](/v2/ingestion/tasks). Optionally send a `Task-Identifier` header to pin the Celery task id.
 
+<AgentNote>
+- `POST /ingest/` with `Content-Type: application/json`, `BrainPAT`, brain scope
+- Required shape: `{ "data": { "data_type": "text", "text_data": "…" }, "brain_id"? }`
+- **202** + `task_id` → poll `GET /tasks/{id}`; **404** ≠ pending
+- Optional: `Task-Identifier` header, `observate_for`, `meta_keys`, `identification_params`
+</AgentNote>
+
 ## Usage
 
 The text ingestion API is available via the REST API, Python SDK, and TypeScript SDK.
