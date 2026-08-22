@@ -47,12 +47,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             options: {
               // next.config basePath is /docs — absolute /api/search 404s
               api: "/docs/api/search",
-              tags: [
-                { name: "V2", value: "v2" },
-                { name: "V1", value: "v1" },
-              ],
               defaultTag: "v2",
-              allowClear: false,
             },
           }}
         >

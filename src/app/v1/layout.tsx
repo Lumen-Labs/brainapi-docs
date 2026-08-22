@@ -10,6 +10,7 @@ import { source } from "@/lib/source";
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <DocsLayout
+      containerProps={{ className: "md:[--fd-layout-width:100vw]" }}
       sidebar={{
         banner: docsSidebarBanner,
         tabs: docsSidebarTabs,
