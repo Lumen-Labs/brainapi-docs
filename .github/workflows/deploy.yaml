@@ -76,4 +76,17 @@ jobs:
             npm ci --omit=dev --ignore-scripts
             ln -sfn "$release" "/home/${{ secrets.USERNAME }}/brainapi-docs/current"
             cd "/home/${{ secrets.USERNAME }}/brainapi-docs/current"
-            pm2 startOrReload ecosystem.config.js
+            pm2 delete brainapi-docs >/dev/null 2>&1 || true
+            pm2 start ecosystem.config.js --only brainapi-docs >/dev/null
+
+            for attempt in 1 2 3 4 5 6 7 8 9 10; do
+              if curl --fail --silent --show-error \
+                "http://127.0.0.1:3877/docs/v2/quickstart" >/dev/null; then
+                exit 0
+              fi
+              sleep 2
+            done
+
+            echo "The deployed documentation did not become healthy." >&2
+            pm2 logs brainapi-docs --lines 50 --nostream >&2
+            exit 1

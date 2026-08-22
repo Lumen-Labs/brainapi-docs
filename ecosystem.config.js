@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "brainapi-docs",
       script: "npm start",
-      cwd: "./",
+      cwd: __dirname,
       env: {
         PORT: 3877,
       },
