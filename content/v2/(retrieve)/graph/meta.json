@@ -1,0 +1,8 @@
+{
+  "title": "Entity APIs",
+  "defaultOpen": true,
+  "pages": [
+    "[Existence API — Check an entity](/v2/retrieval/entities/existence)",
+    "[Synergies API — Find related entities](/v2/retrieval/entities/synergies)"
+  ]
+}

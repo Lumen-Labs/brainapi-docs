@@ -1,0 +1,292 @@
+---
+title: Catalog search and personalization
+description: Map catalog structure, filter metadata, and rerank retrieved products for a user
+---
+
+In BrainAPI, a catalog is any collection of passages that map to stable,
+addressable `ENTITY` or `PRODUCT` nodes. Products are one example; courses,
+media assets, policies, research records, and operational runbooks can use the
+same pattern when they have durable ids and shared attributes.
+
+Catalog search layers that structure and optional user preferences over the
+core query-to-passage first stage. The same brain can hold searchable passages,
+item nodes, typed attribute hubs, direct preferences, and dated interactions.
+
+## What can be a catalog?
+
+| Domain | Addressable node | Useful shared hubs | Example broad query |
+| --- | --- | --- | --- |
+| Ecommerce | `PRODUCT` | brand, class, color, material | `winter coat` |
+| Learning library | `ENTITY` | topic, level, format, language | `security course` |
+| Media archive | `ENTITY` | genre, creator, language, era | `documentary` |
+| Policy library | `ENTITY` | jurisdiction, policy family, audience | `retention policy` |
+| Operations | `ENTITY` runbook | service, incident type, severity | `database recovery` |
+
+The implementation does not infer these product concepts from the Search
+request. Your ingestion design supplies stable ids and direct edges. Use
+`PRODUCT` when the node really is a product and the generic `ENTITY` label for
+other addressable items eligible for personalization.
+
+## Catalog shape
+
+```text
+searchable passage --DOCID marker--> PRODUCT or ENTITY node
+PRODUCT --HAS--> CLASS / TYPE / ATTR hubs
+USER --PREFERS--> ATTR hub
+USER --> dated EVENT --> PRODUCT --> ATTR hub
+```
+
+The catalog mapper in BrainAPI uses stable item and hub UUIDs so repeated ingests converge on the same graph structure. This is a convention built from generic structured triples; Search does not hard-code fields such as SKU, brand, or product category into its public request model.
+
+### Why text and graph identities are both needed
+
+The passage is what BM25 and dense retrieval search. The node is what graph
+traversal and personalization score. A `DOCID <node-id>` marker connects those
+two representations without requiring Search to guess which entity a passage
+describes. If the marker is absent, the passage can still rank normally; it
+simply has no `node_id` for catalog-only stages.
+
+## Ingest searchable passages
+
+Store the query-facing text as a normal chunk. A `DOCID <node-id>.` marker allows a returned passage to expose the associated graph node in `hit.node_id`.
+
+```json
+{
+  "data": {
+    "data_type": "text",
+    "text_data": "DOCID sku-42. Title: Modern oak dining table. Color: natural oak. Class: Dining Tables."
+  },
+  "brain_id": "products",
+  "skip_enrichment": true
+}
+```
+
+`skip_enrichment=true` still saves and embeds the chunk; it skips observations and Scout/Architect graph enrichment. Build graph structure explicitly through [structured ingestion](/v2/ingestion/structured-data).
+
+## Ingest direct catalog edges
+
+Static product attributes should be direct edges, not fake timeless event nodes:
+
+```json
+{
+  "data": [
+    {
+      "subject": {"uuid": "sku-42", "name": "Modern oak dining table", "type": "PRODUCT"},
+      "subj_event": {"name": "HAS"},
+      "object": {"uuid": "hub:class:dining-tables", "name": "Dining Tables", "type": "CLASS"}
+    },
+    {
+      "subject": {"uuid": "sku-42", "name": "Modern oak dining table", "type": "PRODUCT"},
+      "subj_event": {"name": "HAS"},
+      "object": {"uuid": "hub:attr:natural-oak", "name": "natural oak", "type": "ATTR"}
+    }
+  ],
+  "mode": "deterministic",
+  "brain_id": "products"
+}
+```
+
+`HAS` wrappers without `happened_at` are normalized to direct edges. A dated event remains an event with two edges because its time is meaningful.
+
+## Non-commerce example: a learning library
+
+The same shape can represent a course and a learner's topic preference. First,
+ingest searchable course text:
+
+```json
+{
+  "data": {
+    "data_type": "text",
+    "text_data": "DOCID course:threat-modeling. Threat Modeling Foundations. Topic: security. Level: beginner."
+  },
+  "skip_enrichment": true
+}
+```
+
+Then submit direct edges to `POST /ingest/structured`:
+
+```json
+{
+  "data": [
+    {
+      "subject": {
+        "uuid": "course:threat-modeling",
+        "name": "Threat Modeling Foundations",
+        "type": "ENTITY"
+      },
+      "subj_event": {"name": "HAS"},
+      "object": {
+        "uuid": "hub:topic:security",
+        "name": "security",
+        "type": "ATTR"
+      }
+    },
+    {
+      "subject": {
+        "uuid": "user:alex",
+        "name": "Alex",
+        "type": "USER"
+      },
+      "subj_event": {"name": "PREFERS", "amount": 0.8},
+      "object": {
+        "uuid": "hub:topic:security",
+        "name": "security",
+        "type": "ATTR"
+      }
+    }
+  ],
+  "mode": "deterministic",
+  "brain_id": "learning-library"
+}
+```
+
+The course and user must reference the same hub UUID. Similar names on two
+different hubs do not create preference overlap.
+
+## Filters and facets
+
+Scalar chunk metadata is returned as `extras`. POST can require case-insensitive equality matches:
+
+```json
+{
+  "query": "dining table",
+  "k": 20,
+  "extras": {"locale": "en", "color": "Natural Oak"}
+}
+```
+
+All filters must match. They run after candidate retrieval and before personalization. Facets are counts over the final returned hits, not an aggregation over every matching product in storage.
+
+### Why filters are not preferences
+
+`extras={"language":"it"}` means the caller requires Italian results; a
+non-matching hit must be removed. A history-derived preference for security or
+beginner content is uncertain, so it changes order without removing other
+relevant items. Converting inferred taste into `extras` would silently turn a
+soft guess into a hard exclusion.
+
+## Catalog mode
+
+`mode="catalog"` provides a deeper pool for a second-stage reranker:
+
+```json
+{
+  "query": "modern dining table",
+  "k": 10,
+  "mode": "catalog",
+  "rerank": "plugin:cross-encoder"
+}
+```
+
+The server retrieves `min(200, max(k, 50))` candidates, allows the reranker to reorder at most 50, then returns the requested `k`. The default mode retrieves the requested `k` and reranks at most 10. Catalog mode plus a cross-encoder is deliberately outside the default `<200 ms` p50 target.
+
+## Record long-term preferences
+
+Direct `PREFERS` edges use the same attribute hub IDs as product `HAS` edges:
+
+```json
+{
+  "data": [
+    {
+      "subject": {"uuid": "user:u01", "name": "u01", "type": "USER"},
+      "subj_event": {
+        "name": "PREFERS",
+        "amount": 0.8,
+        "properties": {"facet": "style", "value": "70s"}
+      },
+      "object": {"uuid": "hub:attr:70s", "name": "70s", "type": "ATTR"}
+    }
+  ],
+  "mode": "deterministic",
+  "brain_id": "products"
+}
+```
+
+Keep selected options or user-declared preferences on the user. Do not stamp inferred preferences into product passage metadata: an `extras` filter is a hard user assertion, while preference history is a soft ranking signal.
+
+## Record short-term behavior
+
+Dated views, carts, favorites, and purchases remain event wrappers:
+
+```text
+USER --MADE--> EVENT(happened_at) --TARGETED--> PRODUCT --HAS--> ATTR
+```
+
+Personalized Search follows both direct preferences and dated interaction paths. Event evidence decays with a 14-day half-life. Default behavior strengths are aligned with Recommendations:
+
+| Behavior | Weight |
+| --- | ---: |
+| View, click, or unknown | 0.2 |
+| Cart or follow | 0.5 |
+| Favorite or wishlist | 0.7 |
+| Purchase | 1.0 |
+
+## Personalize a query
+
+Pass the USER UUID or id as `target`:
+
+```json
+{
+  "query": "lamp",
+  "k": 10,
+  "mode": "catalog",
+  "target": "u01"
+}
+```
+
+BrainAPI resolves `u01` and `user:u01`, scores the retrieved `node_id` values against user attribute weights, and blends the result according to query specificity.
+
+| Query | Personalization behavior |
+| --- | --- |
+| `lamp` | Strong preference influence (`λ≈0.85`) |
+| `brass floor lamp` | Moderate influence (`λ≈0.25`) |
+| `oak dining table 180cm` | No influence because the query contains digits |
+
+Safe fallbacks preserve retrieval order when `target` is absent or unresolved, preferences are empty, the query gate is zero, or a hit has no catalog `node_id`. Personalization never drops ids solely because preference evidence is missing.
+
+## Worked query cases
+
+| Query and state | Expected behavior | Why |
+| --- | --- | --- |
+| `security` with `target=user:alex` | Strong preference blend when eligible nodes exist | One content token leaves substantial ambiguity |
+| `security course` | Moderate preference blend | Two content tokens narrow intent but still allow taste |
+| `beginner security course` | Lower preference blend | More query detail should dominate |
+| `SEC-204` or `table 180cm` | No personalization | A digit-bearing token indicates a navigational/SKU-like query |
+| Valid query, unresolved target | Retrieval order is preserved | Identity failure is a safe no-op |
+| Valid user, hit without `node_id` | Hit remains with zero preference evidence | Personalization never drops an id for missing graph mapping |
+
+## Ideas to test safely
+
+### Attribute coverage
+
+**Hypothesis:** catalog items and users share enough meaningful hubs for
+preferences to discriminate among retrieved candidates. **Measure:** the
+fraction of returned `node_id` values with non-zero preference evidence and the
+ranking effect on query-by-user judgments. **Stop:** redesign ingestion before
+tuning weights if overlap is mostly zero.
+
+### Query gating
+
+**Hypothesis:** broad queries benefit more from personalization than detailed
+queries. **Measure:** anonymous versus personalized order by query-length and
+navigational slices. **Stop:** do not infer a win from catalog qrels that have
+no users.
+
+### Candidate depth
+
+**Hypothesis:** catalog mode gives a useful reranker or personalizer enough
+eligible candidates. **Measure:** candidate Recall@K, final nDCG, and p50/p95.
+**Stop:** return to default mode if the deeper pool adds cost without quality.
+
+<Callout type="warn">
+  WANDS and ESCI do not contain query-by-user relevance labels. Catalog graph
+  and personalization runs on those datasets are architecture demonstrations,
+  not evidence that personalization improves their nDCG.
+</Callout>
+
+## Related
+
+- [Search API](/v2/retrieval/search)
+- [Search theory](/v2/retrieval/search/theory)
+- [Structured ingestion](/v2/ingestion/structured-data)
+- [Recommendations](/v2/retrieval/recommendations)

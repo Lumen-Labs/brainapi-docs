@@ -1,518 +1,260 @@
 ---
-title: Synergies
-description: The Synergies API provides a way to retrieve entities that are related to each other with a positive polarity (eg. Ecommerce product recommendations) or with a negative polarity (eg. Suggested courses to take to solve a problem)
+title: Synergies API — Find related entities
+description: Find graph peers connected to a target through shared anchors and event relationships
 ---
 
-## Positive Polarity Example
+Use `GET /retrieve/entity/synergies` to find entities related to a target through the graph. The endpoint resolves a target, explores direct and event-mediated anchors, scores eligible peer nodes, and returns the strongest associations.
 
-Let's take a look at the following example, we are saving into the brain the following information:
+This is useful beyond ecommerce. Examples include services connected to the same incident, courses related through shared skills, researchers connected through projects, or controls connected through the same policy requirement.
 
-<DynamicCodeBlock
-  lang="txt"
-  code={`
-    Maria employs Tom and Lisa.
-    `}
-/>
+## Mental model
 
-The structured network of information rapresenting this data will look like this:
+Suppose two `SERVICE` nodes participate in the same incident event. The incident can act as an anchor connecting them. The response returns each peer as `node`, the anchors that explain the association in `connected_by`, and an `association_score` for ordering.
 
-![Entities Diagram](/images/positive-polarity-example-maria.png)
+The endpoint is still graph retrieval:
 
-Now let's say that we want to know <b>who is the colleage of Lisa</b>, brainapi makes this retrieval easy by using the <b>synergies</b> API. By using the <b>synergies</b> API we can retrieve the entities that are related to each other with a positive polarity.
-We will call the `/retrieve/entity/synergies` endpoint with the following parameters:
+- It needs useful nodes and relationships.
+- It returns entities, not passages.
+- It can use same or opposite node polarity.
+- It is not the same as query search or the multi-channel recommendation endpoint.
 
-<DynamicCodeBlock
-  lang="js"
-  code={`
-    const response = await fetch("<DEPLOYMENT_URL>/retrieve/entity/synergies", {
-      method: "GET",
-      body: JSON.stringify({
-        target: "Lisa",
-        brain_id: "example1",
-      }),
-    });
+### Event hubs connect peers
 
-    const data = await response.json();
+In the diagram below, Maria initiates an employment event that targets Tom and Lisa. The event hub preserves the action as a first-class node. Because Tom and Lisa participate in the same event structure, the graph has an explainable path for treating them as related peers.
 
-    // This will return us:
-    // data.target_node.name = "Lisa"
-    // data.synergies [
-    //   ..
-    //   {
-    //      "node": {
-    //         ..
-    //         "name": "Tom",
-    //         ..
-    //      },
-    //      "connected_by": [
-    //         {
-    //            ..
-    //            "name": "Employs",
-    //            "description": "Maria employs Tom and Lisa.",
-    //            ..
-    //         }
-    //      ]
-    //   }
-    //   ..
-    // ]
-    `}
+![Maria initiates an employment event whose targets are Tom and Lisa](/images/positive-polarity-example-maria.png)
 
-/>
+The same pattern can represent services participating in an incident, researchers contributing to a project, or courses addressing a shared skill. The domain changes; the shared-anchor principle does not.
 
-<Callout type="info">
-  **The Synergies API is designed to retrieve entities of the same type that
-  have a defined synergistic relationship**, expressed with either positive or
-  negative polarity. Typical examples include product recommendations, user
-  suggestions in a social network, or course recommendations for a given problem
-  (where the problem has negative polarity and the course has positive
-  polarity). **If you need to retrieve information about a specific entity**,
-  including relationships with entities of a different type (for example, “the
-  organization where Lisa works”), you should instead use the
-  **`/retrieve/entities/neighbors` API **or the `/retrieve/entity/info` API**.
-</Callout>
+## Find services related to an incident participant
 
-## Usage
+```bash
+curl --get "http://localhost:8000/retrieve/entity/synergies" \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: operations" \
+  --data-urlencode "target=payments-api" \
+  --data-urlencode "polarity=same" \
+  --data-urlencode "labels=SERVICE" \
+  --data-urlencode "top_k=10" \
+  --data-urlencode "ppa=true"
+```
 
-The synergies API is available via REST API, Python SDK and Typescript SDK.
-Using it is straightforward, you just need to call the API with the entity you want to retrieve the synergies for.
+A shortened response looks like:
 
-Extra parameters can be passed to the API to customize the retrieval and response. The following parameters in the table are available:
-
-<Tabs items={["Typescript", "Python", "cURL"]}>
-  <Tab value="Typescript">
-  The Typescript SDK provides the `retrieveSynergies` function to retrieve the synergies.
-    <DynamicCodeBlock
-      lang="ts"
-      code={`// This will retrieve all the "Persons" that share some synergy with "Lisa"
-const result = await brain.retrieveSynergies(
-      {
-        target: "Lisa", // Lisa is of type "Person"
-        brainId: "example1", // default is "default"
-        do: false, // optional
-        pa: false, // optional
-        ppa: false, // optional
-      }
-);`}
-    />
-    The accepted parameters are the following, passed as an object to the `retrieveSynergies` function:
-    <TypeTable
-      type={{
-        target: {
-          description: "This will be the target entity to retrieve the synergies for.",
-          type: "string",
-          required: true,
-        },
-        brainId: {
-          description:
-            "This will be the brain identifier to retrieve the synergies from.",
-          type: "string",
-          required: true,
-        },
-        do: {
-          description:
-            "Whether to return only the synergies that are directly connected to the target entity.",
-          type: "boolean",
-          required: false,
-        },
-        pa: {
-          description:
-            "Whether to return all the edges and directly connected nodes to the target entity.",
-          type: "boolean",
-          required: false,
-        },
-        ppa: {
-          description:
-            "Whether to return all the edges and nodes that are similar to the directly connected nodes to the target entity but not directly connected.",
-          type: "boolean",
-          required: false,
-        },
-      }}
-    />
-    The response will be an object with of type `QuerySynergiesResponse`:
-     <DynamicCodeBlock
-      lang="ts"
-      code={`export interface QuerySynergiesResponse {
-  target_node: {
-    uuid: string;
-    labels: string[];
-    name: string;
-    description: string;
-    properties: Record<string, any>;
-    polarity: string;
-    metadata: Record<string, any> | null;
-    happened_at: string | null;
-    last_updated: string;
-    observations: unknown[] | null;
-  };
-  synergies: Array<{
-    node: {
-      uuid: string;
-      labels: string[];
-      name: string;
-      description: string;
-      properties: Record<string, any>;
-      polarity: string;
-      metadata: Record<string, any> | null;
-      happened_at: string | null;
-      last_updated: string;
-      observations: string[] | null;
-    };
-    connected_by: Array<{
-      uuid: string;
-      labels: string[];
-      name: string;
-      description: string;
-      properties: Record<string, any>;
-      polarity: string;
-      metadata: Record<string, any> | null;
-      happened_at: string | null;
-      last_updated: string;
-      observations: string[] | null;
-    }>;
-    association_score: number;
-  }>;
-}`}
-    />
-
-  </Tab>
-  <Tab value="Python">
-  The Python SDK provides the `retrieve_synergies` method to retrieve the synergies.
-    <DynamicCodeBlock
-      lang="py"
-      code={`result = await client.retrieve_synergies(
-    target="Lisa",
-    brain_id="example1",
-    do=False,
-    pa=False,
-    ppa=False,
-)`}
-    />
-    The accepted parameters are the following, passed to the `retrieve_synergies` method:
-    <TypeTable
-      type={{
-        target: {
-          description: "This will be the target entity to retrieve the synergies for.",
-          type: "str",
-          required: true,
-        },
-        brain_id: {
-          description:
-            "This will be the brain identifier to retrieve the synergies from.",
-          type: "str",
-          required: true,
-        },
-        do: {
-          description:
-            "Whether to return only the synergies that are directly connected to the target entity.",
-          type: "bool",
-          required: false,
-        },
-        pa: {
-          description:
-            "Whether to return all the edges and directly connected nodes to the target entity.",
-          type: "bool",
-          required: false,
-        },
-        ppa: {
-          description:
-            "Whether to return all the edges and nodes that are similar to the directly connected nodes to the target entity but not directly connected.",
-          type: "bool",
-          required: false,
-        },
-      }}
-    />
-    The response will be an object of type `QuerySynergiesResponse`:
-     <DynamicCodeBlock
-      lang="py"
-      code={`class QuerySynergiesResponse(TypedDict):
-    target_node: dict
-    synergies: list[dict]
-
-class TargetNode(TypedDict, total=False):
-uuid: str
-labels: list[str]
-name: str
-description: str
-properties: dict[str, Any]
-polarity: str
-metadata: dict[str, Any] | None
-happened_at: str | None
-last_updated: str
-observations: list[Any] | None
-
-class SynergyNode(TypedDict, total=False):
-uuid: str
-labels: list[str]
-name: str
-description: str
-properties: dict[str, Any]
-polarity: str
-metadata: dict[str, Any] | None
-happened_at: str | None
-last_updated: str
-observations: list[str] | None
-
-class SynergyItem(TypedDict):
-node: dict
-connected_by: list[dict]
-association_score: float`}
-/>
-
-  </Tab>
-  <Tab value="cURL">
-  Call the GET endpoint with query parameters to retrieve the synergies.
-    <DynamicCodeBlock
-      lang="bash"
-      code={`curl -X GET "<DEPLOYMENT_URL>/retrieve/entity/synergies" \\
-  -G \\
-  --data-urlencode "target=Lisa" \\
-  --data-urlencode "brain_id=example1" \\
-  --data-urlencode "do=false" \\
-  --data-urlencode "pa=false" \\
-  --data-urlencode "ppa=false"`}
-    />
-    The accepted query parameters are the following:
-    <TypeTable
-      type={{
-        target: {
-          description: "This will be the target entity to retrieve the synergies for.",
-          type: "string",
-          required: true,
-        },
-        brain_id: {
-          description:
-            "This will be the brain identifier to retrieve the synergies from.",
-          type: "string",
-          required: true,
-        },
-        do: {
-          description:
-            "Whether to return only the synergies that are directly connected to the target entity.",
-          type: "boolean",
-          required: false,
-        },
-        pa: {
-          description:
-            "Whether to return all the edges and directly connected nodes to the target entity.",
-          type: "boolean",
-          required: false,
-        },
-        ppa: {
-          description:
-            "Whether to return all the edges and nodes that are similar to the directly connected nodes to the target entity but not directly connected.",
-          type: "boolean",
-          required: false,
-        },
-      }}
-    />
-    Example response:
-    <DynamicCodeBlock
-      lang="json"
-      code={`{
+```json
+{
   "target_node": {
-    "uuid": "550e8400-e29b-41d4-a716-446655440001",
-    "labels": ["Person"],
-    "name": "Lisa",
-    "description": "A person named Lisa.",
-    "properties": {},
-    "polarity": "positive",
-    "metadata": null,
-    "happened_at": null,
-    "last_updated": "2025-01-15T10:30:00Z",
-    "observations": null
+    "uuid": "service-42",
+    "labels": ["SERVICE"],
+    "name": "payments-api"
   },
   "synergies": [
     {
       "node": {
-        "uuid": "550e8400-e29b-41d4-a716-446655440002",
-        "labels": ["Person"],
-        "name": "Tom",
-        "description": "A person named Tom.",
-        "properties": {},
-        "polarity": "positive",
-        "metadata": null,
-        "happened_at": null,
-        "last_updated": "2025-01-15T10:30:00Z",
-        "observations": null
+        "uuid": "service-77",
+        "labels": ["SERVICE"],
+        "name": "checkout-api"
       },
       "connected_by": [
         {
-          "uuid": "550e8400-e29b-41d4-a716-446655440003",
-          "labels": ["Employs"],
-          "name": "Employs",
-          "description": "Maria employs Tom and Lisa.",
-          "properties": {},
-          "polarity": "positive",
-          "metadata": null,
-          "happened_at": null,
-          "last_updated": "2025-01-15T10:30:00Z",
-          "observations": null
+          "uuid": "incident-19",
+          "labels": ["EVENT"],
+          "name": "Connection pool saturation"
         }
       ],
-      "association_score": 0.92
+      "association_score": 0.0
     }
-  ]
-}`}
-    />
-  </Tab>
-</Tabs>
-
-## Extra Parameters
-
-### do (direct only)
-
-This parameter is a boolean value that, if set to true, will return only the synergies that are directly connected to the target entity.
-
-This means that we will get only synergies like this (Maria\<>Michael + Maria\<>James):
-![Direct Only Example](/images/example-do.png)
-
-And not synergies like this (Maria\<>Marco):
-![Direct Only Example](/images/example-ppa.png)
-
-### pa (provide anchors)
-
-This parameter is a boolean value that, if set to true, will return all the synergies that are connected to the target entity via a shared node/edge.
-This is helpful to understand what the target entity is connected to and what could match it.
-
-Here is an example of what the anchors are (Lisa, Tom, Stanford, Cafe Shop), all connected via through an "EVENT" hub:
-
-![Anchors Example](/images/example-pa.png)
-
-### ppa (provide potential anchors)
-
-This parameter is a boolean value that, if set to true, will return all the synergies both directly connected to the target entity but also similar nodes found with cosine similarity to the directly connected nodes but not directly connected.
-
-Here is an example of what the potential anchors are (UC Berkeley, Stanford, Cafe Shop and Pastry Shop) those are the nodes that are not directly connected but that if they would be, would create a direct synergistic relationship with the target entity depending on their cosine similarity:
-
-![Potential Anchors Example](/images/example-ppa.png)
-
-## Similarity Score
-
-The similarity score is calculated and weighted based on the connections between the target entity and the synergies and also their similarity itself, the core formulas to keep in mind are listed below:
-
-### WSIM (Weighted Similarity)
-
-This is a python util that can be found in the [utils/similarity/numbers.py](https://github.com/Lumen-Labs/brainapi2/blob/main/src/utils/similarity/numbers.py), used to weight the similarity scores.
-
-```python
-return similarity ** (1 - weight)
-```
-
-```math
-\operatorname{wsim}(s, w) = s^{\,1 - w}
-\begin{aligned}
-s &\in [0,1] && \text{base similarity} \\
-w &\in \mathbb{R} && \text{weight (may be negative)}
-\end{aligned}
-```
-
-### WMEAN (Weighted Mean)
-
-Weighted mean of a list of values. The first two values are transformed with WSIM using an effective weight (weight times max(1, n minus 2) over max(2, n), so it is never zero when n equals 2); the remaining values are left unchanged. The result is the average of this transformed list. Empty lists return 0; a single value is returned as-is.
-
-The purpose is to add more importance to quantity based similarities insead of an average of the values
-(eg: similarity between 2 elements with 5 things in common is found with 0.20 cosine each is more relevant than a similarity of 0.90 between 2 elements with 1 thing in common).
-
-```math
-\operatorname{wmean}(\{x_i\}, w)
-=
-\frac{
-x_1^{\,1 - w_{\text{eff}}(n)}
-+
-x_2^{\,1 - w_{\text{eff}}(n)}
-+
-\sum_{i=3}^{n} x_i
-}{
-n
+  ],
+  "anchors": []
 }
 ```
 
-### Cosine Similarity
+The numeric value above demonstrates the response type only; it is not a quality claim or expected score. Interpret rankings within one result set and evaluate them against your graph and task.
 
-Classic cosine similarity formula.
+## Request controls
+
+| Parameter | Default | Meaning |
+| --- | --- | --- |
+| `target` | Required | Name or description used to resolve the starting node. |
+| `polarity` | `same` | `same` keeps matching polarities. `opposite` keeps positive↔negative pairs and excludes neutral or missing polarity. |
+| `do` | `false` | When `true`, restricts results to direct synergies. |
+| `pa` | `false` | Include `potential_anchors` in the response when available. |
+| `ppa` | `false` | Include seed `anchors` in the response when available. |
+| `top_k` | `50` | Maximum number of synergies returned. |
+| `labels` | None | Repeated candidate-label filter; a candidate must intersect it. |
+
+`labels` is serialized as repeated query parameters, for example `labels=COURSE&labels=WORKSHOP`.
+
+## Visual guide to traversal controls
+
+The controls change which graph evidence is returned or allowed to contribute. They do not turn the endpoint into passage search.
+
+### Direct-only results with `do=true`
+
+Direct-only mode restricts discovery to direct synergy structure. In this example, Maria has direct graph branches through the `Owns` and `Graduated` hubs; James and Michael are found through those directly shared structures.
+
+![Direct synergy paths through shared Owns and Graduated hubs](/images/example-do.png)
+
+Use direct-only mode when indirect event or similarity expansion creates too many weak peers. Avoid it when multi-step event structure carries important evidence.
+
+### Seed anchors with `ppa=true`
+
+Seed anchors are the graph nodes reached from the target and used to discover peers. Requesting `ppa=true` includes them in the response as `anchors`, making the association easier to inspect.
+
+![Maria connected to seed anchors for Stanford, Cafe Shop, Lisa, and Tom](/images/example-pa.png)
+
+### Potential anchors with `pa=true`
+
+Potential anchors are similar nodes that could explain or extend an association but are not necessarily connected through the same direct path. Requesting `pa=true` includes them as `potential_anchors` when available.
+
+![Potentially similar anchors such as Stanford and UC Berkeley or Cafe Shop and Pastry Shop](/images/example-ppa.png)
+
+Potential anchors are diagnostic evidence, not automatically accepted relationships. Inspect them before changing the graph or using them as application truth.
+
+## How the association score is calculated
+
+`association_score` is a ranking signal built from embedding similarity and graph-path evidence. It is not a probability, confidence percentage, or globally calibrated value. Compare scores within one request and one configuration.
+
+The implementation is in [`entity_sibilings.py`](https://github.com/Lumen-Labs/brainapi2/blob/main/src/core/search/entity_sibilings.py), with similarity helpers in [`numbers.py`](https://github.com/Lumen-Labs/brainapi2/blob/main/src/utils/similarity/numbers.py).
+
+### 1. Cosine similarity
+
+BrainAPI compares available node, relationship, and event-context embeddings with cosine similarity:
 
 ```math
-\operatorname{cosine}(a, b) = \frac{a \cdot b}{\|a\|\|b\|}
-```
-
-### Node-Target description similarity
-
-This measures the direct similarity between the target node and the found node with synergies, comparing descriptions. The result is used with higher weights than the relationship / context similarity.
-
-```python
-tn_score = wsim(
-    cosine_similarity(neighbor_node_embedding, target_embedding),
-    NODE_SIM_DESC_INCREMENTAL_WEIGHT,
-)
-```
-
-```math
-\operatorname{tn\_score}
+\operatorname{cosine}(a,b)
 =
-\operatorname{cosine}(v_n, v_t)^{1 - w_d}
+\frac{a \cdot b}{\lVert a \rVert\,\lVert b \rVert}
 ```
+
+A value closer to `1` means the vectors point in a similar direction. A zero-length vector produces `0` in the shipped helper. Cosine similarity alone does not prove that two entities have a valid graph relationship; it supplies one component of the path score.
+
+### 2. Weighted similarity
+
+For event-mediated candidates, BrainAPI strengthens the node-to-target description component with `wsim`:
 
 ```math
-w_d = \text{NODE\_SIM\_DESC\_INCREMENTAL\_WEIGHT}
+\operatorname{wsim}(s,w)=s^{1-w}
 ```
 
-### Relationship / context similarity
-
-The `found_embeddings` is a vector mean of the vectors rapresenting the `edge` (the event hub), connected to the found node with synergies, the `target_embeddings` is a vector mean of the vectors rapresenting the `edge` (the event hub) connected to the target node.
-The cosine similarity of the two means will return us the similarity between the way the two entities are connected to the a shared synergy.
-
-```python
-rel_score = cosine_similarity(found_embeddings, target_embeddings)
-```
+The shipped node-description weight is:
 
 ```math
-\operatorname{rel\_score}
-=
+w_d = 0.5
+```
+
+Therefore that branch uses the square root of the node similarity:
+
+```math
+t=\operatorname{wsim}\!\left(\operatorname{cosine}(v_n,v_t),0.5\right)
+```
+
+This transformation assumes a non-negative similarity input. It raises smaller positive similarities while preserving `0` and `1`; it should not be interpreted as learned calibration.
+
+### 3. Relationship and event-context similarity
+
+For an event-mediated path, the candidate-side context combines the relevant event-edge embeddings, then compares that representation with the target-side context:
+
+```math
+r=
 \operatorname{cosine}\!\left(
-\frac{v_e + v_r}{2},
-\; v_{ctx}
+\frac{v_{e,c}+v_{r,c}}{2},
+v_{ctx,t}
 \right)
-
 ```
+
+Here, `v_{e,c}` and `v_{r,c}` represent the candidate-side event and relationship evidence, while `v_{ctx,t}` represents the relationship context collected from the target side. Direct paths use the available direct-relationship embedding evidence instead of an event-context mean.
+
+### 4. Per-path association score
+
+When both the target-side similarity component `t` and relationship/context component `r` are non-zero, BrainAPI calculates:
 
 ```math
-v_{ctx} = \text{target side context embedding}
-v_{r} = \text{related node embedding}
-v_{e} = \text{edge embedding}
+A_{path}=m\cdot\frac{t+r}{2}
 ```
 
-### Association score (core formula)
-
-The association score is a simple mean between the cosine similarity of the target description with the found node description and the cosine similarity of the relationships connecting the found node and the target node with some shared node/edge.
-The multiplier is applied to weight the similarity based on the case that the found node is directly connected to the target node or not (connected via similar nodes found with cosine similarity but not directly connected).
-
-```python
-(np.mean([tn_score, rel_score]) * multiplier)
-```
+The multiplier favors graph evidence reached through a direct seed over evidence reached through a similar, remote seed:
 
 ```math
-\operatorname{assoc}(n)
-=
-m \cdot \frac{\operatorname{tn\_score} + \operatorname{rel\_score}}{2}
-```
-
-```math
-m =
+m=
 \begin{cases}
-1.30 & \text{direct connection} \\
-0.70 & \text{remote connection}
+1.30 & \text{direct seed} \\
+0.70 & \text{remote similar seed}
 \end{cases}
 ```
 
-### Incremental merge of multiple paths (weighted mean)
+If either required component is missing or zero, the shipped implementation assigns that path a score of `0`. Because the direct multiplier is greater than one, an association score can exceed `1`; this is another reason not to treat it as a probability.
 
-If more synergies are found for a neighbor entity, the association score is recalculated and the mean is weighted by the `FACTORS_INCREMENTAL_WEIGHT`.
+For intuition only, if `t=0.64` and `r=0.48`, the mean component is `0.56`. The same evidence would contribute `0.728` through a direct seed and `0.392` through a remote seed. These numbers demonstrate the formula; they are not expected production scores.
+
+### 5. Merge evidence from multiple anchors
+
+When another seed connects to a candidate already found, BrainAPI merges the previous association score `p` and new path score `n` with `wmean` and `FACTORS_INCREMENTAL_WEIGHT=0.3`:
 
 ```math
-pas = \text{association score of the previous path} \\
-nas = \text{association score of the current path}
+A_{merged}=\operatorname{wmean}([p,n],0.3)
 ```
 
-```python
-n_association_score = wmean([pas, nas], FACTORS_INCREMENTAL_WEIGHT)
+The general helper defines:
+
+```math
+w_{eff}(N)=w\cdot\frac{\max(1,N-2)}{\max(2,N)}
 ```
+
+and transforms its first two inputs before taking the mean:
+
+```math
+\operatorname{wmean}(\{x_i\},w)
+=
+\frac{
+x_1^{1-w_{eff}(N)}+x_2^{1-w_{eff}(N)}+\sum_{i=3}^{N}x_i
+}{N}
+```
+
+The Synergies merge passes two values, so `w_eff=0.15` and the two exponents are `0.85`. This rewards a candidate supported through more than one useful anchor without simply summing scores.
+
+### Scoring constants and limits
+
+| Constant | Shipped value | Effect |
+| --- | --- | --- |
+| `DIRECT_MULTIPLIER` | `1.30` | Boosts evidence reached through a direct seed. |
+| `REMOTE_MULTIPLIER` | `0.70` | Discounts evidence reached through a similar remote seed. |
+| `NODE_SIM_DESC_INCREMENTAL_WEIGHT` | `0.50` | Applies the weighted-similarity transform to event-mediated node similarity. |
+| `FACTORS_INCREMENTAL_WEIGHT` | `0.30` | Controls the incremental merge of multiple anchor paths. |
+
+Before scoring, BrainAPI excludes deprecated or invalidated predicates and applies candidate label and polarity constraints. It sorts the remaining candidates by descending `association_score`, then truncates to `top_k`. A strong score cannot rescue a candidate rejected by those eligibility rules.
+
+## Same and opposite polarity
+
+Use `same` when peers should express compatible orientation: two helpful courses, two preferred media items, or two services affected in the same way. Nodes with neutral or missing polarity are compatible with each other in this mode.
+
+Use `opposite` only when the graph deliberately models positive and negative sides of a need. A negative problem node might connect to a positive remediation node. Neutral or missing polarity never qualifies for `opposite`.
+
+Do not introduce polarity merely to make this endpoint return results. If your domain is not naturally polar, use `same` and model meaningful anchors and labels.
+
+## Decide between related surfaces
+
+| Surface | Choose it when |
+| --- | --- |
+| Synergies | You want peer entities explained by shared direct or event anchors. |
+| [Recommendations](/v2/retrieval/recommendations) | You need ranked next-item behavior with asymmetric, multi-interest, recency, seen-item, or diversity controls. |
+| [Search](/v2/retrieval/search) | The input is a query and the output should be ranked passages or graph-channel hits. |
+| Entity neighbors | You know the entity and want its immediate graph neighborhood rather than peer inference. |
+| [MCP](/v2/agentic/MCP) | The question requires several lookups, changing hypotheses, or evidence synthesis. |
+
+## Evaluate before relying on it
+
+Create a small set of targets with expected peers and explanations. Measure whether the relevant peer appears in the first `k`, then inspect `connected_by` for spurious high-degree anchors. Compare `do=true` with the default path to learn whether indirect event structure contributes signal or noise.
+
+Stop using a channel or anchor type when it repeatedly produces unrelated peers and cannot be corrected through cleaner labels, relationships, or ingestion. A higher graph score is not evidence of business usefulness by itself.
+
+## Troubleshoot
+
+| Symptom | Likely cause | Diagnostic and fix |
+| --- | --- | --- |
+| `404 No entity found matching the target` | Target resolution failed in the selected brain. | [Check the entity](/v2/retrieval/entities/existence), confirm the brain, and use a less ambiguous target. |
+| Empty `synergies` | No eligible peers share supported graph structure, polarity, or labels. | Remove a label filter temporarily, inspect anchors, and verify relationship embeddings exist. |
+| Irrelevant peers | A broad or high-degree anchor dominates. | Inspect `anchors`/`potential_anchors`, tighten labels, or compare direct-only mode. |
+| Expected opposite result is absent | One side is neutral, missing, or has the wrong polarity. | Inspect both nodes; opposite matching is strictly positive↔negative. |
+
+For exact schemas and generated request examples, open the [Retrieve API reference](/v2/reference/api/retrieve).

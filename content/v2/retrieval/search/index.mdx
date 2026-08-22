@@ -1,0 +1,288 @@
+---
+title: Search
+description: Build ranked hybrid, graph-aware, plugin-assisted, and personalized search over one BrainAPI knowledge base
+---
+
+`GET|POST /retrieve/search` returns addressable, ranked hits from a BrainAPI brain. Use it to power documentation search, support portals, research discovery, incident consoles, catalogs, and any interface that needs ordered results with scores and snippets.
+
+A search hit is deliberately smaller and more explicit than an answer. It tells the caller **what matched**, **why it ranked**, and **where to retrieve or display it**. Your application decides whether to show the hit, open the source, send it to an LLM, or begin a deeper investigation.
+
+<AgentNote>
+- Search is opt-in: set `SEARCH_ENABLED=true` and use PostgreSQL
+- Defaults: `k=10`, `channels=["passages"]`, `expand="none"`, `mode="default"`, and no plugin reranker
+- Use POST for the full contract, including `extras`, `fusion_alpha`, and `mode`
+- A disabled Search endpoint returns HTTP 404; an unknown or unloaded plugin returns HTTP 400
+- The default `<200 ms` p50 target excludes `embed.query` and applies only to non-personalized, non-catalog, non-reranked Search
+</AgentNote>
+
+## The mental model
+
+Think of Search as a pipeline with three responsibilities:
+
+1. **Find candidates.** BM25 finds exact terminology, dense retrieval finds semantic similarity, graph channels find connected nodes, and retriever plugins can add another candidate list.
+2. **Order candidates.** BrainAPI fuses the first-stage lists and can optionally rerank a bounded head.
+3. **Shape the result.** Metadata filters, catalog node mapping, query-gated personalization, truncation, and facets produce the final response.
+
+The default path intentionally does less: it retrieves passages with BM25 and dense search and fuses the lists. Add graph channels, plugins, or personalization only when they address a measured problem.
+
+### Why Search is separate from Context
+
+The same brain supports several read products, but they answer different caller needs:
+
+| Surface | Input | Output | Use it when |
+| --- | --- | --- | --- |
+| [`POST /retrieve/context`](/v2/retrieval/context) | A question or conversational state | Prompt-ready context, facts, and evidence | An answering model needs a compact evidence pack |
+| `GET /retrieve/search` or `POST /retrieve/search` | Query text and ranking controls | Ranked hits with component scores | A UI or service must display, inspect, filter, or further process results |
+| [`GET /retrieve/recommend` or `POST /retrieve/recommend`](/v2/retrieval/recommendations) | A target user or entity | Ranked item nodes | The task is query-free next-item or affinity recommendation |
+| [MCP](/v2/agentic/MCP) and deep REST | A sequence of tool calls | Iterative observations and evidence | The question needs traversal, refinement, or verification across several steps |
+
+`/retrieve/context` is not a hidden search endpoint. Enabling Search may change the passage mode available to Context, but it does not give Context ranked hits, facets, or Search plugins.
+
+## Before the first query
+
+Search requires PostgreSQL because BrainAPI stores generated full-text data and indexes beside the passages and vector data. At least one of BM25 or dense retrieval must be enabled.
+
+```dotenv
+DATA_DB="postgresql"
+SEARCH_ENABLED="true"
+SEARCH_USE_DENSE="true"
+SEARCH_USE_BM25="true"
+SEARCH_FUSION="rrf"
+```
+
+Restart BrainAPI after changing configuration. Then ingest text into the same brain you will search. For a documentation corpus that does not need automatic graph enrichment, use `skip_enrichment=true`:
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/ingest/" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -H "X-Brain-ID: developer-docs" \
+  -d '{
+    "data": {
+      "data_type": "text",
+      "text_data": "AUTH-041 occurs when a refresh token has expired. Reauthenticate the client and request a new token."
+    },
+    "meta_keys": {
+      "product": "identity",
+      "locale": "en",
+      "version": "2"
+    },
+    "skip_enrichment": true
+  }'
+```
+
+Ingestion is asynchronous. Wait for the returned task to complete before treating an empty result as a ranking problem. See [Saving text](/v2/ingestion/text) and [ingestion tasks](/v2/ingestion/tasks).
+
+### Why passages are the default
+
+Passages are the most general searchable object: they exist for ordinary text ingestion, retain the source language, and work without a hand-built graph. Graph nodes are valuable only when their labels and relationships represent something useful to the query. Starting with passages gives every brain a predictable baseline and prevents an incomplete graph from silently replacing text recall.
+
+## First search
+
+The same corpus can answer an exact diagnostic lookup and a semantic question:
+
+<Tabs items={["POST", "GET"]}>
+  <Tab value="POST">
+    ```bash
+    curl -X POST "<DEPLOYMENT_URL>/retrieve/search" \
+      -H "Content-Type: application/json" \
+      -H "BrainPAT: YOUR_BRAIN_PAT" \
+      -H "X-Brain-ID: developer-docs" \
+      -d '{
+        "query": "sign in fails after refresh token expires",
+        "k": 10,
+        "channels": ["passages"],
+        "fusion": "rrf",
+        "profile_stages": true
+      }'
+    ```
+  </Tab>
+  <Tab value="GET">
+    ```bash
+    curl --get "<DEPLOYMENT_URL>/retrieve/search" \
+      -H "BrainPAT: YOUR_BRAIN_PAT" \
+      -H "X-Brain-ID: developer-docs" \
+      --data-urlencode "query=AUTH-041" \
+      --data-urlencode "k=10" \
+      --data-urlencode "channels=passages" \
+      --data-urlencode "profile_stages=true"
+    ```
+  </Tab>
+</Tabs>
+
+The exact `AUTH-041` query gives BM25 a strong identifier signal. The natural-language query gives dense retrieval a chance to match the meaning even when the wording differs. With the default RRF fusion, a passage supported by both lists receives evidence from both without comparing incompatible raw score scales.
+
+### Why POST is the complete interface
+
+GET is convenient for browser-addressable searches and simple integrations. It supports `query`, `k`, `channels`, `node_labels`, `community_labels`, `expand`, `fusion`, `rerank`, `target`, `profile_stages`, and header-based brain scoping.
+
+POST uses the structured `SearchRequestBody` and additionally exposes `extras` for scalar metadata filters, `fusion_alpha` for convex-combination tuning, and `mode` for the deeper catalog candidate pool. Use POST for production clients whose search configuration may grow.
+
+## Anatomy of a response
+
+```json
+{
+  "hits": [
+    {
+      "id": "chunk-auth-041",
+      "channel": "passages",
+      "score": 0.0325,
+      "scores": {
+        "bm25": 7.84,
+        "dense": 0.81,
+        "rrf": 0.0325,
+        "cc": null,
+        "rerank": null,
+        "plugin": null,
+        "graph": null,
+        "personalize": null
+      },
+      "snippet": "AUTH-041 occurs when a refresh token has expired...",
+      "labels": [],
+      "extras": {"product": "identity", "locale": "en", "version": "2"},
+      "node_id": null
+    }
+  ],
+  "stage_timings": {"search.retrieve": {"duration_ms": 42.1}},
+  "channel_lists": {
+    "dense": ["chunk-auth-041"],
+    "bm25": ["chunk-auth-041"],
+    "entities": [],
+    "events": [],
+    "communities": [],
+    "neighbors": [],
+    "literal": []
+  },
+  "facets": {
+    "product": {"identity": 1},
+    "locale": {"en": 1},
+    "version": {"2": 1}
+  },
+  "node_ids": []
+}
+```
+
+Read the response in layers:
+
+- `hits` is the final ordered list your application normally consumes.
+- `score` is the final ranking score; compare it only within the same request and configuration.
+- `scores` exposes available component evidence. `null` means that stage did not score the hit.
+- `channel_lists` is diagnostic and can contain candidates that did not survive later stages.
+- `extras` contains scalar metadata. `facets` counts those values only over the returned hits.
+- `node_id` links a passage to an addressable entity when a `DOCID <id>` marker is present. `node_ids` is the de-duplicated response-level list.
+- `stage_timings` appears only when `profile_stages=true`; `embed.query` is separated from retrieval time.
+
+## Request reference
+
+### Query and result size
+
+| Field | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `query` | string | required | Keyword, identifier, phrase, or natural-language query. |
+| `brain_id` | string | `default` | POST model field. Deployment brain scoping such as `X-Brain-ID` is authoritative. |
+| `k` | integer | `10` | Final number of hits, from 1 through 200. |
+
+### Candidate generation
+
+| Field | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `channels` | string[] | `["passages"]` | Core: `passages`, `entities`, `events`, `communities`; plugins use `plugin:<name>`. GET accepts comma-separated text. |
+| `node_labels` | string[] | unset | Restricts the entities channel. GET accepts comma-separated text. |
+| `community_labels` | string[] | server setting | Hub labels for communities; normally `TYPE`, `CLASS`, and `TOPIC`. GET accepts comma-separated text. |
+| `expand` | `none` or `neighbors` | `none` | Adds bounded one-hop neighbors from graph-channel seeds. |
+
+### Fusion and reranking
+
+| Field | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `fusion` | `rrf` or `cc` | `SEARCH_FUSION` | Overrides the server fusion strategy. |
+| `fusion_alpha` | number | `0.5` | POST only. Dense weight for convex combination, from 0 through 1. |
+| `rerank` | string | unset | `none` or `plugin:<name>`. Unknown or unloaded plugins return HTTP 400. |
+| `mode` | `default` or `catalog` | `default` | POST only. Catalog mode deepens candidate retrieval and raises the bounded rerank cap. |
+
+### Filtering, personalization, and diagnostics
+
+| Field | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `extras` | object of strings | unset | POST only. Case-insensitive scalar equality filters combined with hard AND. |
+| `target` | string | unset | Optional USER UUID or id for query-gated personalization of retrieved catalog nodes. |
+| `profile_stages` | boolean | `false` | Includes stage-level timing data. |
+
+## Channels and why to choose them
+
+| Channel | Retrieves | Useful example | Avoid it when |
+| --- | --- | --- | --- |
+| `passages` | BM25 and/or dense text chunks | Manuals, policies, support articles, research abstracts | Never by default; this is the baseline |
+| `entities` | Graph entities using lexical and dense node signals | Services, people, projects, assets | Entity extraction is incomplete or labels have no search meaning |
+| `events` | Event nodes with recency-aware graph scores | Deployments, incidents, meetings, policy changes | The query is timeless and passages are sufficient |
+| `communities` | Items reached through typed hubs | Runbooks grouped by service, papers grouped by topic | Hubs are generic high-degree buckets that add noise |
+| `plugin:<name>` | A plugin-supplied candidate list | Domain terminology or token-level matching | The plugin has not beaten the core baseline on representative queries |
+
+Graph channels can be combined with passages:
+
+```json
+{
+  "query": "authentication outages after the August gateway rollout",
+  "k": 20,
+  "channels": ["passages", "entities", "events"],
+  "node_labels": ["SERVICE", "ENTITY"],
+  "expand": "neighbors",
+  "profile_stages": true
+}
+```
+
+This remains a one-shot ranking request. Use agentic retrieval when answering the question requires following and verifying several relationships.
+
+## Common patterns
+
+### Exact identifiers
+
+Keep `channels=["passages"]` and BM25 enabled for error codes, function names, ticket IDs, statutes, and version strings. Dense-only retrieval can blur small but decisive identifier differences.
+
+### Semantic questions
+
+Use the default hybrid passage path for questions such as “how do I recover a client after its credentials expire?” Hybrid retrieval preserves exact evidence while allowing a paraphrase to match.
+
+### Hard metadata constraints
+
+```json
+{
+  "query": "reset a locked account",
+  "k": 20,
+  "channels": ["passages"],
+  "extras": {"locale": "it", "product": "identity"}
+}
+```
+
+Both values must match, case-insensitively. Filtering occurs after candidate retrieval, so a narrow filter may return fewer than `k`; BrainAPI does not repeatedly retrieve until the page fills.
+
+### Learned stages
+
+Use [Search SPLADE](/v2/search-splade) or [Search ColBERT](/v2/search-colbert) as explicit first-stage channels. Use [Search Rerank](/v2/search-rerank) when candidate recall is already good but the top order needs finer query-candidate comparison.
+
+## Why plugins are opt-in
+
+Learned retrieval and reranking introduce model downloads, device requirements, index lifecycle, memory usage, and variable latency. They can also make relevance worse on a corpus unlike their training data. BrainAPI never silently substitutes a missing plugin or attaches Search plugins to `/retrieve/context`.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Diagnose | Fix |
+| --- | --- | --- | --- |
+| HTTP 404 on `/retrieve/search` | Search is disabled | Inspect `SEARCH_ENABLED` and startup configuration | Enable Search with PostgreSQL and restart |
+| HTTP 400 naming `plugin:<name>` | Plugin is missing, unloaded, or misspelled | Check its health route and loaded packages | Install, restart, and use the registered hook name |
+| HTTP 400 for `rerank="linear"` | Linear reranking is not implemented | Inspect the response detail | Use `none` or a loaded plugin reranker |
+| HTTP 422 | Invalid bounds, enum, or request type | Compare validation detail with the request table | Correct `k`, fusion, mode, expansion, or field types |
+| Empty results after ingest | Task incomplete or wrong brain | Poll the task and verify `X-Brain-ID` | Wait for completion and query the same brain |
+| Exact codes rank poorly | BM25 disabled or identifier not stored | Inspect `channel_lists.bm25` and source text | Enable BM25 and preserve identifiers |
+| Semantic queries are empty | Dense retrieval disabled or embeddings missing | Inspect `channel_lists.dense` and timings | Enable dense retrieval and verify ingestion |
+| Fewer than `k` with `extras` | Hard-AND filtering removed candidates | Compare channel lists with final hits | Broaden filters or retrieve more in the application design |
+| Graph channels add noise | Labels or hubs are too broad | Compare passage-only and graph arms | Restrict labels or remove the channel |
+| Plugin returns no candidates | Its valid in-memory index may be empty | Call health with the brain id | Build or rebuild the plugin index |
+| Latency unexpectedly rises | Embedding, graph, plugin, or rerank work was added | Set `profile_stages=true` | Remove unhelpful stages or route expensive searches separately |
+
+## Continue learning
+
+- [Search levels](/v2/retrieval/search/levels) — decide how far to escalate
+- [Search recipes](/v2/retrieval/search/recipes) — follow complete multi-domain workflows
+- [Search theory](/v2/retrieval/search/theory) — understand the equations and stage ordering
+- [Catalog search and personalization](/v2/retrieval/search/catalog-personalization) — map passages to nodes and add preferences

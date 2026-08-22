@@ -1,4 +1,8 @@
-import { sourceV2 } from "@/lib/source";
+import {
+  generatePublishedV2Params,
+  getPublishedV2Page,
+  sourceV2,
+} from "@/lib/source";
 import {
   DocsPage,
   DocsBody,
@@ -9,12 +13,13 @@ import { notFound } from "next/navigation";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { getMDXComponents } from "@/mdx-components";
 import { LlmsPointer } from "@/components/agent-note";
+import { absoluteDocsUrl } from "@/lib/site";
 
 export default async function Page(props: {
   params: Promise<{ slug?: string[] }>;
 }) {
   const params = await props.params;
-  const page = sourceV2.getPage(params.slug);
+  const page = getPublishedV2Page(params.slug);
   if (!page) notFound();
 
   const MDXContent = page.data.body;
@@ -23,6 +28,15 @@ export default async function Page(props: {
     <DocsPage
       toc={page.data.toc}
       full={page.data.full}
+      {...(page.data.lastModified
+        ? { lastUpdate: page.data.lastModified }
+        : {})}
+      editOnGithub={{
+        owner: "Lumen-Labs",
+        repo: "brainapi-docs",
+        sha: "main",
+        path: `content/v2/${page.file.path}`,
+      }}
     >
       <LlmsPointer />
       <DocsTitle>{page.data.title}</DocsTitle>
@@ -39,18 +53,27 @@ export default async function Page(props: {
 }
 
 export async function generateStaticParams() {
-  return sourceV2.generateParams();
+  return generatePublishedV2Params();
 }
 
 export async function generateMetadata(props: {
   params: Promise<{ slug?: string[] }>;
 }) {
   const params = await props.params;
-  const page = sourceV2.getPage(params.slug);
+  const page = getPublishedV2Page(params.slug);
   if (!page) notFound();
 
   return {
     title: page.data.title,
     description: page.data.description,
+    alternates: {
+      canonical: absoluteDocsUrl(page.url),
+    },
+    openGraph: {
+      title: page.data.title,
+      description: page.data.description,
+      url: absoluteDocsUrl(page.url),
+      type: "article",
+    },
   };
 }

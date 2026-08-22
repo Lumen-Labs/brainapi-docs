@@ -1,0 +1,115 @@
+---
+title: Build a plugin
+description: Add routes, events, MCP tools, prompts, retrievers, and rerankers through PluginContext
+---
+
+A plugin is a trusted Python package loaded inside BrainAPI. Keep registration lightweight, declare compatibility and dependencies explicitly, and fail clearly when an external service is unavailable.
+
+## Minimum plugin
+
+```text
+plugins/my_plugin/
+  plugin.yaml
+  main.py
+```
+
+```yaml title="plugin.yaml"
+name: my_plugin
+version: 0.1.0
+entry_point: main.py
+description: Example BrainAPI plugin
+author: Your Name
+brainapi_version: ">=2.17.0"
+priority: 100
+pip_dependencies: []
+tags: [example]
+```
+
+```python title="main.py"
+def register(context):
+    print("my_plugin loaded")
+```
+
+## Loading lifecycle
+
+At startup BrainAPI scans `PLUGINS_DIR`, validates manifests, sorts by ascending `priority`, installs declared dependencies, imports each entry point, and calls `register(context)`. A failure prevents that plugin from activating; do not hide required-service failures.
+
+## Runtime boundaries
+
+| Hook | API runtime | MCP runtime |
+| --- | --- | --- |
+| `include_router` and `add_middleware` | Active | Not active |
+| `register_mcp_tool` | Registration surface only when MCP is available | Active |
+| `add_event_handler("startup"|"shutdown")` | Executed by API lifecycle | Not currently executed |
+| Search retriever/reranker registration | Active for `/retrieve/search` | Not a Context hook |
+
+## Add an API route
+
+```python
+from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.get("/status")
+async def status():
+    return {"ok": True}
+
+def register(context):
+    context.include_router(router, prefix="/plugins/my-plugin")
+```
+
+## Add an MCP tool
+
+```python
+def lookup_runbook(code: str) -> dict:
+    return {"code": code, "status": "known"}
+
+def register(context):
+    context.register_mcp_tool(lookup_runbook, name="lookup_runbook")
+```
+
+## Register a first-stage Search retriever
+
+The callable receives `(query: str, brain_id: str, k: int)` and returns `(ids, scores, texts)`. IDs are ordered; score and optional text maps use those IDs.
+
+```python
+def retrieve(query: str, brain_id: str, k: int):
+    ids = ["chunk-1"]
+    scores = {"chunk-1": 4.2}
+    texts = {"chunk-1": "Candidate text"}
+    return ids[:k], scores, texts
+
+def register(context):
+    context.register_search_retriever("my-retriever", retrieve)
+```
+
+Call it with `channels=["plugin:my-retriever"]`. Names are normalized to lowercase; an unknown name returns HTTP `400`.
+
+## Register a second-stage reranker
+
+The callable receives `(query: str, candidates: list[dict], k: int)`. Each candidate contains `id`, `text`, and the current `score`. Return ranked dictionaries using only candidate IDs supplied by core.
+
+```python
+def rerank(query: str, candidates: list[dict], k: int):
+    ranked = score_query_candidate_pairs(query, candidates)
+    return ranked[:k]
+
+def register(context):
+    context.register_search_reranker("my-reranker", rerank)
+```
+
+Core preserves omitted candidates and the untouched tail. A reranker cannot introduce a passage that the first stage did not retrieve.
+
+## Use shared services carefully
+
+`context.adapters`, `context.prompts`, and `context.config` expose BrainAPI services. Treat them as privileged runtime dependencies: scope all data operations to the supplied brain, avoid long blocking work inside `register`, and keep dependency versions compatible with core.
+
+## Package and test
+
+1. Test `register(context)` in each intended runtime.
+2. Test startup with required services unavailable.
+3. Validate brain isolation and authorization for added routes.
+4. If you add Search, measure first-stage recall or reranking quality separately.
+5. Package a `.tar.gz`, then publish with the authenticated CLI only after reviewing its contents.
+
+See [Plugins overview](/v2/plugins) for registry commands and individual official-plugin pages for complete operational examples.

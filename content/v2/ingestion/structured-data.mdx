@@ -1,17 +1,18 @@
 ---
 title: Saving structured data
-description: Ingest event-centric triple sets into the memory store
+description: Ingest direct or event-centric triple sets into the knowledge graph
 ---
 
-Structured ingestion lets you push **already-shaped facts** into the brain as event-centric triples, instead of free text or files. Use it when your app already knows the actors, events, and objects (social actions, purchases, reads, CRM events).
+Structured ingestion lets you push **already-shaped facts** into the brain instead of asking an LLM to infer them from free text. Use direct triples for timeless structure such as product attributes and preferences; use event-centric triples for actions whose identity or time matters.
 
 `POST /ingest/structured` accepts a list of `IngestionTripleSet` objects, an optional **anchor** that ties the new facts into an existing node, and optional **text** for extra context. The API returns **202 Accepted** with a `task_id`. Poll status with [task polling](/v2/ingestion/tasks).
 
 <AgentNote>
 - `POST https://brainapi.lumen-labs.ai/ingest/structured` (or your deploy URL) with `BrainPAT` + brain scope (`X-Brain-ID` / `brain_id`)
-- Body: `{ "data": [IngestionTripleSet, …], "anchor"?, "text"?, "brain_id"? }` — **not** old `json_data` / element schema
+- Body: `{ "data": [IngestionTripleSet, …], "anchor"?, "text"?, "mode"?, "brain_id"? }` — **not** old `json_data` / element schema
 - Expect **202** + `task_id`; poll `GET /tasks/{id}`; **404** = unknown task
-- Each triple: optional `subject` + `subj_event`, required `event` + `event_obj` + `object`
+- Direct triple: required `subject` + `subj_event` + `object`, with `event` and `event_obj` omitted
+- Event-centric triple: `event` and `event_obj` must both be present; `object` is always required
 </AgentNote>
 
 <Callout type="warn">
@@ -20,14 +21,51 @@ Structured ingestion lets you push **already-shaped facts** into the brain as ev
   event-centric triples only.
 </Callout>
 
-## Why event hubs
+## Choose direct or event-centric shape
 
-Each triple is built around an **event node** (the hub), with optional subject → event and required event → object links. That shape matches how BrainAPI stores and retrieves facts: Scout/Architect can backfill missing pieces, and an **anchor** connects the batch to a person, product, or account already in the graph.
+Direct edges represent stable structure without manufacturing an event:
+
+```text
+[subject] --subj_event--> [object]
+
+PRODUCT --HAS--> ATTR
+USER --PREFERS--> ATTR
+```
+
+Event-centric facts preserve an action, timestamp, or provenance-bearing hub:
 
 ```text
 [subject?] --subj_event--> [event] --event_obj--> [object]
                               ^
                          optional anchor
+```
+
+`event` and `event_obj` are a pair: sending only one is a validation error. A legacy `HAS → HAS-event → HAS` wrapper with no `happened_at` is collapsed to one direct `HAS` edge. A dated event is preserved as two edges.
+
+## Processing modes
+
+| Mode | Submitted triples | Optional `text` | LLM behavior |
+| --- | --- | --- | --- |
+| `deterministic` | Persisted directly | Ignored for enrichment | No Scout/Architect; anchor must resolve exactly |
+| `hybrid` | Persisted first | May add context/enrichment | Optional LLM enrichment without re-persisting submitted triples |
+| `enrich` | Persisted first | Used for backfill | Explicit LLM enrichment path |
+
+When `mode` is omitted, BrainAPI chooses `hybrid` if `text` is present and `deterministic` otherwise. Deterministic anchors resolve by UUID or exact `name` + `type` and fail closed when unresolved.
+
+### Direct preference example
+
+```json
+{
+  "data": [
+    {
+      "subject": {"uuid": "user:u01", "name": "u01", "type": "USER"},
+      "subj_event": {"name": "PREFERS", "amount": 0.8},
+      "object": {"uuid": "hub:attr:70s", "name": "70s", "type": "ATTR"}
+    }
+  ],
+  "mode": "deterministic",
+  "brain_id": "commerce"
+}
 ```
 
 ## Quick path
@@ -296,6 +334,11 @@ Available via REST, Python SDK, and TypeScript SDK.
       type: "string",
       required: false,
     },
+    mode: {
+      description: "Processing mode: deterministic, hybrid, or enrich. Defaults to hybrid when text is present and deterministic otherwise.",
+      type: "string",
+      required: false,
+    },
     brain_id: {
       description: "Brain identifier to store the data in.",
       type: "string",
@@ -309,10 +352,10 @@ Available via REST, Python SDK, and TypeScript SDK.
 
 | Field | Required | Description |
 | --- | --- | --- |
-| `subject` | no | Actor node (person, org, …). |
-| `subj_event` | no | Predicate linking subject → event (e.g. `MADE`). |
-| `event` | **yes** | Event hub node. |
-| `event_obj` | **yes** | Predicate linking event → object (e.g. `TARGETED`). |
+| `subject` | conditional | Required with `subj_event` for a direct triple; optional actor for an event-centric triple. |
+| `subj_event` | conditional | Required with `subject` for a direct triple; optional subject → event predicate for an event-centric triple. |
+| `event` | paired | Event hub node. Must be supplied together with `event_obj`, or both omitted. |
+| `event_obj` | paired | Event → object predicate. Must be supplied together with `event`, or both omitted. |
 | `object` | **yes** | Target node (product, post, article, …). |
 
 ### Node fields (`RequestPartialNode`)
@@ -418,4 +461,5 @@ Must include either `uuid`, **or** both `name` and `type`. Plain strings are rej
 
 - [How to poll ingestion tasks](/v2/ingestion/tasks)
 - [Retrieve context](/v2/retrieval/context)
+- [Catalog search and personalization](/v2/retrieval/search/catalog-personalization)
 - [Saving text](/v2/ingestion/text)

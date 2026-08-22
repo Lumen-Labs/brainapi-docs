@@ -1,0 +1,30 @@
+---
+title: Connect agents
+description: Give agents BrainAPI tools through MCP or plugin-provided capabilities
+---
+
+Use MCP when an agent should decide which BrainAPI operation to call during a conversation or investigation. Use REST directly when your application already knows the operation and wants tighter control over retries, latency, and output handling.
+
+## Two MCP surfaces
+
+| Surface | Purpose |
+| --- | --- |
+| BrainAPI MCP server | Lets an agent read and write the configured BrainAPI instance. |
+| Documentation MCP | Lets coding agents search and read these documentation pages. |
+
+The documentation MCP does not grant access to a user's brain. The product MCP does not replace documentation about request contracts.
+
+## Start with a bounded toolset
+
+Expose only the tools an agent needs, supply the correct BrainPAT and brain mapping outside the prompt, and log tool inputs and outputs. A broad tool catalog increases selection ambiguity and the blast radius of a mistaken call.
+
+## Extend with plugins
+
+Plugins can register additional MCP tools alongside REST routes and lifecycle hooks. Prefer a plugin tool when it represents one coherent domain operation; avoid exposing low-level storage primitives that require the model to reconstruct application invariants.
+
+## Continue
+
+- [Connect an MCP client](/v2/agentic/MCP)
+- [Use Docs MCP](/v2/agentic/docs-mcp)
+- [Choose a plugin](/v2/plugins)
+- [Build a plugin](/v2/plugins/authoring)

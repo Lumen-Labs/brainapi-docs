@@ -1,179 +1,60 @@
 ---
-title: Introduction (V2)
-description: Get started with BrainAPI V2
-icon: BookOpen
+title: BrainAPI V2
+description: Build, operate, and extend applications on a traceable knowledge graph
 ---
 
-<AgentNote>
-- Prefer V2 docs; machine index: [llms.txt](https://brainapi.lumen-labs.ai/docs/llms.txt) · Docs MCP: `https://brainapi.lumen-labs.ai/docs/mcp`
-- Markdown for any page: append `.md` to the URL (e.g. `/docs/v2/installation.md`)
-- Ingest returns **202** + `task_id` — poll `GET /tasks/{id}`; **404** ≠ pending
-</AgentNote>
+BrainAPI turns text, files, and structured events into a shared knowledge base for context retrieval, ranked search, recommendations, and agent tools. You choose how much structure and ranking you need; BrainAPI keeps every request scoped to a brain.
 
-## BrainAPI
+<Callout type="info" title="Current documentation">
+These pages describe BrainAPI `2.17.0-dev`. V1 remains available as **Legacy**, but start with V2 for new systems.
+</Callout>
 
-BrainAPI turns raw documents, plain text and events into a queryable knowledge graph you can use to power memory, recommendations, and retrieval without building the full data pipeline yourself.
+## Choose your path
 
-Build once, ingest continuously, query with APIs or natural language.
+<Cards>
+  <Card title="Build an application" href="/v2/quickstart">
+    Start BrainAPI, ingest one document, wait for the asynchronous task, and retrieve grounded context.
+  </Card>
+  <Card title="Operate BrainAPI" href="/v2/installation">
+    Deploy the services, configure providers and storage, inspect health, and diagnose failures.
+  </Card>
+  <Card title="Extend BrainAPI" href="/v2/plugins">
+    Connect agents through MCP or add routes, lifecycle hooks, retrievers, rerankers, and recommendation models.
+  </Card>
+</Cards>
 
-[Get Started](/v2/installation)  
-[GitHub](https://github.com/Lumen-Labs/brainapi2)
+## The product in one minute
 
-![Dash Example 1](/images/dash-example-1.png)
+1. **Ingest** text, files, or explicit graph facts into a named brain.
+2. **Process** the input asynchronously with deterministic logic and, when configured, specialized extraction agents.
+3. **Store** passages, entities, relationships, events, observations, and vectors in the configured backends.
+4. **Retrieve** the representation suited to your application: context packs, ranked hits, recommendations, graph facts, or agent tools.
 
-## Mental Model (How it works)
+The brain is the isolation boundary. A request normally carries a `BrainPAT` token and an `X-Brain-ID` header; BrainAPI validates both before reading or writing data.
 
-1. Receives ingested data from files, text, APIs, or event streams.
-2. Annotates the ingested data with observations when `RUN_OBSERVATIONS` is enabled (off by default).
-3. Processes the input to extract entities, events, facts, and links.
-4. Store results as a connected graph.
-5. Query the graph through API, SDK, MCP, or natural language — including hybrid [context retrieve](/v2/retrieval/context).
+## What you can build
 
-![Dash Example 2](/images/dash-example-2.png)
+| Goal | Start with | Why |
+| --- | --- | --- |
+| Ground an assistant | [Context](/v2/retrieval/context) | Returns passages and graph context ready for an LLM prompt. |
+| Search documentation or support data | [Search](/v2/retrieval/search) | Returns ranked, inspectable hits with optional graph and plugin stages. |
+| Suggest related content or next actions | [Recommendations](/v2/retrieval/recommendations) | Starts from a user or item rather than a text query. |
+| Investigate connected events | [Graph retrieval](/v2/retrieval/entities/synergies) | Exposes relationships and traversal signals directly. |
+| Give an agent tools | [MCP](/v2/agentic/MCP) | Lets compatible runtimes call BrainAPI without embedding REST details in prompts. |
 
-## What You Can Build
+## What BrainAPI is not
 
-- AI assistants with long-term user memory across sessions.
-- Recommendation systems based on entity relationships, not only clicks (see [Synergies](/v2/retrieval/entities/synergies)).
-- Knowledge search over docs, tickets, and chat history.
-- Community mapping for experts, topics, and collaboration paths.
-- Business intelligence over customer feedback, product usage, and support data.
-- Investigation workflows that connect people, events, and sources.
+BrainAPI is not a replacement for ordinary CRUD when rows and foreign keys already answer the problem. It is most useful when information arrives as changing language or events, multiple representations must coexist, or a caller needs traceable relationships behind an answer.
 
-## Architecture Overview
+## First successful request
 
-BrainAPI runs a multi-agent pipeline (what we call "the round table of agents") where each role does one clear job:
+The [Quickstart](/v2/quickstart) takes you from an empty machine to a completed ingest-and-retrieve flow. If BrainAPI is already running, go directly to [Authentication and brains](/v2/brains-and-auth), then choose [how to ingest](/v2/ingestion) and [how to retrieve](/v2/retrieval).
 
-- Scout: reads incoming data and identifies candidate signals.
-- Architect: transforms signals into structured entities and relations.
-- Janitor: cleans duplicates, resolves conflicts, and keeps graph quality stable.
-- KG: writes and maintains the final knowledge graph for retrieval and reasoning.
+## Help and machine-readable docs
 
-This separation keeps ingestion reliable while preserving a consistent graph over time, the agents read the ingested data
-and they talk together to build the graph collaboratively.
-
-## Quickstart
-
-### 1) Run BrainAPI
-
-```bash
-git clone git@github.com:Lumen-Labs/brainapi2.git
-cd brainapi2
-cp .env.example .env
-docker compose -f example-docker-compose.yaml up -d
-```
-
-### 2) Ingest data
-
-```bash
-curl -X POST "http://localhost:8000/ingest/" \
-  -H "Content-Type: application/json" \
-  -H "BrainPAT: $BRAINPAT_TOKEN" \
-  -d '{
-    "brain_id": "quickstart-doc-1",
-    "data": {
-      "data_type": "text",
-      "text_data": "Alice leads the backend team at Acme. Acme launched Project Atlas in 2025."
-    }
-  }'
-# → 202 {"message":"Ingestion accepted","task_id":"…"}
-# Poll: GET /tasks/<task_id>  (see /v2/ingestion/tasks)
-```
-
-### 3) Query results
-
-```bash
-curl -X GET "http://localhost:8000/retrieve?brain_id=quickstart-doc-1&text=Who leads the backend team and what did their company launch?" \
-  -H "Content-Type: application/json" \
-  -H "BrainPAT: $BRAINPAT_TOKEN" \
-```
-
-The response will be the following:
-
-```json
-{
-  "data": [
-    {
-      "text": "Alice leads the backend team at Acme. Acme launched Project Atlas in 2025.",
-      "entities": [
-        {
-          "name": "Alice",
-          "type": "person"
-        }
-      ]
-    }
-  ],
-  "observations": ["Alice is the backend team lead at Acme."],
-  "relationships": [
-    {
-      "name": "leads",
-      "description": "Alice leads the backend team at Acme.",
-      "type": "relationship"
-    },
-    {
-      "name": "launched",
-      "description": "Acme launched Project Atlas in 2025.",
-      "type": "relationship"
-    }
-  ]
-}
-```
-
-## Interaction Modes
-
-Use BrainAPI through the interface that matches your stack:
-
-- REST API for backend services and scheduled jobs.
-- MCP for tool-driven AI runtimes that need direct system access.
-- SDKs for application-level integration with typed client workflows.
-- Natural language querying for fast exploratory analysis.
-
-You can mix modes in one system, such as API ingestion plus MCP-based retrieval.
-
-## Extensibility (Plugins)
-
-BrainAPI is designed as a platform:
-
-- Add custom endpoints to expose domain-specific operations.
-- Customize agent behavior with plugin prompts and logic.
-- Register MCP tools so external AI runtimes can call your functions.
-- Install and publish plugins through the BrainAPI plugin registry.
-
-This lets teams keep a stable core while extending behavior per product domain.
-
-## Concrete Example
-
-- Input: "User `u123` watched 3 videos about graph databases and bookmarked a Neo4j tutorial."
-- Extracted entities/relations:
-  - `u123` -> interested_in -> `graph databases`
-  - `u123` -> engaged_with -> `Neo4j tutorial`
-  - `Neo4j tutorial` -> belongs_to -> `database learning content`
-- What becomes possible afterward:
-  - Recommend the next most relevant content (see [Synergies](/v2/retrieval/entities/synergies)).
-  - Personalize onboarding for similar users.
-  - Answer: "Why did we suggest this course?" with traceable graph links.
-
-## When to Use / Not Use
-
-### Use if:
-
-- You need structured knowledge from messy, changing data sources.
-- You need memory and retrieval across documents, events, and users.
-- You want explainable relationships behind recommendations or answers.
-- You expect to extend behavior with plugins over time.
-
-### Do not use if:
-
-- You only need basic CRUD over fixed schemas.
-- Your data has no relationship logic beyond simple key-value lookup.
-- A single SQL query solves the problem end to end.
-- You do not need extraction, linking, or graph-based retrieval.
-
-## Next Steps
-
-- [Installation](/v2/installation)
-- [Structured ingestion](/v2/ingestion/structured-data)
-- [Retrieve context](/v2/retrieval/context)
-- [Benchmarks](/v2/benchmarks)
-- [Plugin Development](/v2/plugins)
-- [Architecture Deep Dive](/v2/core-philosophy)
+- [Health and troubleshooting](/v2/troubleshooting)
+- [API reference](/v2/reference)
+- [What's new](/v2/changelog)
+- [GitHub](https://github.com/Lumen-Labs/brainapi2)
+- [Discord](https://discord.gg/VTngQTaeDf)
+- [llms.txt](https://brainapi.lumen-labs.ai/docs/llms.txt) and [Docs MCP](/v2/agentic/docs-mcp)

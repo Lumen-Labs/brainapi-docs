@@ -1,7 +1,52 @@
 ---
-title: Core Philosophy
-description: Get started with BrainAPI V2
-icon: Brain
+title: How BrainAPI works
+description: Understand brains, representations, ingestion stages, and retrieval surfaces
 ---
 
-BrainAPI V2 documentation.
+BrainAPI maintains several representations of the same knowledge so applications do not have to force every problem into one database or one retrieval algorithm.
+
+## One brain, several representations
+
+A **brain** is a named, authenticated knowledge boundary. Within it, BrainAPI may store:
+
+- Original resources and text chunks for provenance.
+- Embeddings for semantic candidate generation.
+- Entities and typed relationships for graph traversal.
+- Event nodes when time, actor, target, and context matter.
+- Observations when that optional extraction stage is enabled.
+- Search-specific lexical indexes when Search is enabled on PostgreSQL.
+
+The representations complement each other. A passage preserves exact wording; an entity supplies stable identity; an event preserves an action in time; an embedding finds paraphrases.
+
+## Ingestion is asynchronous
+
+Text and structured ingestion return `202 Accepted` with a `task_id`. The API has accepted work, but the new knowledge is not necessarily queryable yet. Poll `GET /tasks/{task_id}` in the same brain until it reaches a terminal state.
+
+Structured ingestion can write direct `subject → predicate → object` edges, event-centric relationships, or a mixture. Event hubs are valuable when an action needs time and context, but they are not mandatory for static attributes such as `HAS` or `PREFERS`.
+
+## Extraction is configurable
+
+The accurate pipeline can use specialized Scout, Architect, Janitor, and optional observation/consolidation stages. Lightweight and deterministic paths reduce model work. The correct mode depends on whether your input already has structure and whether the application values richer extraction over cost and latency.
+
+## Retrieval is purpose-built
+
+BrainAPI keeps separate public surfaces because their outputs serve different consumers:
+
+- **Context** assembles evidence for an LLM.
+- **Search** ranks inspectable hits for search interfaces and downstream ranking evaluation.
+- **Recommendations** rank items around a target entity or user.
+- **Graph APIs** expose entity state and relationships directly.
+- **MCP** lets an agent choose and combine tools across several steps.
+
+Sharing a knowledge base does not make these outputs interchangeable. Search plugins do not alter `/retrieve/context`, and personalization is a soft reordering stage rather than an authorization filter.
+
+## Defaults favor safe escalation
+
+BrainAPI begins with bounded, understandable behavior: passage retrieval, opt-in Search, opt-in plugins, and explicit graph/personalization controls. Add a more expensive stage only when evaluation shows where the existing stage fails.
+
+## Related guides
+
+- [Choose an ingestion shape](/v2/ingestion)
+- [Choose a retrieval surface](/v2/retrieval)
+- [Understand Search theory](/v2/retrieval/search/theory)
+- [Build a plugin](/v2/plugins/authoring)

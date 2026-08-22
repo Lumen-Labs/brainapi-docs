@@ -1,12 +1,16 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { source, sourceV2 } from "@/lib/source";
+import {
+  getPublishedV2Page,
+  getPublishedV2Pages,
+  source,
+} from "@/lib/source";
 import { getLLMText } from "@/lib/get-llm-text";
 import { absoluteDocsUrl } from "@/lib/site";
 import { searchAPI } from "@/lib/search-api";
 
 async function searchDocs(query: string, tag?: "v1" | "v2") {
-  return searchAPI.search(query, { tag });
+  return searchAPI.search(query, { tag: tag ?? "v2" });
 }
 
 function resolvePage(path: string) {
@@ -21,7 +25,7 @@ function resolvePage(path: string) {
       .replace(/^\/?v2\/?/, "")
       .split("/")
       .filter(Boolean);
-    return sourceV2.getPage(slug.length ? slug : undefined);
+    return getPublishedV2Page(slug.length ? slug : undefined);
   }
   if (cleaned.startsWith("/v1") || cleaned.startsWith("v1")) {
     const slug = cleaned
@@ -31,7 +35,7 @@ function resolvePage(path: string) {
     return source.getPage(slug.length ? slug : undefined);
   }
 
-  const asV2 = sourceV2.getPage(
+  const asV2 = getPublishedV2Page(
     cleaned.replace(/^\//, "").split("/").filter(Boolean),
   );
   if (asV2) return asV2;
@@ -57,7 +61,7 @@ function listSections(version: "v1" | "v2" | "all" = "v2") {
     }
   }
   if (version === "v2" || version === "all") {
-    for (const page of sourceV2.getPages()) {
+    for (const page of getPublishedV2Pages()) {
       out.push({
         version: "v2",
         title: page.data.title,
@@ -98,7 +102,7 @@ export function createDocsMcpServer() {
 
   server.tool(
     "search_docs",
-    "Search BrainAPI documentation (V1/V2). Prefer tag=v2 for new integrations.",
+    "Search BrainAPI documentation. V2 is searched by default; pass tag=v1 only for legacy integrations.",
     {
       query: z.string().describe("Search query"),
       tag: z

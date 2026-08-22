@@ -1,0 +1,30 @@
+# Root-domain policy to apply in Cloudflare after the documentation deployment.
+# User-directed retrieval and search crawlers may access the site.
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+# Training-oriented crawlers remain blocked.
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: *
+Allow: /
+
+Sitemap: https://brainapi.lumen-labs.ai/docs/sitemap.xml
+
+# Cloudflare Content Signals Policy: search=yes, ai-train=no, use=reference

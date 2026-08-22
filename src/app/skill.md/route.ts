@@ -5,7 +5,7 @@ export const revalidate = false;
 const skill = `---
 name: brainapi-docs
 description: Use BrainAPI public documentation and the docs MCP to integrate correctly.
-license: PolyForm-Small-Business
+license: BUSL-1.1
 compatibility: BrainAPI >= 2.13
 metadata:
   docs: ${DOCS_BASE}/llms.txt

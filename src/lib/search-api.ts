@@ -1,4 +1,4 @@
-import { source, sourceV2 } from "@/lib/source";
+import { getPublishedV2Pages, source, sourceV2 } from "@/lib/source";
 import { createSearchAPI } from "fumadocs-core/search/server";
 import type { InferPageType } from "fumadocs-core/source";
 
@@ -22,7 +22,7 @@ function toIndex(page: DocPage, tag: "v1" | "v2") {
 
 const indexes = [
   ...source.getPages().map((page) => toIndex(page, "v1")),
-  ...sourceV2.getPages().map((page) => toIndex(page, "v2")),
+  ...getPublishedV2Pages().map((page) => toIndex(page, "v2")),
 ].filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
 export const searchAPI = createSearchAPI("advanced", {

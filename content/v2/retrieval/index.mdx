@@ -1,0 +1,40 @@
+---
+title: Choose a retrieval surface
+description: Select Context, Search, Recommendations, graph APIs, or MCP from the output your caller needs
+---
+
+All retrieval surfaces can read the same brain, but they solve different caller problems. Start from the output contract rather than choosing the most advanced mechanism.
+
+## Compare the surfaces
+
+| Surface | Output | Best for | Relative work |
+| --- | --- | --- | --- |
+| `/retrieve/context` | Prompt-ready passages, triples, and history | Grounding one LLM call | One bounded retrieval pipeline. |
+| `/retrieve/search` | Ordered hits, scores, snippets, facets, optional timings | Search interfaces and relevance evaluation | Candidate generation plus optional graph/plugin stages. |
+| `/retrieve/recommend` | Items related to a target user or node | Next-item and related-content experiences | Graph reads; optional trained plugin backend. |
+| Entity and graph APIs | Nodes, status, neighbors, paths, relationships | Inspection and deterministic graph workflows | Explicit traversal and application interpretation. |
+| MCP | Tool results selected across several turns | Investigations whose next step depends on earlier evidence | Agent orchestration and multiple calls. |
+
+## Context or Search?
+
+Choose Context when an LLM consumes the result and a union of relevant evidence is more important than a stable total order. Choose Search when the order itself is a product feature, the UI displays snippets/facets, or you need to evaluate ranking metrics.
+
+Enabling Search can change the passage mode available to Context, but it does not turn Context into `/retrieve/search` and does not attach Search plugins to Context.
+
+## Search or Recommendations?
+
+Search starts from query text. Recommendations start from a target such as a user, document, course, media asset, or product. Query-gated personalization can softly reorder catalog search, but it does not replace the recommendation endpoint.
+
+## Graph APIs or MCP?
+
+Use graph APIs when your application knows the entity or traversal it wants. Escalate to MCP when the question requires repeated tool selection, comparison, or follow-up based on intermediate results. Do not pay orchestration cost for a question one API call already answers.
+
+## Worked paths
+
+- [Context request and response](/v2/retrieval/context)
+- [Search quick start](/v2/retrieval/search)
+- [Six Search recipes](/v2/retrieval/search/recipes)
+- [Recommendations](/v2/retrieval/recommendations)
+- [Check an entity](/v2/retrieval/entities/existence)
+- [Find related entities](/v2/retrieval/entities/synergies)
+- [Connect an MCP client](/v2/agentic/MCP)

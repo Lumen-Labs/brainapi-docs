@@ -1,0 +1,346 @@
+---
+title: Retrieve API
+description: BrainAPI retrieve operations.
+full: true
+_openapi:
+  toc:
+    - depth: 2
+      title: Retrieve
+      url: '#retrieve'
+    - depth: 2
+      title: Get Changelogs List
+      url: '#get-changelogs-list'
+    - depth: 2
+      title: Get Changelog Types
+      url: '#get-changelog-types'
+    - depth: 2
+      title: Get Changelog By Id
+      url: '#get-changelog-by-id'
+    - depth: 2
+      title: Get Context
+      url: '#get-context'
+    - depth: 2
+      title: Get Entities
+      url: '#get-entities'
+    - depth: 2
+      title: Get Neighbors
+      url: '#get-neighbors'
+    - depth: 2
+      title: Get Neighbors With Identification Params
+      url: '#get-neighbors-with-identification-params'
+    - depth: 2
+      title: Get Neighbors Ai Mode
+      url: '#get-neighbors-ai-mode'
+    - depth: 2
+      title: Get Entity Context
+      url: '#get-entity-context'
+    - depth: 2
+      title: Get Entity Info
+      url: '#get-entity-info'
+    - depth: 2
+      title: Get Entity Status
+      url: '#get-entity-status'
+    - depth: 2
+      title: Get Entity Synergies
+      url: '#get-entity-synergies'
+    - depth: 2
+      title: Get Hops
+      url: '#get-hops'
+    - depth: 2
+      title: Get Observations List
+      url: '#get-observations-list'
+    - depth: 2
+      title: Get Observation Labels
+      url: '#get-observation-labels'
+    - depth: 2
+      title: Get Observation By Id
+      url: '#get-observation-by-id'
+    - depth: 2
+      title: Get Recommend
+      url: '#get-recommend'
+    - depth: 2
+      title: Post Recommend
+      url: '#post-recommend'
+    - depth: 2
+      title: Get Relationships
+      url: '#get-relationships'
+    - depth: 2
+      title: Get Search
+      url: '#get-search'
+    - depth: 2
+      title: Post Search
+      url: '#post-search'
+    - depth: 2
+      title: Get Structured Data List
+      url: '#get-structured-data-list'
+    - depth: 2
+      title: Get Structured Data Types
+      url: '#get-structured-data-types'
+    - depth: 2
+      title: Get Structured Data By Id
+      url: '#get-structured-data-by-id'
+    - depth: 2
+      title: Get Text Chunks
+      url: '#get-text-chunks'
+    - depth: 2
+      title: Get Vector Stores
+      url: '#get-vector-stores'
+    - depth: 2
+      title: Get Vectors List
+      url: '#get-vectors-list'
+  structuredData:
+    headings:
+      - content: Retrieve
+        id: retrieve
+      - content: Get Changelogs List
+        id: get-changelogs-list
+      - content: Get Changelog Types
+        id: get-changelog-types
+      - content: Get Changelog By Id
+        id: get-changelog-by-id
+      - content: Get Context
+        id: get-context
+      - content: Get Entities
+        id: get-entities
+      - content: Get Neighbors
+        id: get-neighbors
+      - content: Get Neighbors With Identification Params
+        id: get-neighbors-with-identification-params
+      - content: Get Neighbors Ai Mode
+        id: get-neighbors-ai-mode
+      - content: Get Entity Context
+        id: get-entity-context
+      - content: Get Entity Info
+        id: get-entity-info
+      - content: Get Entity Status
+        id: get-entity-status
+      - content: Get Entity Synergies
+        id: get-entity-synergies
+      - content: Get Hops
+        id: get-hops
+      - content: Get Observations List
+        id: get-observations-list
+      - content: Get Observation Labels
+        id: get-observation-labels
+      - content: Get Observation By Id
+        id: get-observation-by-id
+      - content: Get Recommend
+        id: get-recommend
+      - content: Post Recommend
+        id: post-recommend
+      - content: Get Relationships
+        id: get-relationships
+      - content: Get Search
+        id: get-search
+      - content: Post Search
+        id: post-search
+      - content: Get Structured Data List
+        id: get-structured-data-list
+      - content: Get Structured Data Types
+        id: get-structured-data-types
+      - content: Get Structured Data By Id
+        id: get-structured-data-by-id
+      - content: Get Text Chunks
+        id: get-text-chunks
+      - content: Get Vector Stores
+        id: get-vector-stores
+      - content: Get Vectors List
+        id: get-vectors-list
+    contents:
+      - content: Retrieve data from the knowledge graph and data store.
+        heading: retrieve
+      - content: |-
+          Retrieve a paginated list of changelogs.
+
+          Parameters:
+              types (Optional[str]): Optional comma-separated changelog types to filter by; each type will be applied as a filter.
+              query_text (Optional[str]): Optional text used to filter changelogs by content or metadata.
+
+          Returns:
+              list: Changelog records matching the provided filters, constrained by `limit` and `skip`.
+        heading: get-changelogs-list
+      - content: |-
+          Retrieve all unique changelog types for the specified brain.
+
+          Parameters:
+              brain_id (str): Identifier of the brain to query; defaults to "default".
+
+          Returns:
+              list[str]: List of unique changelog type names.
+        heading: get-changelog-types
+      - content: |-
+          Retrieve a changelog entry by its unique identifier.
+
+          Parameters:
+              id (str): Unique identifier of the changelog entry.
+              brain_id (str): Brain identifier to query. Defaults to "default".
+
+          Returns:
+              The changelog entry corresponding to the specified identifier.
+        heading: get-changelog-by-id
+      - content: |-
+          Handle an HTTP request to retrieve an entity's contextual information.
+
+          Parameters:
+              request (GetContextRequestBody): Request body containing:
+                  - text: The text to search context for.
+                  - brain_id: The brain/workspace identifier to query.
+
+          Returns:
+              GetContextResponse: Response containing the context information.
+        heading: get-context
+      - content: >-
+          Retrieve entities matching optional label and text filters with
+          pagination.
+
+
+          Parameters:
+              node_labels (Optional[str]): Comma-separated node labels to filter by (e.g. "Person,Company"); when provided, only entities with any of these labels are returned.
+              query_text (Optional[str]): Free-text filter to match entity properties or content.
+              brain_id (str): Identifier of the brain/knowledge store to query.
+
+          Returns:
+              list: A list of entity records that match the provided filters and pagination parameters.
+        heading: get-entities
+      - content: Get the neighbors of an entity.
+        heading: get-neighbors
+      - content: Get the neighbors of an entity.
+        heading: get-neighbors-with-identification-params
+      - content: |-
+          Retrieve neighboring entities using AI-mode identification parameters.
+
+          Parameters:
+              request (RetrieveNeighborsAiModeRequestBody): Request body containing:
+                  - identification_params: parameters that identify the target entity or entities.
+                  - looking_for: description of the desired neighbors or relation types.
+                  - limit: maximum number of neighbor results to return.
+
+          Returns:
+              list: Neighboring entities that match the AI-mode identification and search criteria.
+        heading: get-neighbors-ai-mode
+      - content: |-
+          Retrieve contextual information for an entity identified by `target`.
+
+          Parameters:
+              target (str): Identifier or name of the target entity.
+              context_depth (int): Maximum depth of related context to include.
+              brain_id (str): Identifier of the brain/knowledge graph to query.
+
+          Returns:
+              dict: A mapping containing the entity's contextual information.
+        heading: get-entity-context
+      - content: >-
+          Retrieve detailed information for an entity identified by the given
+          target and query.
+
+
+          Parameters:
+              target (str): Identifier or name of the target entity to retrieve.
+              query (str): Query text used to refine or disambiguate the requested entity information.
+              max_depth (int): Maximum graph depth to traverse when collecting related information.
+              brain_id (str): Identifier of the brain/namespace to query.
+
+          Returns:
+              dict: A mapping containing the entity's attributes and related contextual information.
+        heading: get-entity-info
+      - content: |-
+          Retrieve status information for a specified entity.
+
+          Parameters:
+              target (str): Identifier or name of the entity to inspect.
+              types (Optional[List[str]]): Optional list of entity types to filter the status computation.
+              brain_id (str): Identifier of the brain (knowledge graph) to query.
+
+          Returns:
+              status (dict): A dictionary containing the entity's status details.
+        heading: get-entity-status
+      - content: |-
+          Retrieve synergies for a specified entity.
+
+          Parameters:
+              target: Identifier or name of the target entity.
+              polarity: "same" for matching node polarity; "opposite" for positive↔negative.
+              do: If True, only direct synergies are returned.
+              pa: If True, potential anchors are returned.
+              ppa: If True, seed anchors are returned.
+              top_k: Maximum synergies to return (default 50).
+              labels: Optional candidate label filter.
+              brain_id: Identifier of the knowledge brain to query.
+
+          Returns:
+              Synergy records for the target entity matching the requested polarity.
+        heading: get-entity-synergies
+      - content: |-
+          Compute graph hops for the given query.
+
+          Parameters:
+              query (str): Search text or entity identifier to start hop traversal from.
+              degrees (int): Maximum number of hop degrees to traverse (default 2).
+              flattened (bool): If True, return a flattened list of hops; otherwise preserve nested hop structure.
+              brain_id (str): Identifier of the brain (knowledge graph) to query.
+
+          Returns:
+              list: Hops (paths) connecting matching entities up to the specified degree; the exact structure varies based on `flattened`.
+        heading: get-hops
+      - content: |-
+          Retrieve a list of observations filtered by the provided parameters.
+
+          Parameters:
+              limit (int): Maximum number of observations to return.
+              skip (int): Number of observations to skip (offset).
+              resource_id (Optional[str]): If provided, only return observations for this resource identifier.
+              labels (Optional[str]): Comma-separated observation labels to filter by; when provided, labels are treated as a list of strings.
+              query_text (Optional[str]): Full-text query to filter observations.
+              brain_id (str): Identifier of the brain/tenant to query.
+
+          Returns:
+              list: A list of observation records that match the provided filters.
+        heading: get-observations-list
+      - content: Get all unique labels from observations.
+        heading: get-observation-labels
+      - content: Get observation by ID.
+        heading: get-observation-by-id
+      - content: |-
+          Ranked event-graph recommendations composing synergies, asymmetric
+          complementary walks, multi-interest medoids, and optional attribute
+          preferences (retrieval-time only; no training).
+        heading: get-recommend
+      - content: >-
+          Retrieve relationships filtered by types, node labels, and query
+          criteria.
+
+
+          Parameters:
+              relationship_types (Optional[str]): Comma-separated relationship types to include.
+              from_node_labels (Optional[str]): Comma-separated source node labels to filter.
+              to_node_labels (Optional[str]): Comma-separated target node labels to filter.
+              query_text (Optional[str]): Text to match against relationships or nodes.
+              query_search_target (Optional[str]): Target of the text query, such as "all", "source", or "target".
+              limit (int): Maximum number of relationships to return.
+              skip (int): Number of relationships to skip.
+              brain_id (str): Brain (dataset) identifier.
+
+          Returns:
+              List of relationship records matching the filters.
+        heading: get-relationships
+      - content: Get a list of structured data.
+        heading: get-structured-data-list
+      - content: Get all unique types from structured data.
+        heading: get-structured-data-types
+      - content: Get structured data by ID.
+        heading: get-structured-data-by-id
+      - content: >-
+          Get text chunks by a query text and optional metadata equality
+          filters.
+        heading: get-text-chunks
+      - content: List available vector store names and dimensions.
+        heading: get-vector-stores
+      - content: List vectors in a store with pagination.
+        heading: get-vectors-list
+---
+
+{/* Generated from schemas\/brainapi-v2.openapi.json. Run npm run api:generate after syncing the schema. */}
+
+BrainAPI retrieve operations.
+
+<APIPage document={"schemas/brainapi-v2.openapi.json"} operations={[{"path":"/retrieve/","method":"get"},{"path":"/retrieve/changelogs","method":"get"},{"path":"/retrieve/changelogs/types","method":"get"},{"path":"/retrieve/changelogs/{id}","method":"get"},{"path":"/retrieve/context","method":"post"},{"path":"/retrieve/entities","method":"get"},{"path":"/retrieve/entities/neighbors","method":"get"},{"path":"/retrieve/entities/neighbors","method":"post"},{"path":"/retrieve/entities/neighbors/ai-mode","method":"post"},{"path":"/retrieve/entity/context","method":"get"},{"path":"/retrieve/entity/info","method":"get"},{"path":"/retrieve/entity/status","method":"get"},{"path":"/retrieve/entity/synergies","method":"get"},{"path":"/retrieve/hops","method":"get"},{"path":"/retrieve/observations","method":"get"},{"path":"/retrieve/observations/labels","method":"get"},{"path":"/retrieve/observations/{id}","method":"get"},{"path":"/retrieve/recommend","method":"get"},{"path":"/retrieve/recommend","method":"post"},{"path":"/retrieve/relationships","method":"get"},{"path":"/retrieve/search","method":"get"},{"path":"/retrieve/search","method":"post"},{"path":"/retrieve/structured-data","method":"get"},{"path":"/retrieve/structured-data/types","method":"get"},{"path":"/retrieve/structured-data/{id}","method":"get"},{"path":"/retrieve/text-chunks","method":"get"},{"path":"/retrieve/vectors/stores","method":"get"},{"path":"/retrieve/vectors/{store}","method":"get"}]} webhooks={[]} hasHead={true} />

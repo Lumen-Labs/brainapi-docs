@@ -1,0 +1,103 @@
+---
+title: Quickstart
+description: Start BrainAPI, ingest text, wait for completion, and retrieve grounded context
+---
+
+This tutorial is for developers evaluating BrainAPI locally. You will start the services with the TUI, ingest one text resource into the `default` brain, wait for the asynchronous job, and retrieve evidence from it.
+
+## Prerequisites
+
+- Node.js and npm for the TUI.
+- Docker for the backing services.
+- A supported local or remote model configuration.
+
+## Start BrainAPI
+
+```bash
+npm install -g brainapi-tui@0.4.0
+brainapi init
+brainapi start
+```
+
+`npm` should place a `brainapi` binary on `PATH`; `init` ends with `Setup complete`, and `start` reports the API on port `8000`, MCP on `8001`, and the selected backing services. If the command is missing, open a new shell or inspect npm's global binary path. If setup stops, run `brainapi doctor` and fix the first failed prerequisite before repeating `init`.
+
+The setup wizard writes a `BRAINPAT_TOKEN`. Export it in the terminal used for API calls:
+
+```bash
+export BRAINPAT_TOKEN="replace-with-your-token"
+export BRAIN_ID="default"
+```
+
+Confirm the API accepts the system token:
+
+```bash
+curl --fail http://localhost:8000/ \
+  -H "BrainPAT: $BRAINPAT_TOKEN"
+```
+
+Expected output is `ok`. If this fails, run `brainapi doctor`. A `401` means the token is missing or wrong; a connection error means the API is not listening yet.
+
+## Ingest one document
+
+```bash
+curl --fail-with-body -X POST http://localhost:8000/ingest/ \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: $BRAIN_ID" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "data_type": "text",
+      "text_data": "Runbook RB-17 says that a saturated connection pool should be mitigated by reducing request concurrency before increasing the pool limit."
+    }
+  }'
+```
+
+Expected response:
+
+```json
+{
+  "message": "Ingestion accepted",
+  "task_id": "<task-id>"
+}
+```
+
+Save `task_id`. A `202` response means the work is queued, not finished.
+
+If you receive `400`, verify `X-Brain-ID`; `401` means the PAT was rejected; `406` means the selected brain was not created and automatic creation/fallback is off. See [Authentication and brains](/v2/brains-and-auth) before retrying.
+
+## Wait for completion
+
+```bash
+export TASK_ID="replace-with-task-id"
+
+curl --fail-with-body "http://localhost:8000/tasks/$TASK_ID" \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: $BRAIN_ID"
+```
+
+Poll with bounded backoff until the returned task reaches a terminal state. Do not interpret `404` as pending: it usually means the task ID or brain is wrong, or the task record expired.
+
+On success the response retains your `task_id`, reports a terminal success status, and includes the worker result. A terminal error should be diagnosed from its error detail and worker log instead of replaying ingestion blindly.
+
+## Retrieve grounded context
+
+```bash
+curl --fail-with-body -X POST http://localhost:8000/retrieve/context \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: $BRAIN_ID" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "What should I do before increasing a saturated connection pool limit?"
+  }'
+```
+
+Inspect `text_context`, `triples`, and `historical_context` rather than expecting one generated answer string. Your application decides how to show or pass this evidence to a model.
+
+The expected result contains evidence related to the saved runbook sentence. If all evidence fields are empty, confirm task success and brain scope first; then inspect active embedding, data, vector, and graph services with `brainapi doctor`.
+
+## What to try next
+
+- Learn how [authentication and brain scoping](/v2/brains-and-auth) work.
+- Choose another [ingestion shape](/v2/ingestion).
+- Compare [Context, Search, Recommendations, graph APIs, and MCP](/v2/retrieval).
+- Open the [troubleshooting guide](/v2/troubleshooting) if a stage fails.

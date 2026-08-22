@@ -1,0 +1,68 @@
+---
+title: Health and troubleshooting
+description: Diagnose BrainAPI startup, authentication, brain, ingestion, storage, Search, plugin, and MCP failures
+---
+
+Start with the failing boundary instead of changing several settings at once. Run `brainapi doctor`, capture the HTTP status and response body, and verify that API, worker, and MCP processes use the same `.env`.
+
+## Health checklist
+
+```bash
+brainapi doctor
+curl --fail http://localhost:8000/ -H "BrainPAT: $BRAINPAT_TOKEN"
+curl --fail http://localhost:8001/
+curl --fail http://localhost:9091/healthz
+curl --fail http://localhost:9000/minio/health/live
+```
+
+Only test services selected by your deployment profile.
+
+## Startup and configuration
+
+| Symptom | Likely cause | Diagnostic | Fix |
+| --- | --- | --- | --- |
+| API exits with `Invalid MODELS_MODE` | Required mode missing or invalid. | Inspect `.env` loaded by the process. | Set `MODELS_MODE=local` or `remote`. |
+| API exits with provider validation error | Active provider lacks a model, key, endpoint, or credentials file. | Compare provider variables with [Configuration](/v2/configuration). | Supply the active provider's complete settings or select another provider. |
+| Console returns 404 | Static console disabled or not built. | Check `CONSOLE_ENABLED` and console build output. | Enable it and build/restart the API, or run the development console. |
+| API and worker disagree | Processes loaded different environment files. | Compare startup logs and service configuration. | Mount or copy one `.env` into all services. |
+
+## Authentication and brain selection
+
+| Symptom | Likely cause | Diagnostic | Fix |
+| --- | --- | --- | --- |
+| `400 Brain ID is required` | No brain resolved. | Inspect `X-Brain-ID`, query, or body. | Send `X-Brain-ID` or deliberately enable default fallback. |
+| `401 Invalid or missing BrainPAT` | Missing/wrong token or brain-PAT mismatch. | Call `/meta/login-info` with the token. | Use the system PAT or the PAT belonging to the selected brain. |
+| `406 Brain not found` | Brain is absent and creation/fallback is disabled. | List/create brains with the system PAT. | Create it explicitly or change the intended setting. |
+| `503 Database unavailable` | MongoDB lookup failed. | Test Mongo connection and credentials. | Correct `MONGO_*`/connection string and restart. |
+
+## Ingestion and tasks
+
+| Symptom | Likely cause | Diagnostic | Fix |
+| --- | --- | --- | --- |
+| Ingest returned `202` but retrieval is empty | Work is still queued/running. | Poll `/tasks/{task_id}` in the same brain. | Wait for a terminal success before retrieving. |
+| Task lookup returns `404` | Wrong task ID/brain or expired cache record. | Compare request brain with ingest brain. | Use the original brain and task ID; do not treat 404 as pending. |
+| File ingest never advances | Parser callback or worker unavailable. | Check worker logs and DocParser/OCR configuration. | Start the worker and correct parser endpoint/token/callback host. |
+| Structured request returns `422` | Shape failed Pydantic validation. | Check paired `event`/`event_obj`, node types, and fields. | Correct the payload using [structured ingestion](/v2/ingestion/structured-data). |
+
+## Search and retrieval
+
+| Symptom | Likely cause | Diagnostic | Fix |
+| --- | --- | --- | --- |
+| `/retrieve/search` returns `404` | Search disabled. | Check `SEARCH_ENABLED`. | Use Context or enable Search with PostgreSQL. |
+| Startup rejects Search | Wrong data backend or both retrievers disabled. | Check `DATA_DB`, `SEARCH_USE_DENSE`, and `SEARCH_USE_BM25`. | Use PostgreSQL and enable at least one first stage. |
+| Plugin channel/reranker returns `400` | Plugin missing, failed, or name wrong. | Inspect loader banner and plugin health. | Install/restart/fix the plugin and use its registered lowercase name. |
+| Filtered Search returns fewer than `k` | `extras` is hard-AND filtering after ranking. | Remove filters one at a time and inspect facets. | Broaden the filters or ingest missing metadata. |
+| Context ranking changed after enabling Search | `CONTEXT_PASSAGE_MODE` changed its passage leg. | Inspect the configured mode. | Select `ilike`, `dense`, `bm25`, or `hybrid` deliberately. |
+
+## Plugins and MCP
+
+| Symptom | Likely cause | Diagnostic | Fix |
+| --- | --- | --- | --- |
+| Plugin marked failed | Manifest, dependency, import, or registration error. | Read the loader error before later service logs. | Correct that first failure and restart the relevant process. |
+| SPLADE/ColBERT returns no candidates after restart | Plugin-local in-memory index is empty. | Inspect plugin health/index size. | Rebuild the index as part of startup or deployment. |
+| MCP client cannot connect | URL, transport, auth, or MCP process mismatch. | Curl the MCP health endpoint and inspect client logs. | Correct the client URL/transport and OAuth or PAT setup. |
+| Docs MCP finds a hidden page | Stale deployment or publication predicate drift. | Compare `/llms/v2.txt`, search, and `list_sections`. | Rebuild/deploy all machine surfaces from the shared predicate. |
+
+## Ask for help
+
+When reporting an issue, include the BrainAPI version, deployment profile, sanitized configuration choices, exact status/body, task or request ID, and the first relevant error. Never include PATs or provider secrets. Open an issue on [GitHub](https://github.com/Lumen-Labs/brainapi2/issues) or ask in [Discord](https://discord.gg/VTngQTaeDf).

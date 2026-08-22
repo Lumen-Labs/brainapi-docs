@@ -30,6 +30,7 @@ export const v2 = defineDocs({
 });
 
 export default defineConfig({
+  lastModifiedTime: "git",
   mdxOptions: {
     rehypePlugins: (v) => [rehypeKatex, ...v],
     remarkPlugins: [remarkMath],

@@ -1,0 +1,436 @@
+---
+title: Search recipes
+description: End-to-end BrainAPI Search patterns for documentation, support, incidents, research, technical corpora, and personalized collections
+---
+
+These recipes show how the same Search contract adapts to different products. They are fictional examples, not relevance or latency claims. Start with the smallest request, inspect the response, and add a stage only when it addresses an observed failure.
+
+All requests use `BrainPAT` for authentication and `X-Brain-ID` for brain scoping. Text and structured ingestion are asynchronous; poll the returned task before searching.
+
+## 1. Developer documentation: exact codes and semantic questions
+
+### Goal and corpus
+
+An API documentation portal must support both navigational queries such as `AUTH-041` and questions such as “how do I recover when a refresh token expires?” The corpus contains reference pages, guides, and troubleshooting passages with scalar metadata for product, version, and language.
+
+### Minimal ingestion
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/ingest/" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -H "X-Brain-ID: developer-docs" \
+  -d '{
+    "data": {
+      "data_type": "text",
+      "text_data": "AUTH-041 means the refresh token is expired. Reauthenticate the SDK client before retrying the request."
+    },
+    "meta_keys": {
+      "product": "identity",
+      "version": "2",
+      "locale": "en"
+    },
+    "skip_enrichment": true
+  }'
+```
+
+`skip_enrichment=true` is appropriate because this recipe needs searchable chunks and embeddings, not an automatically extracted graph.
+
+### Search
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/retrieve/search" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -H "X-Brain-ID: developer-docs" \
+  -d '{
+    "query": "recover after an expired refresh token",
+    "k": 10,
+    "channels": ["passages"],
+    "fusion": "rrf",
+    "profile_stages": true
+  }'
+```
+
+### Why these controls
+
+- `passages` invokes the core BM25/dense path.
+- BM25 can preserve exact evidence such as `AUTH-041`, while dense retrieval can match a paraphrase.
+- RRF combines their orderings without comparing BM25 and cosine scores directly.
+- Profiling lets you separate query embedding from retrieval.
+
+Inspect `scores.bm25`, `scores.dense`, and `channel_lists`. A semantic query may have strong dense evidence without an exact term match; an error-code query should normally appear in the BM25 list when the code is stored verbatim.
+
+### Variations and failure diagnosis
+
+- Use GET for a simple addressable `?query=AUTH-041` search.
+- Add `extras={"version":"2"}` when the caller explicitly selects a documentation version.
+- If exact codes are absent from BM25, verify they survived chunking and that BM25 is enabled.
+- If natural-language questions are empty, verify embeddings completed in the same brain.
+
+### Idea to test
+
+**Hypothesis:** hybrid improves a test set containing both codes and questions. **Measure:** compare BM25-only, dense-only, and hybrid Recall@10/nDCG@10. **Stop:** keep the simpler configuration if hybrid does not improve the mixed set.
+
+## 2. Customer support: filters and facets
+
+### Goal and corpus
+
+A support portal contains similar procedures for multiple products and locales. The user selected Italian Identity documentation, so those selections are hard constraints rather than ranking preferences.
+
+### Minimal ingestion
+
+```json
+{
+  "data": {
+    "data_type": "text",
+    "text_data": "Per sbloccare un account, verifica prima il metodo MFA e poi avvia il ripristino dell’identità."
+  },
+  "meta_keys": {
+    "product": "identity",
+    "locale": "it",
+    "article_type": "procedure"
+  },
+  "skip_enrichment": true
+}
+```
+
+Send this body to `POST /ingest/` with `BrainPAT` and `X-Brain-ID: support-kb`.
+
+### Search
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/retrieve/search" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -H "X-Brain-ID: support-kb" \
+  -d '{
+    "query": "account bloccato dopo il reset MFA",
+    "k": 20,
+    "channels": ["passages"],
+    "extras": {
+      "product": "identity",
+      "locale": "it"
+    },
+    "profile_stages": true
+  }'
+```
+
+### Why these controls
+
+`extras` uses case-insensitive scalar equality and hard AND. Every returned hit must have both `product=identity` and `locale=it`. The response `facets` counts metadata only over the hits that remain after filtering and final truncation; it is not a global aggregation over the support corpus.
+
+### Expected response behavior
+
+- `channel_lists` may show more retrieved candidates than the final `hits` list.
+- The final list can contain fewer than 20 hits because filtering occurs after candidate retrieval.
+- A missing metadata key does not match the filter.
+
+### Variations and failure diagnosis
+
+- Remove `article_type` from the filter when guides and troubleshooting articles are both acceptable.
+- Do not infer `locale` from a user profile and silently apply it as a hard filter; the caller should assert it.
+- If all hits disappear, inspect stored scalar metadata and compare an unfiltered request before changing ranking.
+
+### Idea to test
+
+**Hypothesis:** retrieving a larger application-side page before applying highly selective filters improves the number of usable hits. **Measure:** returned-hit coverage and latency at fixed filter selectivity. **Stop:** do not deepen retrieval if users already receive enough relevant filtered results.
+
+## 3. Incident response: entities, events, and escalation
+
+### Goal and corpus
+
+An operations console must find incident notes and graph nodes related to an authentication outage after a gateway deployment. Text explains symptoms; structured facts connect services and dated events.
+
+### Minimal structured ingestion
+
+```json
+{
+  "data": [
+    {
+      "subject": {
+        "uuid": "service:gateway",
+        "name": "API Gateway",
+        "type": "SERVICE"
+      },
+      "subj_event": {"name": "DEPENDS_ON"},
+      "object": {
+        "uuid": "service:identity",
+        "name": "Identity Service",
+        "type": "SERVICE"
+      }
+    },
+    {
+      "subject": {
+        "uuid": "service:gateway",
+        "name": "API Gateway",
+        "type": "SERVICE"
+      },
+      "subj_event": {"name": "HAD"},
+      "event": {
+        "uuid": "event:gateway-rollout-2026-08",
+        "name": "Gateway rollout",
+        "type": "EVENT",
+        "happened_at": "2026-08-18T09:00:00Z"
+      },
+      "event_obj": {"name": "AFFECTED"},
+      "object": {
+        "uuid": "service:identity",
+        "name": "Identity Service",
+        "type": "SERVICE"
+      }
+    }
+  ],
+  "mode": "deterministic",
+  "brain_id": "operations"
+}
+```
+
+Send this body to `POST /ingest/structured`. Ingest incident reports as ordinary text into the same brain so passage and graph candidates can meet in Search.
+
+### Search
+
+```json
+{
+  "query": "authentication failures after the gateway rollout",
+  "k": 20,
+  "channels": ["passages", "entities", "events"],
+  "node_labels": ["SERVICE", "ENTITY"],
+  "expand": "neighbors",
+  "profile_stages": true
+}
+```
+
+### Why these controls
+
+- Passages recover incident reports and runbook text.
+- Entities recover addressable service nodes.
+- Events add dated operational changes with recency-aware scoring.
+- One-hop neighbors can expose a directly connected service without performing an open-ended traversal.
+
+### Search versus agentic retrieval
+
+This request can rank likely evidence. It cannot by itself prove that the rollout caused the outage or choose a rollback. If the task requires following several relationships, checking timestamps, retrieving a runbook, and reconciling conflicting evidence, pass the initial hits to an [MCP-driven investigation](/v2/agentic/MCP).
+
+### Variations and failure diagnosis
+
+- Compare `passages` alone against each graph channel before enabling all of them.
+- Restrict `node_labels` if generic entities crowd out services.
+- Remove `expand="neighbors"` when high-degree dependencies add noise.
+- If events are absent, verify that `event` and `event_obj` were both ingested and `happened_at` is valid.
+
+### Idea to test
+
+**Hypothesis:** the events channel improves recent-change incident queries, while neighbors help dependency queries. **Measure:** separate labeled slices and stage latency. **Stop:** remove a channel that has no slice-specific win.
+
+## 4. Research and policy: bounded cross-encoder reranking
+
+### Goal and corpus
+
+A governance team searches many near-duplicate policy passages. The first stage already retrieves the relevant documents, but the top results confuse rules for contractors with rules for employees.
+
+### Prerequisite
+
+Ingest policy passages into a `policy-library` brain and install [Search Rerank](/v2/search-rerank). A reranker needs no index; its model loads lazily on the first request.
+
+### Search
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/retrieve/search" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -H "X-Brain-ID: policy-library" \
+  -d '{
+    "query": "retention exceptions for contractors after termination",
+    "k": 10,
+    "channels": ["passages"],
+    "rerank": "plugin:cross-encoder",
+    "profile_stages": true
+  }'
+```
+
+### Why these controls
+
+The core path supplies candidates. The cross-encoder reads the query and each candidate together, which may help it distinguish subject, exception, and timing language. In default mode BrainAPI reranks at most 10 candidates.
+
+### Expected response behavior
+
+Look for `scores.rerank` on reranked hits and a plugin timing stage. A changed order is not automatically an improvement; validate it against judgments. Recall cannot rise when the relevant passage never reached the candidate head.
+
+### Variations and failure diagnosis
+
+- Use `mode="catalog"` only when a deeper catalog pool is intentional; it retrieves at least 50 and reranks at most 50.
+- If health reports `loaded=false`, that is normal before the first successful prediction.
+- A missing plugin returns HTTP 400 instead of silently using core order.
+
+### Idea to test
+
+**Hypothesis:** reranking improves fine-grained policy precision after candidate recall is already high. **Measure:** candidate Recall@10, nDCG/MRR before and after reranking, and p50/p95. **Stop:** reject the reranker if it reorders known-relevant passages downward or exceeds the product budget.
+
+## 5. Technical terminology: compare SPLADE and ColBERT
+
+### Goal and corpus
+
+An engineering knowledge base contains acronyms, library names, language qualifiers, and configuration terms. The application wants to test whether learned sparse expansion or token-level interaction fixes a measured recall gap.
+
+### Prerequisite indexes
+
+After ingesting the same chunks into `engineering-kb`, install both plugins and build their independent in-memory indexes:
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/search-splade/index" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -d '{"brain_id":"engineering-kb","limit":5000}'
+
+curl -X POST "<DEPLOYMENT_URL>/search-colbert/index" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -d '{"brain_id":"engineering-kb","limit":5000}'
+```
+
+### Compare three requests
+
+```json
+{
+  "query": "Python async client connection pool timeout",
+  "k": 20,
+  "channels": ["passages"]
+}
+```
+
+```json
+{
+  "query": "Python async client connection pool timeout",
+  "k": 20,
+  "channels": ["passages", "plugin:splade"]
+}
+```
+
+```json
+{
+  "query": "Python async client connection pool timeout",
+  "k": 20,
+  "channels": ["passages", "plugin:colbert"]
+}
+```
+
+### Why compare instead of stack blindly
+
+SPLADE may bridge vocabulary such as “connection pool” and related learned terms while retaining sparse matching. ColBERT preserves relationships among tokens such as `Python`, `async`, and `timeout`. Those are hypotheses based on model design, not guarantees for this corpus.
+
+Use each hit's `channel` and `scores.plugin` to see which plugin contributed it.
+`channel_lists` reports the core dense, BM25, graph, neighbor, and literal lists;
+it does not add plugin-specific keys. Evaluate each arm on the same queries; do
+not judge from one attractive result.
+
+### Variations and failure diagnosis
+
+- Test plugin-only channels to isolate the retriever, then merge with passages for the product arm.
+- An HTTP 400 means the hook is not registered; an empty candidate list with HTTP 200 can mean a valid empty index.
+- Both indexes are lost on API restart and must be rebuilt.
+- ColBERT’s token-vector index generally consumes more memory than SPLADE’s sparse index.
+
+### Idea to test
+
+**Hypothesis:** SPLADE helps acronym/vocabulary queries while ColBERT helps multi-term constraints. **Measure:** predeclare those query slices, compare Recall@K/nDCG, index time, memory, and query latency. **Stop:** avoid application-level routing if neither slice has a repeatable winner.
+
+## 6. Learning catalog: query-gated personalization
+
+### Goal and corpus
+
+An internal learning library contains addressable courses. A broad query such as “security course” may reflect a learner’s topic preferences, while a specific code such as `SEC-204` should preserve query relevance.
+
+### Ingest searchable course text
+
+```json
+{
+  "data": {
+    "data_type": "text",
+    "text_data": "DOCID course:threat-modeling. Threat Modeling Foundations. Topic: security. Level: beginner."
+  },
+  "skip_enrichment": true
+}
+```
+
+Send this to `POST /ingest/` with `X-Brain-ID: learning-library`. Then create the course and preference structure:
+
+```json
+{
+  "data": [
+    {
+      "subject": {
+        "uuid": "course:threat-modeling",
+        "name": "Threat Modeling Foundations",
+        "type": "ENTITY"
+      },
+      "subj_event": {"name": "HAS"},
+      "object": {
+        "uuid": "hub:topic:security",
+        "name": "security",
+        "type": "ATTR"
+      }
+    },
+    {
+      "subject": {
+        "uuid": "user:alex",
+        "name": "Alex",
+        "type": "USER"
+      },
+      "subj_event": {"name": "PREFERS", "amount": 0.8},
+      "object": {
+        "uuid": "hub:topic:security",
+        "name": "security",
+        "type": "ATTR"
+      }
+    }
+  ],
+  "mode": "deterministic",
+  "brain_id": "learning-library"
+}
+```
+
+### Search
+
+```json
+{
+  "query": "security course",
+  "k": 10,
+  "mode": "catalog",
+  "channels": ["passages"],
+  "target": "user:alex"
+}
+```
+
+### Why these controls
+
+The `DOCID` marker maps the passage to the stable course entity. The course and user share the same attribute hub, allowing personalization to score an already retrieved node. `target` is a soft reranking input; it does not call `/retrieve/recommend` or filter out courses without a matching preference.
+
+### Expected response behavior
+
+- Eligible hits expose `node_id` and may receive `scores.personalize`.
+- Missing users, zero preferences, or hits without `node_id` preserve the retrieval path safely.
+- `SEC-204` contains digits, so the query gate gives personalization zero influence.
+- A broad one-content-token query has stronger preference influence than a detailed multi-token query.
+
+### Variations and failure diagnosis
+
+- Use direct `HAS` edges for stable course attributes and dated EVENT edges for learner behavior.
+- Do not copy inferred preferences into `extras`; that would hard-filter results.
+- If personalization is always zero, verify the user resolves, `DOCID` matches the entity UUID, and both sides share identical hub ids.
+
+### Idea to test
+
+**Hypothesis:** preference blending improves broad discovery queries but not navigational course-code queries. **Measure:** anonymous versus personalized ranking with query-by-user judgments. **Stop:** ordinary catalog qrels without users cannot validate this hypothesis.
+
+## Build your own recipe
+
+Use this sequence for a new domain:
+
+1. Define what a correct result is: passage, node, or multi-step answer.
+2. Ingest a representative corpus and establish a passage-only hybrid baseline.
+3. Label a small but varied query set, including exact, semantic, and difficult cases.
+4. Identify whether failure is missing candidates, bad order, incorrect filtering, or a multi-hop task.
+5. Add one channel or stage, compare it with the frozen baseline, and keep it only if it solves the intended slice.
+
+For every field and response shape, return to the [Search API reference](/v2/retrieval/search). For the ranking mechanics, read [Search theory](/v2/retrieval/search/theory).

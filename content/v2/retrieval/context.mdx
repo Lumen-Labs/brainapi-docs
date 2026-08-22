@@ -282,6 +282,29 @@ Context retrieval expands beyond a single hop:
 
 Tune `max_facts`, `max_passages`, and `use_ppr` for product latency; leave `sufficiency_retry` false unless you accept a second pass.
 
+## Passage retrieval mode
+
+Context remains a prompt-ready evidence API even when Search is enabled. Search
+plugins, catalog mode, filters, facets, and personalized ranking do not run on
+this endpoint.
+
+When `SEARCH_ENABLED=false`, Context preserves its historical passage behavior:
+dense retrieval fused with the existing ILIKE lexical leg. The value of
+`CONTEXT_PASSAGE_MODE` is ignored in that state.
+
+When Search is enabled, `CONTEXT_PASSAGE_MODE` selects the passage legs:
+
+| Mode | Passage retrieval |
+| --- | --- |
+| `hybrid` | Dense + BM25, fused with RRF (default) |
+| `bm25` | BM25 only; no query embedding for passages |
+| `dense` | Dense only |
+| `ilike` | Dense + legacy ILIKE lexical search |
+
+This setting changes only the passage evidence inside Context. It does not
+change graph fact retrieval or make the response equivalent to the ranked
+[`/retrieve/search`](/v2/retrieval/search) hit list.
+
 ## Stage profiler
 
 Set `profile_stages: true` on the request to receive `stage_timings`. Operators can also enable the server-side profiler with `TRACE_STAGE_PROFILER_ENABLED` (not in `.env.example` by default). See [Installation](/v2/installation#pipeline-and-ingest-tuning).
@@ -289,5 +312,5 @@ Set `profile_stages: true` on the request to receive `stage_timings`. Operators 
 ## Related
 
 - [Structured ingestion](/v2/ingestion/structured-data)
+- [Ranked Search](/v2/retrieval/search)
 - [Entity synergies](/v2/retrieval/entities/synergies)
-- [Benchmarks](/v2/benchmarks)

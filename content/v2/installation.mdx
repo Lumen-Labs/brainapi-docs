@@ -5,15 +5,52 @@ icon: Package
 ---
 
 <AgentNote>
-- Clone `Lumen-Labs/brainapi2`, copy `.env.example` → `.env`, fill keys before start
+- Recommended: `npm install -g brainapi-tui@0.4.0` → `brainapi init` → `brainapi start`
+- The TUI manages source, a Python venv, `.env`, services, API, worker, MCP, and optional plugins
+- Contributors can instead clone `Lumen-Labs/brainapi2`, copy `.env.example` → `.env`, and run from source
 - Dev: `./bin/brainapi <command>` · Prod: `docker compose -f example-docker-compose.yaml up -d`
 - API default `:8000`; product MCP often `:8001`; docs MCP is separate at `/docs/mcp`
 - After plugin install, restart API (and worker/MCP when those surfaces change)
 </AgentNote>
 
-BrainAPI v2 supports two common installation flows: local development and Docker-based production deployment.
+BrainAPI v2 supports three installation paths. Use the TUI for a local evaluation or application-development environment, clone the repository when contributing to BrainAPI itself, and use an explicit Compose deployment for a controlled self-hosted environment.
 
-<Tabs items={["Development", "Production (Docker Compose)"]}>
+<Tabs items={["TUI (recommended)", "Development", "Production (Docker Compose)"]}>
+  <Tab value="TUI (recommended)">
+  The `brainapi` TUI is the shortest supported path from a new machine to a running API, worker, MCP server, console, and selected backing services.
+
+```bash
+npm install -g brainapi-tui@0.4.0
+brainapi init
+brainapi start
+```
+
+`brainapi init` checks Python and Docker, clones BrainAPI into `~/.brainapi/source`, creates its virtual environment, and opens the configuration wizard. The wizard lets you choose databases, local or remote model providers, ingestion mode, Search, credentials, services, and official plugins. It writes the resulting configuration to `~/.brainapi/source/.env`.
+
+When `brainapi start` is ready, the common local endpoints are:
+
+| Surface | URL |
+| --- | --- |
+| REST API | `http://localhost:8000` |
+| Web console | `http://localhost:8000/console` |
+| Product MCP server | `http://localhost:8001/mcp` |
+
+Verify the API with the system PAT created or supplied during setup:
+
+```bash
+export BRAINPAT_TOKEN="replace-with-your-token"
+curl --fail http://localhost:8000/ \
+  -H "BrainPAT: $BRAINPAT_TOKEN"
+```
+
+Expected output is `ok`. If startup or verification fails, run `brainapi doctor`; it checks the managed Python environment, Docker, model providers, credentials, and configured services.
+
+```bash
+brainapi doctor
+```
+
+Use `brainapi config` to revisit the wizard and `brainapi update` to update the managed checkout. See the complete [TUI installer reference](/v2/tui) for non-interactive flags, Search choices, service selection, directory layout, and process controls.
+  </Tab>
   <Tab value="Development">
   Use this flow if you are working on the BrainAPI codebase or building plugins.
 
@@ -228,8 +265,128 @@ These are optional cost/latency controls (documented in `.env.example`):
 
 For `/retrieve/context`, set `profile_stages: true` on the request to receive `stage_timings` (see [Context](/v2/retrieval/context#stage-profiler)). Operators can also set `TRACE_STAGE_PROFILER_ENABLED` on the server (not shipped in `.env.example`).
 
+## Search configuration
+
+Ranked Search is off by default and requires PostgreSQL for text chunks:
+
+```dotenv
+DATA_DB="postgresql"
+SEARCH_ENABLED="true"
+SEARCH_USE_DENSE="true"
+SEARCH_USE_BM25="true"
+SEARCH_FUSION="rrf"
+SEARCH_FUSION_ALPHA="0.5"
+SEARCH_BM25_K1="1.2"
+SEARCH_BM25_B="0.75"
+SEARCH_COMMUNITY_LABELS="TYPE,CLASS,TOPIC"
+SEARCH_NEIGHBOR_FANOUT="50"
+CONTEXT_PASSAGE_MODE="hybrid"
+```
+
+<TypeTable
+  type={{
+    SEARCH_ENABLED: {
+      description: "Enable GET|POST /retrieve/search and PostgreSQL search indexes.",
+      type: "boolean",
+      required: false,
+      default: "false",
+    },
+    SEARCH_USE_DENSE: {
+      description: "Use embedding-vector retrieval for the passages channel.",
+      type: "boolean",
+      required: false,
+      default: "true",
+    },
+    SEARCH_USE_BM25: {
+      description: "Use PostgreSQL BM25 retrieval for the passages channel.",
+      type: "boolean",
+      required: false,
+      default: "true",
+    },
+    SEARCH_FUSION: {
+      description: "Default passage fusion: rrf or cc.",
+      type: "string",
+      required: false,
+      default: "rrf",
+    },
+    SEARCH_FUSION_ALPHA: {
+      description: "Dense weight used by convex-combination fusion.",
+      type: "number",
+      required: false,
+      default: "0.5",
+    },
+    SEARCH_BM25_K1: {
+      description: "Positive BM25 term-frequency saturation constant.",
+      type: "number",
+      required: false,
+      default: "1.2",
+    },
+    SEARCH_BM25_B: {
+      description: "BM25 document-length normalization, from 0 through 1.",
+      type: "number",
+      required: false,
+      default: "0.75",
+    },
+    SEARCH_COMMUNITY_LABELS: {
+      description: "Comma-separated graph hub labels used by the communities channel.",
+      type: "string",
+      required: false,
+      default: "TYPE,CLASS,TOPIC",
+    },
+    SEARCH_NEIGHBOR_FANOUT: {
+      description: "Maximum one-hop members inspected per seed for neighbor/community expansion.",
+      type: "number",
+      required: false,
+      default: "50",
+    },
+    CONTEXT_PASSAGE_MODE: {
+      description: "Passage leg for /retrieve/context while Search is enabled: hybrid, bm25, dense, or ilike.",
+      type: "string",
+      required: false,
+      default: "hybrid",
+    },
+  }}
+/>
+
+Search startup validation rejects `SEARCH_ENABLED=true` unless
+`DATA_DB=postgresql` and at least one of `SEARCH_USE_DENSE` or
+`SEARCH_USE_BM25` is true.
+
+### Multilingual full-text search
+
+English full-text indexing is always available. To add another tokenizer for
+selected brains, set both values:
+
+```dotenv
+SEARCH_FTS_REGCONFIG="italian"
+SEARCH_FTS_BRAINS="catalogit,catalogit2"
+```
+
+Supported alternate configurations are `italian`, `spanish`, and `simple`.
+Only listed brains use the alternate `tsvector`; other brains retain English.
+
+### Advanced candidate fill
+
+`SEARCH_LITERAL_FILL=true` enables an opt-in literal-overlap sidecar. It scans
+token-specific chunk candidates and merges residual literal matches after the
+frozen core head. Keep it false unless the workload has been evaluated: it can
+add data reads and is not part of the default Search claim.
+
+### Large embedding dimensions
+
+pgvector HNSW's regular vector index is limited for high dimensions. With
+Search enabled and an embedding dimension above 2000, BrainAPI creates a
+`halfvec` cosine HNSW index for candidate generation, then orders the candidate
+set with float32 vector distances. If the halfvec index cannot be created,
+startup fails rather than silently shipping an unindexed Search path.
+
+The default Search latency target is p50 `<200 ms` excluding the separately
+profiled `embed.query` stage. It applies to `mode=default`, no plugin reranker,
+and no `target`; deeper catalog, plugin, and personalized requests have their
+own cost profile.
+
 ## Next steps
 
 - [Structured ingestion](/v2/ingestion/structured-data)
 - [Retrieve context](/v2/retrieval/context)
-- [Run benchmarks](/v2/benchmarks)
+- [Ranked Search](/v2/retrieval/search)

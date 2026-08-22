@@ -1,6 +1,7 @@
 import { getLLMText } from "@/lib/get-llm-text";
 import { source } from "@/lib/source";
 import { notFound } from "next/navigation";
+import { absoluteDocsUrl } from "@/lib/site";
 
 export const revalidate = false;
 
@@ -16,6 +17,7 @@ export async function GET(
     headers: {
       "Content-Type": "text/markdown; charset=utf-8",
       "Cache-Control": "public, max-age=3600",
+      Link: `<${absoluteDocsUrl(page.url)}>; rel="canonical"`,
     },
   });
 }

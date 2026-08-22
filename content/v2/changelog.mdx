@@ -1,0 +1,37 @@
+---
+title: What's new
+description: Track documented BrainAPI V2 behavior and documentation changes
+---
+
+This page records changes verified in the current source tree. It is not a promise that unreleased behavior is available on every deployed instance.
+
+## 2.17.0-dev — Unreleased
+
+### Search and retrieval
+
+- Added opt-in ranked Search with BM25, dense, graph, catalog, plugin, reranking, personalization, facets, and stage profiling controls.
+- Added Search Rerank, Search SPLADE, and Search ColBERT plugin documentation and author hooks.
+- Clarified that `/retrieve/context`, `/retrieve/search`, `/retrieve/recommend`, graph APIs, and MCP are distinct surfaces over one knowledge base.
+- Added query-gated catalog personalization and documented safe fallback behavior.
+
+### Ingestion and recommendations
+
+- Documented direct and event-centric structured triples, deterministic/hybrid/enrich modes, and `skip_enrichment`.
+- Documented behavior weights and the additive Features Rec and RecSys GNN plugin paths.
+
+### Developer experience
+
+- Reorganized V2 into task-first Start, Build, Retrieve, Extend, Operate, and Reference groups without changing established URLs.
+- Added a complete quickstart, authentication/brain-scoping guide, retrieval chooser, configuration guide, troubleshooting hub, and grouped core API reference.
+- Kept benchmark and incomplete placeholder pages unpublished across HTML and machine-readable surfaces.
+
+## Earlier V2 tags
+
+The repository contains earlier development tags through `v2.14.4-dev`. Their source history remains available in [BrainAPI releases and tags](https://github.com/Lumen-Labs/brainapi2/tags). This page does not reconstruct release notes that were not recorded at the time.
+
+## Maintenance policy
+
+- Put upcoming verified behavior under **Unreleased**.
+- Move it to a dated version only when that version is tagged or released.
+- Link changed public contracts to their canonical reference pages.
+- Label experimental architecture demonstrations and unshipped research explicitly.

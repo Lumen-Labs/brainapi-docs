@@ -1,0 +1,107 @@
+---
+title: Features Rec
+description: Write multi-behavior and attribute preferences for train-free recommendations
+---
+
+Features Rec is the official train-free recommendation-ingestion plugin. It maps user interactions and catalog facets to deterministic structured triples, then upserts weighted `USER -PREFERS→ ATTR` edges. Ranking stays on the core `/retrieve/recommend` endpoint; the plugin does not train or serve a separate model.
+
+| Contract | Value |
+| --- | --- |
+| Registry package | `features-rec` `0.1.0` |
+| Compatibility | BrainAPI `>=2.14.0` |
+| Write route | `POST /features-rec/interactions` |
+| Ranking route | Core `GET /retrieve/recommend` or `POST /retrieve/recommend` |
+| Default brain | `demorecsys` |
+| Extra dependencies | None |
+
+## Install
+
+```bash
+./bin/brainapi install features-rec
+```
+
+Or install the repository as a local plugin:
+
+```bash
+git clone https://github.com/Lumen-Labs/brainapi-plugin-features-rec.git plugins/features-rec
+```
+
+Restart BrainAPI after installation. The plugin has no model artifact, but structured ingestion still uses the core ingestion worker.
+
+## Write an interaction
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/features-rec/interactions" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -d '{
+    "user_id": "u1",
+    "item_id": "sku-42",
+    "behavior": "purchase",
+    "timestamp": "2026-08-01T12:00:00Z",
+    "attributes": {
+      "color": "navy",
+      "brand": "Acme",
+      "category": "outerwear"
+    },
+    "brain_id": "demorecsys",
+    "wait": true
+  }'
+```
+
+Each request writes a user-to-event-to-product interaction and direct product `HAS` edges for allowed facets. After a completed or partially completed ingest, it updates matching preference edges with accumulated `weight`, count `n`, `last_at`, and optional exponential decay.
+
+Allowed facets are `color`, `material`, `category`, `brand`, `size`, and `style`. You can pass them inside `attributes`; `category`, `brand`, `color`, and `material` are also accepted as top-level convenience fields.
+
+## Preference weights
+
+| Behavior | Preference increment |
+| --- | ---: |
+| View, click, or unknown | 0.2 |
+| Cart or follow | 0.5 |
+| Favorite or wishlist | 0.7 |
+| Purchase | 1.0 |
+
+`preference_half_life_days` defaults to 90 for decay of an existing preference before the new increment. The request also defaults to `wait=true`, `timeout_s=120`, and `seq=1`.
+
+## Retrieve recommendations
+
+Use the core endpoint after writing interactions:
+
+```bash
+curl --get "<DEPLOYMENT_URL>/retrieve/recommend" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -H "X-Brain-ID: demorecsys" \
+  --data-urlencode "target=user:u1" \
+  --data-urlencode "include_attribute_pref=true" \
+  --data-urlencode "top_k=20"
+```
+
+Features Rec is additive to the graph recommendation path. Use [RecSys GNN](/v2/recsys-gnn) only when you also want a separately trained collaborative-filtering model.
+
+## Response and lifecycle
+
+```json
+{
+  "status": "completed",
+  "task_id": "task-id",
+  "brain_id": "demorecsys",
+  "n_triples": 4,
+  "attributes": {"color":"navy","brand":"Acme","category":"outerwear"},
+  "prefers": [
+    {"user_id":"u1","facet":"color","value":"navy","weight":1.0,"n":1}
+  ],
+  "task": {"status":"completed"}
+}
+```
+
+Terminal statuses are `completed`, `failed`, `partial_failed`, and `timeout`. `prefers` is populated only after `completed` or `partial_failed` and only when attributes were supplied. There is no model-health route or artifact lifecycle because recommendation state lives in the BrainAPI graph.
+
+## Failure behavior
+
+- Brain ids beginning with `beam1m` or `locomoconv` are rejected; use `demorecsys` or another dedicated recommendation brain.
+- A timed-out wait can leave the core ingestion task running; inspect the returned task id before retrying.
+- Failed structured ingestion prevents preference writes.
+- Unsupported facet keys are ignored rather than converted into arbitrary graph labels.
+
+See [Recommendations](/v2/retrieval/recommendations) for the core ranking contract.

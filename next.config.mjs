@@ -6,6 +6,25 @@ const withMDX = createMDX();
 const config = {
   reactStrictMode: true,
   basePath: "/docs",
+  async redirects() {
+    return [
+      {
+        source: "/v2/retrieval/search-theory",
+        destination: "/v2/retrieval/search/theory",
+        permanent: true,
+      },
+      {
+        source: "/v2/retrieval/search-plugins",
+        destination: "/v2/retrieval/search/levels",
+        permanent: true,
+      },
+      {
+        source: "/v2/retrieval/catalog-search",
+        destination: "/v2/retrieval/search/catalog-personalization",
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

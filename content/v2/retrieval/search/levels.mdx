@@ -1,0 +1,284 @@
+---
+title: Search levels
+description: Choose the lightest BrainAPI retrieval architecture that solves your relevance problem
+---
+
+BrainAPI Search is progressive. The five levels are not a maturity ladder and level 5 is not inherently better than level 1. Each level adds a particular kind of evidence, cost, and operational responsibility. The best design is the lowest level that meets your measured quality requirement.
+
+## Start with the problem, not the feature
+
+Before changing a search request, collect representative queries and answer these questions:
+
+| Question | Why it changes the design |
+| --- | --- |
+| Are queries exact identifiers, natural-language questions, or both? | Exact vocabulary favors BM25; paraphrases benefit from dense retrieval. |
+| Is the desired result a passage, a graph node, or an answer assembled from several facts? | Search ranks passages/nodes; Context assembles evidence; agents can iterate. |
+| Is poor quality caused by missing candidates or bad ordering? | First-stage retrievers address recall; rerankers address ordering only. |
+| Does the graph contain reliable labels and relationships relevant to users? | Graph channels help only when graph structure represents search intent. |
+| Are filters explicit user constraints or inferred preferences? | `extras` removes hits; personalization only reorders them. |
+| What latency and memory budget is available? | Learned indexes and pairwise reranking add different costs. |
+| Can you measure relevance with query judgments or behavioral data? | Without a baseline and evaluation set, adding a level is guesswork. |
+
+## At a glance
+
+| Level | Adds | Typical use | Main cost |
+| --- | --- | --- | --- |
+| 1. Core hybrid | BM25, dense retrieval, and fusion over passages | Documentation, policies, support content, general search | Lowest; default path |
+| 2. Graph and catalog | Entities, events, communities, neighbors, metadata, stable node ids | Relationship-aware discovery and structured collections | Graph reads and schema quality |
+| 3. Learned plugins | SPLADE, ColBERT, or a cross-encoder | A measured recall or precision gap on domain queries | Models, indexes, memory, inference |
+| 4. Personalization | Query-gated preference scoring over retrieved nodes | User-aware learning, media, or product catalogs | Per-user graph reads and evidence quality |
+| 5. Agentic escalation | Iterative retrieval, traversal, refinement, and verification | Ambiguous investigations and multi-hop questions | Highest and variable latency |
+
+The default `<200 ms` p50 target, excluding `embed.query`, applies only to level 1 with `mode="default"`, no `target`, and no plugin reranker. It is not a blanket promise for every row in this table.
+
+## Level 1 — Core hybrid passages
+
+### What problem it solves
+
+Most corpora contain both exact terms and semantic language. A developer may search for `AUTH-041`, then ask “why does login fail after a token expires?” A policy reader may enter a statute number, then rephrase the same topic conversationally.
+
+### How it works
+
+BM25 ranks passages using lexical term evidence. Dense retrieval compares query and passage embeddings. BrainAPI normally joins their orderings with reciprocal rank fusion.
+
+```json
+{
+  "query": "recover after an expired refresh token",
+  "k": 10,
+  "channels": ["passages"],
+  "fusion": "rrf"
+}
+```
+
+### Why it may help
+
+Lexical and semantic evidence fail differently. BM25 protects exact identifiers and rare terminology; dense retrieval can match “sign in again” with “reauthenticate” even when the words differ. RRF rewards passages supported by both without assuming their raw scores are comparable.
+
+### Choose this level when
+
+- Searchable text is the primary source of truth.
+- Queries mix keywords and natural language.
+- You need a dependable baseline before introducing graph or model complexity.
+
+### Avoid changing levels when
+
+A few weak queries do not yet prove a systematic problem. Improve source text, chunking, metadata, or query evaluation before assuming a more expensive retriever is required.
+
+### Cost and lifecycle
+
+Core hybrid uses PostgreSQL lexical indexes, existing embeddings, and the configured vector store. It has no plugin-local index or model lifecycle. Query embedding is profiled separately.
+
+### Idea to test: lexical versus semantic mix
+
+**Hypothesis:** hybrid RRF improves a mixed developer-documentation query set compared with BM25-only or dense-only retrieval. **Measure:** Recall@K, nDCG, and p50/p95 for the same queries. **Stop:** keep the simpler arm if hybrid does not produce a meaningful quality improvement.
+
+## Level 2 — Graph and catalog-aware search
+
+### What problem it solves
+
+Text similarity cannot fully express relationships such as “services affected by the gateway deployment,” “runbooks for dependencies of the billing API,” or “courses sharing a topic with this lesson.” Graph channels add candidates from entities, dated events, typed communities, and bounded neighbors.
+
+### How it works
+
+```json
+{
+  "query": "authentication incidents after the gateway rollout",
+  "k": 20,
+  "channels": ["passages", "entities", "events", "communities"],
+  "node_labels": ["SERVICE", "ENTITY"],
+  "community_labels": ["TOPIC", "TYPE"],
+  "expand": "neighbors",
+  "profile_stages": true
+}
+```
+
+The graph channels contribute additional ranked lists to fusion. Event scoring incorporates recency. Community search moves through selected hub labels. Neighbor expansion is one hop and bounded by server fanout; it is not an unrestricted traversal.
+
+### Why it may help
+
+Reliable graph structure can recover an addressable entity even when its best text passage does not repeat every relationship in the query. Stable `node_id` values also let a client open the corresponding entity or apply later personalization.
+
+### Choose this level when
+
+- Relationships, time, or typed grouping are part of the user’s intent.
+- The graph has consistent entities, event dates, and hub labels.
+- You need metadata filters, facets, or stable catalog identities.
+
+### Avoid this level when
+
+- The graph is sparse, automatically extracted labels are inconsistent, or high-degree hubs connect almost everything.
+- The query asks for a passage and the passage baseline already retrieves it.
+- You expect one-hop expansion to answer an arbitrary multi-hop question.
+
+### Cost and lifecycle
+
+Every graph channel adds storage reads and ranking work. Communities and neighbors depend on fanout and hub degree. A larger response candidate set can also increase later reranking and metadata hydration cost.
+
+### Idea to test: channel ablation
+
+**Hypothesis:** `events` improves recent incident queries while `communities` improves service-topic discovery. **Measure:** run passages-only, passages+events, and passages+communities arms on labeled query slices. **Stop:** remove any channel that adds latency without improving its intended slice.
+
+## Level 3 — Plugin retrieval and reranking
+
+### What problem it solves
+
+Core hybrid may still miss domain vocabulary or order near-duplicate candidates poorly. BrainAPI exposes two different extension points:
+
+- A **retriever plugin** produces another first-stage candidate list. [Search SPLADE](/v2/search-splade) uses learned sparse expansion; [Search ColBERT](/v2/search-colbert) uses token-level late interaction.
+- A **reranker plugin** reorders an already retrieved candidate head. [Search Rerank](/v2/search-rerank) compares each query-passage pair with a cross-encoder.
+
+### How it works
+
+```json
+{
+  "query": "Python async client connection pool timeout",
+  "k": 10,
+  "channels": ["passages", "plugin:colbert"],
+  "rerank": "plugin:cross-encoder"
+}
+```
+
+Plugin candidates join the Search pipeline only when named. Unknown plugins return HTTP 400. None of these hooks run on `/retrieve/context`.
+
+### Why it may help
+
+SPLADE can give weight to related vocabulary that ordinary term matching misses. ColBERT preserves token-level interactions that one-vector dense retrieval compresses. A cross-encoder can inspect the query and candidate together, improving fine distinctions among candidates already present.
+
+### Choose this level when
+
+- Evaluation identifies a repeatable core-search failure.
+- You know whether the failure is candidate recall or top-order precision.
+- The quality gain justifies model downloads, index rebuilds, memory, and latency.
+
+### Avoid this level when
+
+- The first-stage corpus is incomplete or incorrectly ingested.
+- A reranker is expected to recover a missing document; it cannot.
+- The application has no process for rebuilding in-memory plugin indexes after restart.
+- A model trained on a different domain has not been evaluated on your queries.
+
+### Cost and lifecycle
+
+SPLADE and ColBERT own in-process indexes capped at 20,000 chunks per index request and lose them on restart. ColBERT stores token vectors and is generally more memory intensive. Cross-encoder cost grows with the number of pairs; BrainAPI caps its default head at 10 and catalog head at 50.
+
+### Idea to test: route only the hard queries
+
+**Hypothesis:** acronyms and multi-term technical queries benefit from a learned plugin while exact identifiers do not. **Measure:** define query categories before testing and compare plugin quality and latency per category. **Stop:** do not add application-level routing if the plugin has no consistent category-specific win.
+
+## Level 4 — Query-gated personalization
+
+### What problem it solves
+
+Broad catalog queries can have several relevant answers for different users. In a learning library, “security course” may reasonably favor threat modeling for one user and identity operations for another. Personalization provides a soft preference signal after query retrieval.
+
+### How it works
+
+```json
+{
+  "query": "security course",
+  "k": 10,
+  "mode": "catalog",
+  "target": "user:alex"
+}
+```
+
+BrainAPI resolves retrieved passages to `node_id` values, scores those entities from direct `PREFERS` edges and recency-decayed behavior, then blends preferences with query relevance. It does not generate candidates from recommendations and does not turn preferences into filters.
+
+### Why it may help
+
+Broad queries leave room for taste. Specific queries leave less. The query gate therefore applies strong preference influence to short broad queries, progressively reduces it as content-token count grows, and sets it to zero for digit-bearing or SKU-like queries.
+
+### Choose this level when
+
+- Results are addressable `ENTITY` or `PRODUCT` nodes with shared attribute hubs.
+- User preference or interaction evidence is available.
+- The product requirement is personalized ordering, not exclusion.
+
+### Avoid this level when
+
+- Hits lack `node_id`, users cannot be resolved, or preferences do not share hubs with the catalog.
+- The query is navigational or contains a specific code/version.
+- You need a strict constraint; use caller-supplied `extras` instead.
+
+### Cost and lifecycle
+
+Personalization adds graph reads and per-user scoring. Missing targets, zero preferences, hits without `node_id`, and a zero query gate preserve the retrieval path safely. Its latency is outside the default Search SLO claim.
+
+### Idea to test: broad-query usefulness
+
+**Hypothesis:** preference blending helps one- and two-token learning-catalog queries but has little value for detailed course titles. **Measure:** compare anonymous and personalized ordering using query-by-user judgments or behavior. **Stop:** do not infer benefit from ordinary catalog qrels that contain no users.
+
+## Level 5 — Agentic and deep retrieval
+
+### What problem it solves
+
+Some questions cannot be answered by one ranking pass: “Which gateway change caused the authentication incident, what evidence supports it, and which rollback procedure applies?” The system may need to find an event, inspect neighboring services, retrieve a runbook, and verify dates.
+
+### How it works
+
+An application or agent uses [MCP tools](/v2/agentic/MCP) or deep REST calls to retrieve, inspect, refine, and verify across several steps. `/retrieve/search` can be one tool in that sequence; agentic retrieval is not another Search channel.
+
+### Why it may help
+
+Iteration allows later queries to depend on facts found earlier. It also gives the caller a place to decide whether evidence is sufficient instead of forcing every interactive search through a reasoning loop.
+
+### Choose this level when
+
+- The task is exploratory, multi-hop, or requires explicit verification.
+- Variable latency is acceptable.
+- The caller can bound tool use and preserve provenance.
+
+### Avoid this level when
+
+- A user expects an interactive list of results.
+- One well-formed query already retrieves the relevant passage.
+- The application has no loop budget, stopping rule, or evidence policy.
+
+### Cost and lifecycle
+
+Agentic latency is the sum of several calls and may include model inference. It belongs on an escalation lane, not the default Search hot path.
+
+### Idea to test: insufficiency-triggered escalation
+
+**Hypothesis:** only queries with weak or conflicting evidence need iterative retrieval. **Measure:** define a deterministic trigger and compare resolution quality, calls, and latency with always-agentic behavior. **Stop:** reject the trigger if it escalates routine queries or misses known hard cases.
+
+## Decision path
+
+```text
+Start with passage hybrid
+  ├─ Missing because relationships or time matter? → add a measured graph channel
+  ├─ Missing because domain vocabulary is not recovered? → test SPLADE or ColBERT
+  ├─ Candidate is present but ordered badly? → test a bounded reranker
+  ├─ Broad query should reflect user taste? → add target after node mapping
+  └─ Needs several dependent retrieval steps? → escalate to MCP/deep retrieval
+```
+
+At every branch, keep the previous level as the control. If the new arm does not improve the intended query slice, remove it.
+
+## Common anti-patterns
+
+### Requesting every channel
+
+More lists can introduce noisy candidates and extra graph work. Channels should correspond to a documented query need and a useful schema.
+
+### Always-on cross-encoder reranking
+
+A cross-encoder cannot repair missing first-stage recall and adds pairwise inference. Reserve it for a measured ordering problem.
+
+### Treating preference as a filter
+
+Inferred taste is uncertain. BrainAPI blends it as a soft signal. Only caller-supplied `extras` asserts a hard constraint.
+
+### Using catalog mode as a general quality switch
+
+Catalog mode deepens the candidate pool for bounded reranking. Without a reranker or catalog use case, it can add work without changing the desired result.
+
+### Escalating every query to an agent
+
+Agents are appropriate for dependent reasoning steps, not ordinary navigation. A search box should not inherit the latency and variability of an investigation workflow.
+
+## Next
+
+- Follow complete [Search recipes](/v2/retrieval/search/recipes)
+- Learn the ranking mathematics in [Search theory](/v2/retrieval/search/theory)
+- Review the complete [Search API](/v2/retrieval/search)

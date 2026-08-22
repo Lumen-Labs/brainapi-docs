@@ -1,6 +1,6 @@
 ---
 title: Benchmarks
-description: HTTP-only harnesses for LoCoMo, LongMemEval, and BEAM
+description: HTTP-only harnesses for memory, recommendation, and ranked search
 icon: FlaskConical
 ---
 
@@ -11,6 +11,8 @@ BrainAPI ships standalone benchmark harnesses under `benchmarks/` in the [braina
 | [LoCoMo](/v2/benchmarks/locomo) | `./locomo.sh` | `benchmarks.locomo` |
 | [LongMemEval](/v2/benchmarks/longmemeval) | `./longmemeval.sh` | `benchmarks.longmemeval` |
 | [BEAM](/v2/benchmarks/beam) | `./beam.sh` | `benchmarks.beam` |
+| [RecSys](/v2/benchmarks/recsys) | `./recsys.sh` | `benchmarks.recsys` |
+| [Search](/v2/benchmarks/search) | `./search.sh` | `benchmarks.search` |
 
 Published scores live in [`REPORTS.json`](/v2/benchmarks/reports-ledger).
 
@@ -44,7 +46,15 @@ download → smoke → ingest → evaluate → report
          REPORTS.json (on successful scored report)
 ```
 
-Harnesses call `POST /ingest/` and `POST /retrieve/context` — the same product surfaces documented under [Ingestion](/v2/ingestion/text) and [Context](/v2/retrieval/context).
+Memory harnesses call `POST /ingest/` and `POST /retrieve/context`. RecSys calls structured ingestion plus `/retrieve/recommend`; Search calls text/optional structured ingestion plus `/retrieve/search`. Every suite evaluates its own product surface over HTTP.
+
+| Evaluation family | Suites | Metric family |
+| --- | --- | --- |
+| Conversational/long memory | LoCoMo, LongMemEval, BEAM | LLM judge or ability scores |
+| Next-item recommendation | RecSys | HitRate/Recall@K |
+| Ranked query retrieval | Search | Recall@K, nDCG@10, MRR, latency |
+
+Do not transfer a metric between families: LoCoMo judge accuracy is not Search quality, and RecSys HitRate is not Search nDCG.
 
 ## Tracks (LoCoMo)
 
@@ -58,4 +68,6 @@ Harnesses call `POST /ingest/` and `POST /retrieve/context` — the same product
 - [LoCoMo tutorial](/v2/benchmarks/locomo)
 - [LongMemEval](/v2/benchmarks/longmemeval)
 - [BEAM](/v2/benchmarks/beam)
+- [RecSys](/v2/benchmarks/recsys)
+- [Search](/v2/benchmarks/search)
 - [Results ledger](/v2/benchmarks/reports-ledger)

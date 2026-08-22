@@ -1,0 +1,73 @@
+---
+title: Glossary
+description: Shared terminology for BrainAPI ingestion, graph, retrieval, Search, recommendations, and plugins
+---
+
+## Core data
+
+**Brain**  
+An authenticated knowledge boundary used to scope every application read and write.
+
+**Resource**  
+An ingested source such as text, a file, or structured data.
+
+**Passage / text chunk**  
+A retrievable portion of source text. Search uses passages by default.
+
+**Entity / node**  
+A stable graph object with identity, labels, description, and properties.
+
+**Relationship / predicate**  
+A typed directed connection between two nodes.
+
+**Event hub**  
+A first-class event node used when an action needs actor, target, time, or context. Static facts do not require one.
+
+**Observation**  
+An optional model-generated note stored alongside other knowledge representations.
+
+## Retrieval
+
+**Context**  
+Evidence assembled for an LLM, including passages and graph/history fields. It is not a ranked Search response.
+
+**Hit**  
+One ranked Search result with an ID, score, optional component scores, snippet, labels, metadata, and catalog node mapping.
+
+**Channel**  
+A Search candidate source such as `passages`, `entities`, `events`, `communities`, or `plugin:<name>`.
+
+**Candidate pool**  
+The items retrieved before later filtering, reranking, personalization, and truncation.
+
+**Fusion**  
+Combining rankings or normalized scores from multiple candidate sources.
+
+**Reranking**  
+Reordering a bounded candidate head with a more expensive scoring function. It cannot recover missing candidates.
+
+**Facet**  
+Counts derived from metadata on returned Search hits.
+
+**Personalization**  
+A soft query-gated reordering signal applied to eligible catalog hits, not an authorization or hard filter.
+
+**Recommendation**  
+A ranking around a target user or node rather than a free-text query.
+
+## Operations and extensions
+
+**Task**  
+An asynchronous ingest work record scoped to the same brain as the request.
+
+**Plugin**  
+Trusted Python code loaded into BrainAPI to add routes, tools, hooks, or ranking behavior.
+
+**MCP**  
+Model Context Protocol, used to expose BrainAPI or documentation tools to compatible agent runtimes.
+
+**Shipped behavior**  
+Implemented and test-backed behavior documented as part of the current contract.
+
+**Idea to test**  
+A hypothesis for application evaluation, not a BrainAPI quality or latency claim.

@@ -9,7 +9,7 @@ The TUI is the `brainapi-tui` npm package: a Node.js terminal CLI (built with `@
 Instead of manually cloning the repo, creating a venv, writing `.env`, starting Docker, and running `uvicorn`/Celery, you run a small global command.
 
 ```bash
-npm install -g brainapi-tui   # installs `brainapi` on PATH
+npm install -g brainapi-tui@0.4.0   # installs `brainapi` on PATH
 ```
 
 <Callout type="info">
@@ -102,16 +102,35 @@ Both `init` and `config` walk you through:
 - Vector DB, data DB, graph DB, and models mode (local Ollama vs remote providers).
 - Remote chat providers include OpenAI-compatible options such as **DeepSeek** (chat only — embeddings stay on another provider). See [Installation → DeepSeek](/v2/installation#deepseek-chat-only).
 - Pipeline (OCR, accurate vs lightweight ingestion via `PIPELINE_MODE`). Observations and graph consolidation default **off** unless you enable them in `.env`.
+- Search: enable `/retrieve/search`, then choose hybrid BM25+dense (default), dense only, or BM25 only. Search requires `DATA_DB=postgresql`; the wizard leaves it disabled for other data stores.
 - Connection details for only the services you picked.
 - Services runtime: Docker Compose vs manual (you run services yourself).
 - `BRAINPAT_TOKEN` (generate or paste).
 - Plugins (search/install, e.g. [chatbot](/v2/chatbot)).
 - Whether to bring up containers now.
 
+### Search choices written by the wizard
+
+| Wizard choice | `SEARCH_ENABLED` | `SEARCH_USE_DENSE` | `SEARCH_USE_BM25` |
+| --- | --- | --- | --- |
+| Disabled (default) | `false` | `true` | `true` |
+| Both fused | `true` | `true` | `true` |
+| Dense only | `true` | `true` | `false` |
+| BM25 only | `true` | `false` | `true` |
+
+The wizard also writes `SEARCH_FUSION=rrf`, `SEARCH_FUSION_ALPHA=0.5`,
+`SEARCH_BM25_K1=1.2`, `SEARCH_BM25_B=0.75`, and
+`CONTEXT_PASSAGE_MODE=hybrid`. Re-run `brainapi config` and select **Search
+(BM25 + dense)** to change the selection later.
+
+The `<200 ms` p50 target shown by the wizard excludes the query-embedding RTT
+and describes the default, unpersonalized Search path—not catalog mode or a
+cross-encoder plugin.
+
 ## Typical end-user flow
 
 ```bash
-npm install -g brainapi-tui
+npm install -g brainapi-tui@0.4.0
 brainapi init          # first time
 brainapi start         # daily dev / local server
 brainapi doctor        # troubleshoot

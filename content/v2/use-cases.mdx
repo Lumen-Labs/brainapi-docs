@@ -1,7 +1,46 @@
 ---
-title: Use Cases
-description: Use cases for BrainAPI V2
-icon: Rocket
+title: Choose a path
+description: Match your application, operating, or extension goal to the shortest BrainAPI workflow
 ---
 
-BrainAPI V2 documentation.
+You do not need to learn every BrainAPI surface before building something useful. Choose the outcome that resembles your problem, complete the smallest workflow, and add graph, ranking, personalization, or agents only when evidence justifies the extra cost.
+
+## Build an application
+
+### Ground an assistant in private knowledge
+
+Ingest documentation, tickets, or conversation summaries, then call `/retrieve/context` for a compact context pack. Choose this path when the next component is an LLM and it needs both relevant passages and connected facts.
+
+Start with [Quickstart](/v2/quickstart), then read [Context](/v2/retrieval/context).
+
+### Add ranked search
+
+Use `/retrieve/search` when your interface displays ordered results, snippets, facets, or score explanations. Core hybrid passages cover most documentation and support corpora. Graph channels, plugins, and personalization are optional levels rather than prerequisites.
+
+Start with [Search levels](/v2/retrieval/search/levels) and copy a complete [Search recipe](/v2/retrieval/search/recipes).
+
+### Recommend the next item
+
+Use `/retrieve/recommend` when the request starts from a user, course, media asset, document, or product rather than a text query. BrainAPI can use direct graph relationships without training a model; RecSys GNN is an additive plugin when you have enough interaction data to justify training.
+
+Start with [Recommendations](/v2/retrieval/recommendations).
+
+## Operate an instance
+
+Use the [TUI](/v2/tui) for the shortest local setup or [Installation](/v2/installation) for explicit development and production flows. Keep [Configuration](/v2/configuration) nearby when choosing model and storage backends. When a service is running but requests fail, use the symptom-led [troubleshooting guide](/v2/troubleshooting).
+
+## Extend the platform
+
+Use [MCP](/v2/agentic/MCP) when an external agent needs existing BrainAPI capabilities. Build a [plugin](/v2/plugins/authoring) when you need a new route, lifecycle hook, ingestion behavior, MCP tool, first-stage search retriever, or second-stage reranker.
+
+## Choose the lightest retrieval surface
+
+| Your caller needs | Surface | Avoid it when |
+| --- | --- | --- |
+| Prompt-ready evidence | Context | You need a stable ranked result list or facets. |
+| Ranked hits | Search | You only need context for one LLM call. |
+| Related items or next actions | Recommendations | The request is fundamentally a text query. |
+| Exact graph state or traversal | Graph APIs | A passage-level answer is enough. |
+| Multi-step investigation | MCP and agent orchestration | One bounded retrieval request answers the question. |
+
+Higher levels are not automatically better. Measure the failure you are fixing before adding graph reads, a plugin index, reranking, personalization, or agent orchestration.

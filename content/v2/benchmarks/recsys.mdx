@@ -1,0 +1,80 @@
+---
+title: RecSys benchmark
+description: Evaluate train-free graph recommendations and the optional LightGCN plugin
+---
+
+The RecSys harness measures held-out next-item recommendation through `GET /retrieve/recommend`. It writes structured user-item events, hides the final interaction, and checks whether the held-out item appears in the ranked list.
+
+<Callout type="warn">
+  RecSys uses the `demorecsys` brain only. Never run it on LoCoMo, LongMemEval,
+  BEAM, Search, or production brains.
+</Callout>
+
+## Backends
+
+| Backend | Product path | Training |
+| --- | --- | --- |
+| `graph` (default) | `POST /ingest/structured` → `GET /retrieve/recommend` | None; graph walks at retrieval time |
+| `lightgcn` | Optional `plugins/recsys-gnn` inference path | Offline plugin training |
+
+The optional `plugins/features-rec` mapper adds attribute preference signals. It does not change the headline next-item metric into a Search task.
+
+## Run the graph baseline
+
+```bash
+cd benchmarks
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+
+./recsys.sh smoke --backend graph
+./recsys.sh download --name ml-100k
+./recsys.sh evaluate \
+  --backend graph \
+  --dataset data/movielens_100k.jsonl \
+  --max-users 50
+```
+
+Attribute fixture:
+
+```bash
+./recsys.sh evaluate \
+  --backend graph \
+  --dataset data/recsys_toy_attrs.jsonl \
+  --min-interactions 2
+```
+
+Optional LightGCN arm:
+
+```bash
+./recsys.sh evaluate \
+  --backend lightgcn \
+  --dataset data/recsys_toy.jsonl \
+  --epochs 20
+```
+
+## Metrics
+
+| Metric | Meaning |
+| --- | --- |
+| HitRate@K | Fraction of evaluated users whose held-out next item appears in the top K |
+| Recall@K | Fraction of held-out relevant items recovered in the top K |
+
+With one held-out item per user, HitRate and Recall can have the same value. They still describe recommendation, not query relevance.
+
+## Event and preference strength
+
+The graph backend applies behavior strength and optional time decay. Current defaults include view/click/unknown `0.2`, cart/follow `0.5`, favorite/wishlist `0.7`, and purchase `1.0`. These defaults are shared with personalized Search preference scoring, but the candidate-generation task remains different.
+
+## Current ledger example
+
+The repository currently includes `recsys-20260805T200653Z` on `demorecsys`, with HitRate@10 and Recall@10 of `0.1`. Treat it as a recorded harness result with its own fixture and configuration, not a general recommendation SLA.
+
+Successful reports upsert `benchmarks.recsys` only. They must never rewrite other suite keys.
+
+## Related
+
+- [Recommendations API](/v2/retrieval/recommendations)
+- [Structured ingestion](/v2/ingestion/structured-data)
+- [Results ledger](/v2/benchmarks/reports-ledger)

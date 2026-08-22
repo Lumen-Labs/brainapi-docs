@@ -13,6 +13,7 @@ such as powering memory for chatbots and ai assistants, but also to power a RAG 
 - Required shape: `{ "data": { "data_type": "text", "text_data": "…" }, "brain_id"? }`
 - **202** + `task_id` → poll `GET /tasks/{id}`; **404** ≠ pending
 - Optional: `Task-Identifier` header, `observate_for`, `meta_keys`, `identification_params`
+- Set `skip_enrichment=true` for chunk + embedding only (useful for search corpora)
 </AgentNote>
 
 ## Usage
@@ -96,3 +97,28 @@ This is a list of strings that will be used to tailor the analysis of the saved 
 ### `preferred_extraction_entities` optional parameter
 
 This is a list of strings that if provided will be used to used to constrain the types of entities that will be extracted from the saved text and used to create the entity graph.
+
+## Search-only ingestion
+
+Set `skip_enrichment=true` when the text should be searchable but does not need
+observations or an automatically extracted knowledge graph:
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/ingest/" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -H "X-Brain-ID: products" \
+  -d '{
+    "data": {
+      "data_type": "text",
+      "text_data": "DOCID sku-42. Modern oak dining table"
+    },
+    "skip_enrichment": true
+  }'
+```
+
+The worker still saves the text chunk, calculates its embedding, and marks the
+task complete. It skips Observations, Scout, and Architect work. This reduces
+ingestion cost for search benchmarks and explicitly managed catalogs. It does
+not create product nodes or attribute edges; add those through [structured
+ingestion](/v2/ingestion/structured-data).

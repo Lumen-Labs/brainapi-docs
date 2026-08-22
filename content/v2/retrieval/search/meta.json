@@ -1,0 +1,5 @@
+{
+  "title": "Search",
+  "defaultOpen": false,
+  "pages": ["index", "levels", "recipes", "theory", "catalog-personalization"]
+}

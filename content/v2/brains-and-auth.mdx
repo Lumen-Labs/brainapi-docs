@@ -1,0 +1,84 @@
+---
+title: Authentication and brains
+description: Authenticate requests and keep every BrainAPI operation in the intended brain
+---
+
+Every core request needs a valid PAT. Most data requests also need a brain identifier. Treat the token as authorization and the brain as the data boundary; do not infer either from user-provided content.
+
+## Token types
+
+| Token | Scope | Use it for |
+| --- | --- | --- |
+| System `BRAINPAT_TOKEN` | All brains and `/system/*` | Administration, brain creation, trusted operations. |
+| Brain PAT | One stored brain | Application requests limited to that brain. |
+
+Send either header form:
+
+```http
+BrainPAT: <token>
+```
+
+```http
+Authorization: Bearer <token>
+```
+
+Examples in these docs use `BrainPAT` because it avoids ambiguity with other bearer-token middleware.
+
+## Select a brain
+
+BrainAPI resolves a brain in this order:
+
+1. `X-Brain-ID` header.
+2. `brain_id` query parameter.
+3. Top-level `brain_id` in a JSON body for `POST`, `PUT`, or `PATCH`.
+4. `brain_id` multipart field for file uploads.
+
+Use `X-Brain-ID` in new integrations so routing is consistent across methods and body formats.
+
+```bash
+curl http://localhost:8000/meta/entity-labels \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: supportkb"
+```
+
+Brain IDs must be alphanumeric in ordinary data requests. The reserved `system` brain cannot be used as application data.
+
+## Create or resolve brains
+
+`BRAIN_CREATION_ALLOWED=true` lets middleware create a missing named brain when a valid request selects it. `DEFAULT_BRAIN_FALLBACK=true` selects or creates `default` when no brain is supplied. For explicit administration, use the system token:
+
+```bash
+curl --fail-with-body -X POST http://localhost:8000/system/brains \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"brain_id":"supportkb"}'
+```
+
+For production, prefer explicit brain creation and pass the intended brain on every request. Automatic creation is convenient during development but can hide spelling mistakes.
+
+## Resolve a token
+
+`GET /meta/login-info` is exempt from brain selection and tells a console or client whether a PAT is the system token or belongs to one brain.
+
+```bash
+curl http://localhost:8000/meta/login-info \
+  -H "BrainPAT: $BRAINPAT_TOKEN"
+```
+
+## Failure behavior
+
+| Status | Meaning | Check |
+| --- | --- | --- |
+| `400` | Brain ID is missing, malformed, or reserved. | Header spelling and ID characters. |
+| `401` | PAT is missing, malformed, or does not match the brain. | Token source and selected brain. |
+| `406` | Brain does not exist and automatic creation/fallback did not resolve it. | Brain creation settings or administrative creation. |
+| `503` | Brain lookup could not reach MongoDB. | MongoDB connection and credentials. |
+
+## Security guidance
+
+- Keep the system token in trusted operator services; give applications brain-scoped PATs.
+- Never put PATs in URLs, examples committed to source, browser logs, or analytics.
+- Validate the caller's tenant-to-brain mapping before forwarding `X-Brain-ID`.
+- Rotate a leaked PAT and clear any intermediary cache that stored it.
+
+See [Errors and HTTP statuses](/v2/reference/errors) for cross-API behavior.

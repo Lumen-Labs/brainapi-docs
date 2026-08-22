@@ -1,0 +1,285 @@
+---
+title: Search theory
+description: Understand how BrainAPI generates, combines, filters, reranks, and personalizes search candidates
+---
+
+Search is not one similarity calculation. It is a sequence of decisions: which objects may be relevant, how several kinds of evidence become one ordering, and which optional stages are worth their cost. BrainAPI keeps those decisions visible so applications can evaluate them separately.
+
+## Candidate generation before fine ordering
+
+The most important distinction in retrieval is between **finding a candidate** and **ordering candidates already found**.
+
+- BM25, dense retrieval, graph channels, SPLADE, and ColBERT can introduce candidates.
+- Fusion combines candidate lists.
+- A cross-encoder reranker changes the order of a bounded head but cannot retrieve a missing passage.
+- Filters remove candidates.
+- Personalization reorders eligible catalog nodes; it does not generate recommendation candidates.
+
+This distinction prevents a common diagnostic mistake: tuning a reranker when the relevant result never entered its input list.
+
+## The shipped pipeline
+
+```text
+query
+  → retrieve requested passage, graph, and plugin candidate lists
+  → fuse core lexical, dense, and graph evidence
+  → merge plugin sidecars while preserving the core top-10 head
+  → optionally rerank a bounded head
+  → fetch snippets and scalar metadata
+  → apply hard-AND extras filters
+  → resolve catalog node_ids
+  → optionally personalize retrieved node_ids
+  → truncate to requested k and calculate facets
+```
+
+The order creates useful guarantees: filters never invent matches, personalization never replaces query relevance, and an optional sidecar cannot silently displace the proven core head before reranking.
+
+## A small corpus to reason with
+
+Imagine four documentation passages for the query `expired token client recovery`:
+
+| Id | Passage |
+| --- | --- |
+| A | `AUTH-041: refresh token expired; reauthenticate the client.` |
+| B | `Token validation error reference and status codes.` |
+| C | `Restore a session by signing in again when credentials are no longer valid.` |
+| D | `Configure connection pooling and request retries.` |
+
+BM25 may rank `A, B, C` because A contains the rare exact terms and B repeats “token.” Dense retrieval may rank `C, A, D` because C closely expresses the recovery meaning and D is broadly related to clients and retries. Neither list is unreasonable; each observes a different representation of relevance.
+
+## Lexical retrieval: BM25
+
+BM25 rewards query terms in a passage, discounts terms common across the collection, and normalizes passage length:
+
+$$
+\operatorname{BM25}(q,d)=\sum_{t\in q}\operatorname{IDF}(t)\frac{f(t,d)(k_1+1)}{f(t,d)+k_1\left(1-b+b\frac{|d|}{\operatorname{avgdl}}\right)}
+$$
+
+- $f(t,d)$ is the frequency of term $t$ in passage $d$.
+- IDF makes a rare code such as `AUTH-041` more informative than a common word such as “client.”
+- $|d|/\operatorname{avgdl}$ prevents long passages from winning merely because they contain more tokens.
+- `SEARCH_BM25_K1` defaults to `1.2`. It controls how quickly repeated term occurrences saturate.
+- `SEARCH_BM25_B` defaults to `0.75`. At `0`, passage length is ignored; at `1`, full length normalization is applied.
+
+### Why it works
+
+Exact identifiers, names, statutes, error messages, and technical terms are high-value lexical evidence. BM25 also remains interpretable: a passage ranks because query terms occur with particular rarity and frequency.
+
+### Where it fails
+
+BM25 cannot infer that “sign in again” means “reauthenticate” when no overlapping useful terms exist. Stemming and language configuration help morphology, not arbitrary semantic paraphrases.
+
+### Tuning implication
+
+Do not adjust `k1` or `b` from a handful of examples. Compare a frozen query set and inspect whether long documents or repeated terms cause a systematic error. PostgreSQL stores generated `tsvector` data with a GIN index; English is the base configuration, with explicitly selected brain support for `italian`, `spanish`, or `simple` tokenization.
+
+## Dense retrieval
+
+The embedding adapter maps the query and each passage to vectors. PostgreSQL/pgvector returns cosine distance; BrainAPI exposes a similarity component:
+
+$$
+s_{dense}(q,d)=1-\operatorname{cosine\_distance}(q,d)
+$$
+
+### Why it works
+
+Semantically related text can occupy nearby vector space even with little token overlap. In the toy corpus, C can match the recovery intent despite not containing “expired token.”
+
+### Where it fails
+
+One vector compresses a passage. It may blur exact version numbers, negation, rare names, or which technical term modifies which other term. Dense similarity also depends on the embedding model’s training domain.
+
+### ANN and precision
+
+Approximate nearest-neighbor indexing narrows the candidates efficiently; it does not redefine the final similarity. When embedding dimensions exceed 2000 and Search is enabled, BrainAPI builds a legal `halfvec` HNSW expression index for candidate generation, then reranks that overfetch window using stored float32 vectors. This avoids truncating embedding dimensions while retaining higher-precision final distances.
+
+### Idea to test: identifier slice
+
+**Hypothesis:** dense-only retrieval loses exact codes that hybrid preserves. **Measure:** Recall@K on an identifier slice and a paraphrase slice separately. **Stop:** do not add special routing if the hybrid baseline already serves both slices.
+
+## Fusion
+
+Fusion turns several first-stage rankings into one core order.
+
+### Reciprocal rank fusion
+
+RRF is the default because BM25 and dense scores do not share a natural numeric scale:
+
+$$
+\operatorname{RRF}(d)=\sum_{L\in\mathcal{L}}\frac{1}{60+\operatorname{rank}_L(d)}
+$$
+
+Ranks are one-based. Using the toy lists:
+
+| Passage | BM25 rank | Dense rank | RRF contribution | Approximate total |
+| --- | ---: | ---: | --- | ---: |
+| A | 1 | 2 | $1/61 + 1/62$ | 0.03252 |
+| C | 3 | 1 | $1/63 + 1/61$ | 0.03227 |
+| B | 2 | absent | $1/62$ | 0.01613 |
+| D | absent | 3 | $1/63$ | 0.01587 |
+
+A narrowly wins because both systems support it and BM25 places it first. C remains close because dense retrieval strongly supports its paraphrase.
+
+### Why RRF is robust
+
+Only order matters. A change in BM25 score magnitude or embedding similarity distribution does not require retuning a blend weight. The tradeoff is that RRF discards meaningful score gaps within a list.
+
+### Convex combination
+
+`fusion="cc"` min-max normalizes component scores and blends them:
+
+$$
+s_{cc}(d)=\alpha\widehat{s}_{dense}(d)+(1-\alpha)\widehat{s}_{bm25}(d)
+$$
+
+`fusion_alpha` defaults to `0.5`. Larger $\alpha$ gives more weight to dense evidence; smaller values favor BM25.
+
+### Where convex combination fails
+
+Min-max normalization depends on the candidates and score distribution in each request. Outliers and corpus drift can change the effective meaning of the same alpha. Use CC when you have a stable evaluation set and deliberately want a semantic-versus-lexical control; otherwise RRF is the safer baseline.
+
+### Idea to test: fusion ablation
+
+**Hypothesis:** a stable domain query set benefits from a tuned CC alpha. **Measure:** RRF versus several predeclared alpha values on the same qrels and latency. **Stop:** keep RRF if gains are small, unstable across slices, or require per-query manual tuning.
+
+## Graph candidate lists
+
+Graph search adds structure to the candidate-generation stage. Consider an operations graph:
+
+```text
+API Gateway --DEPENDS_ON--> Identity Service
+API Gateway --HAD--> Deployment Event --AFFECTED--> Identity Service
+Identity Runbook --HAS--> TOPIC(authentication)
+```
+
+### Entities
+
+The entities channel combines dense node similarity with lexical matching over node names and searchable node text. `node_labels` restricts eligible node types. This is useful when the result itself should be a service, project, person, asset, or other addressable entity.
+
+Failure mode: broad or inconsistent labels can mix unrelated node classes. Restrict labels or return to passages rather than assuming every extracted node improves search.
+
+### Events
+
+Event matches combine query relevance with recency:
+
+$$
+w_{event}=0.5^{\operatorname{ageDays}/365}
+$$
+
+The current event half-life is 365 days. Missing or unparsable dates retain weight `1`; BrainAPI does not silently discard the event.
+
+Why: “gateway rollout” often refers to a dated change, and a recent matching event may be more useful than an old one. Failure mode: recency is not correctness; an old incident can still be the relevant precedent.
+
+### Communities and degree-IDF
+
+Communities are typed hubs such as `TYPE`, `CLASS`, and `TOPIC`, not an implicit Leiden clustering job. Members reached through a hub receive degree damping:
+
+$$
+w_{degree}=\frac{1}{\log_2(2+\operatorname{degree})}
+$$
+
+A specific topic hub therefore contributes more than a hub connected to nearly everything. `expand="neighbors"` performs one bounded hop from graph seeds, with `SEARCH_NEIGHBOR_FANOUT` limiting work per seed.
+
+<Callout type="warn">
+  Graph channels support discovery and structure; they do not replace the
+  query-to-passage baseline. The WANDS catalog-graph result is an architecture
+  demonstration, not a default Search quality claim.
+</Callout>
+
+### Idea to test: graph usefulness by intent
+
+**Hypothesis:** events help change-related queries and communities help topic-discovery queries. **Measure:** ablate each channel on its intended labeled slice, including stage timing. **Stop:** remove a channel that only increases candidate volume.
+
+## Plugin candidate merge
+
+Retriever plugins return ordered ids, scores, and optional text. Core first fuses its passage and graph evidence. BrainAPI preserves the first 10 ids of that fused core ranking, then uses plugin candidates and the core tail to fill the requested candidate window.
+
+The frozen head is a safety boundary: an experimental sidecar can contribute recall without silently replacing the default top results. A later explicit reranker can still reorder its bounded input.
+
+## Bounded reranking
+
+A reranker receives query-candidate pairs after first-stage retrieval:
+
+| Mode | Candidate retrieval | Maximum reranked head |
+| --- | ---: | ---: |
+| `default` | Requested `k` | 10 |
+| `catalog` | `min(200, max(k, 50))` | 50 |
+
+Cross-encoders can model fine query-passage relationships because both texts enter the model together. Their fundamental limit is candidate recall: if C never entered the head, reranking cannot restore it. Pairwise inference cost is also why cross-encoders are plugin-only and absent from `/retrieve/context`.
+
+### Idea to test: candidate recall first
+
+**Hypothesis:** a reranker improves precision when relevant candidates are already in the head. **Measure:** candidate Recall@K before nDCG/MRR after reranking, plus p50/p95. **Stop:** fix first-stage recall instead if relevant items are missing.
+
+## Filters and facets
+
+`extras` applies case-insensitive scalar equality with hard AND. Filtering happens after candidate retrieval and reranking:
+
+```text
+retrieved 20 → reranked 10 → 4 match locale=it AND product=identity → return 4
+```
+
+BrainAPI does not automatically retrieve again to fill `k`. This preserves a clear contract but means selective filters require deliberate candidate-pool design. Facets count scalar metadata on the final returned hits, not every matching record in storage.
+
+Why filters are late: the same candidate pipeline supports different storage adapters and plugin results, while one consistent metadata step enforces caller constraints. Failure mode: interpreting returned facets as global corpus counts.
+
+## Query-gated personalization
+
+Personalization acts only on retrieved hits that resolve to catalog `node_id` values. Retrieve and preference scores are independently min-max normalized:
+
+$$
+s_{personal}(d)=(1-\lambda(q))\widehat{s}_{retrieve}(d)+\lambda(q)\widehat{s}_{preference}(d)
+$$
+
+| Query signal | $\lambda(q)$ |
+| --- | ---: |
+| Contains a digit-bearing token | 0 |
+| One content token | 0.85 |
+| Two content tokens | 0.50 |
+| Three content tokens | 0.25 |
+| Four or more content tokens | 0.10 |
+
+For a learning catalog, `security` can reflect strong topic preference, while `security course beginner` retains more query influence. `SEC-204` disables personalization because a specific code is navigational evidence.
+
+Preference evidence combines direct `USER -PREFERS→ ATTR` edges with recency-decayed `USER → EVENT → ITEM → ATTR` history. Interaction evidence uses a 14-day half-life. Missing users, zero preferences, hits without `node_id`, and $\lambda=0$ preserve the incoming path.
+
+Why taste is not a filter: inferred preference is uncertain and should not remove a relevant result the user did not exclude. Caller-supplied `extras` remains the hard assertion.
+
+### Idea to test: personalization gate
+
+**Hypothesis:** short broad queries benefit more than detailed or navigational queries. **Measure:** anonymous versus personalized order with query-by-user judgments. **Stop:** WANDS/ESCI-style qrels without user labels cannot establish this benefit.
+
+## Evaluate a pipeline change
+
+Use several metrics because they answer different questions:
+
+| Metric | Question |
+| --- | --- |
+| Recall@K | Did the first stage retrieve the relevant items? |
+| nDCG@K | Did it order graded relevance well near the top? |
+| MRR | How early did the first relevant result appear? |
+| p50 | What does a typical request cost? |
+| p95 | What does the slow tail cost? |
+| Stage timings | Which component created the latency change? |
+
+A safe experiment changes one stage at a time, preserves the same corpus and qrels, and reports query embedding separately. Compare query slices—identifiers, paraphrases, temporal queries, and multi-term constraints—rather than hiding regressions inside one mean.
+
+## Why the product surfaces remain separate
+
+- **Context** assembles compact evidence for downstream reasoning.
+- **Search** exposes addressable ranked hits and diagnostics.
+- **Recommendations** generate items around a target without query text.
+- **Agentic retrieval** iterates, traverses, and verifies across calls.
+
+They share ingestion, chunks, vectors, and graph structure. They do not share response meaning, evaluation metrics, or latency policies.
+
+## Deferred and experimental approaches
+
+BrainAPI does not currently claim learned query-user attention such as ZAM/TEM, a jointly trained HEM/DREM first stage, PLAID-scale ColBERT serving, always-on cross-encoders, or per-query LLM/HyDE generation on the default hot path. These are ideas for separately evaluated systems, not hidden capabilities or recommended defaults.
+
+## Related
+
+- [Search API](/v2/retrieval/search)
+- [Search recipes](/v2/retrieval/search/recipes)
+- [Catalog search and personalization](/v2/retrieval/search/catalog-personalization)
+- [Search levels](/v2/retrieval/search/levels)

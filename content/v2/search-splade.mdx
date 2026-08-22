@@ -1,0 +1,230 @@
+---
+title: Search SPLADE
+description: Add learned-sparse first-stage retrieval for terminology and vocabulary mismatch
+---
+
+Search SPLADE is the official learned-sparse first-stage plugin for `POST /retrieve/search`. It registers channel `plugin:splade`, encodes passages and queries into weighted vocabulary terms, and retrieves from a plugin-local inverted index.
+
+Unlike a reranker, SPLADE can introduce a passage that core retrieval did not place in the candidate list. Unlike dense retrieval, its representation remains sparse and token-addressable.
+
+| Contract | Value |
+| --- | --- |
+| Registry package | `search-splade` `0.1.0` |
+| Compatibility | BrainAPI `>=2.17.0` |
+| Search channel | `plugin:splade` |
+| Default model | `naver/splade-cocondenser-ensembledistil` |
+| Index route | `POST /search-splade/index` |
+| Health route | `GET /search-splade/health` |
+| Extra dependencies | `torch`, `transformers` |
+
+## Mental model
+
+BM25 stores terms that literally occur in each passage. SPLADE uses a masked-language model to assign weights across the vocabulary. A passage about “multi-factor authentication recovery” can receive weight on related tokens useful to a query such as “MFA reset,” even when ordinary lexical overlap is weak.
+
+```text
+passage text
+  → transformer vocabulary logits
+  → log1p(relu)
+  → max-pool over sequence
+  → sparse {token: weight}
+  → inverted index
+```
+
+At query time the plugin encodes the query the same way and calculates a dot product over overlapping weighted terms. Special tokens are removed and the maximum sequence length is 256.
+
+This is learned expansion, not synonym-rule expansion. The model can add useful vocabulary or irrelevant vocabulary depending on domain fit.
+
+## Why use SPLADE when BrainAPI has BM25 and dense retrieval?
+
+SPLADE occupies a middle ground:
+
+| Retriever | Representation | Typical strength | Typical risk |
+| --- | --- | --- | --- |
+| BM25 | Literal sparse terms | Exact codes, names, and rare vocabulary | Misses paraphrases with no overlap |
+| Dense | One vector per passage | Broad semantic paraphrases | Compresses exact/token-level evidence |
+| SPLADE | Learned sparse vocabulary weights | Vocabulary mismatch with lexical structure | Model expansion can add noise; requires another index |
+
+The plugin is worth testing when query analysis shows a terminology gap—not merely because a learned model is available.
+
+## Install
+
+```bash
+./bin/brainapi install search-splade
+```
+
+Or install the repository as a local plugin:
+
+```bash
+git clone https://github.com/Lumen-Labs/brainapi-plugin-search-splade.git plugins/search-splade
+```
+
+Restart BrainAPI so the hook and routes register. `torch` and `transformers` must be installed in the BrainAPI environment. The model checkpoint loads lazily on the first encode.
+
+## Support knowledge-base example
+
+Suppose `support-kb` contains articles about account recovery, MFA devices, and identity verification. After core text ingestion completes, build the SPLADE index:
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/search-splade/index" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -d '{
+    "brain_id": "support-kb",
+    "limit": 5000
+  }'
+```
+
+Test SPLADE alone to isolate its candidate behavior:
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/retrieve/search" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -H "X-Brain-ID: support-kb" \
+  -d '{
+    "query": "account lockout after MFA device reset",
+    "k": 20,
+    "channels": ["plugin:splade"],
+    "profile_stages": true
+  }'
+```
+
+Then test the product combination:
+
+```json
+{
+  "query": "account lockout after MFA device reset",
+  "k": 20,
+  "channels": ["passages", "plugin:splade"],
+  "profile_stages": true
+}
+```
+
+`channels` must name the plugin explicitly. Omitting channels still means `["passages"]`; installing SPLADE does not alter default Search.
+
+## How plugin candidates enter the ranking
+
+SPLADE returns ordered chunk ids, plugin scores, and candidate text. Core preserves the top 10 of its fused ranking, then fills the remaining window with plugin candidates and the core tail. Relevant response fields include:
+
+```json
+{
+  "channel": "plugin:splade",
+  "scores": {
+    "bm25": null,
+    "dense": null,
+    "rrf": null,
+    "cc": null,
+    "rerank": null,
+    "plugin": {"splade": 12.4},
+    "graph": null,
+    "personalize": null
+  }
+}
+```
+
+The plugin score is model/index specific. Sidecar candidates do not receive a
+core RRF/CC component merely by being merged after core fusion. Use the hit's
+`channel`, `scores.plugin`, and ordered position to inspect SPLADE contribution;
+`channel_lists` contains core lists rather than plugin-specific keys. Judge
+relevance against labels rather than score magnitude alone.
+
+## Index lifecycle
+
+`POST /search-splade/index` reads stored text chunks, encodes them, and replaces the selected brain’s SPLADE index.
+
+| Property | Behavior |
+| --- | --- |
+| `limit` | Default `1000`; valid range `1…20000` |
+| Replacement | Rebuilding resets that brain’s previous plugin index |
+| Storage | In API process memory |
+| Restart | Clears every SPLADE index |
+| Source data | Existing BrainAPI text chunks |
+
+Production deployments must rebuild indexes after every API process restart or rollout. In a multi-process deployment, each process owns its own memory; an index built in one process is not automatically present in another.
+
+Indexing is a snapshot operation. Newly ingested passages do not appear in SPLADE until the index is rebuilt.
+
+## Configuration
+
+```dotenv
+SEARCH_SPLADE_MODEL="naver/splade-cocondenser-ensembledistil"
+```
+
+A model override requires a full index rebuild because stored document weights came from the previous model. Query and document encoders must remain compatible.
+
+## Health
+
+```bash
+curl "<DEPLOYMENT_URL>/search-splade/health?brain_id=support-kb" \
+  -H "BrainPAT: YOUR_BRAIN_PAT"
+```
+
+```json
+{
+  "plugin": "search-splade",
+  "channel": "plugin:splade",
+  "model": "naver/splade-cocondenser-ensembledistil",
+  "loaded": true,
+  "error": null,
+  "index": {
+    "brain_id": "support-kb",
+    "n_docs": 5000,
+    "n_terms": 18000
+  }
+}
+```
+
+The `index` object is present only when `brain_id` is supplied. `loaded` describes the encoder in the current process; `n_docs=0` describes a valid but empty index rather than a missing plugin.
+
+## When to choose Search SPLADE
+
+Choose it when:
+
+- Relevant documents use vocabulary different from user queries.
+- Acronyms, abbreviations, and domain terminology create a repeatable recall gap.
+- A sparse first stage is operationally preferable to a token-vector index.
+- Your deployment can rebuild an in-memory index after restart.
+
+Avoid it when:
+
+- BM25/dense hybrid already meets candidate recall.
+- Exact codes dominate and learned expansion adds ambiguity.
+- The corpus exceeds the plugin’s in-memory/index-request design.
+- You need persistence across restarts without an external rebuild workflow.
+- The target surface is `/retrieve/context`; this channel is Search-only.
+
+## Evaluate before adoption
+
+1. Freeze the same corpus, qrels, and query set used for the core baseline.
+2. Run plugin-only SPLADE to understand its independent recall.
+3. Run passages+SPLADE to test the shipped merge behavior.
+4. Compare Recall@K, nDCG, and regressions by query category.
+5. Record model cold start, index time, `n_docs`/`n_terms`, process memory, and p50/p95 query latency.
+6. Restart the API and verify the rebuild procedure rather than assuming persistence.
+
+### Idea to test: terminology slice
+
+**Hypothesis:** SPLADE helps acronym and vocabulary-mismatch queries more than exact identifiers. **Measure:** predeclare both slices and compare core versus passages+SPLADE Recall@K/nDCG. **Stop:** do not introduce routing or index operations without a repeatable slice-specific improvement.
+
+### Idea to test: index refresh policy
+
+**Hypothesis:** rebuilding after a known ingestion batch gives acceptable freshness without rebuilding on every document. **Measure:** indexing duration, stale-document rate, memory, and deployment recovery time. **Stop:** use a different serving architecture if required freshness cannot coexist with full in-memory replacement.
+
+## Failure diagnosis
+
+| Symptom | Meaning | Action |
+| --- | --- | --- |
+| HTTP 400 unknown `plugin:splade` | Hook is not registered | Install the plugin, restart, and verify package loading |
+| HTTP 200 but no plugin candidates | Valid index may be empty or corpus/query mismatch | Check health for the exact brain, then inspect relevance |
+| Health has no `index` object | Request omitted `brain_id` | Add `?brain_id=<id>` |
+| `loaded=false` before indexing | Encoder has not loaded yet | Build the index or allow first encode to load it |
+| Health `error` is non-null | Model initialization failed | Check dependencies, checkpoint access, and logs |
+| Results disappear after restart | Index is process memory only | Rebuild it in every serving process |
+| Recent documents never appear | Index snapshot predates ingestion | Rebuild after the ingest tasks complete |
+
+## Related
+
+- [Search levels](/v2/retrieval/search/levels)
+- [Search recipes](/v2/retrieval/search/recipes)
+- [Search ColBERT](/v2/search-colbert) for token-level late interaction
+- [Search Rerank](/v2/search-rerank) for bounded second-stage ordering

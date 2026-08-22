@@ -33,4 +33,33 @@ export const sourceV2 = loader({
   icon: resolveIcon,
 });
 
+export function isPublishedV2Url(url: string): boolean {
+  const hiddenRoutes = [
+    "/v2/benchmarks",
+    "/v2/ingestion/backups",
+    "/v2/retrieval/export-backups",
+    "/v2/agentic/streaming-client",
+  ];
+
+  return !hiddenRoutes.some(
+    (route) => url === route || url.startsWith(`${route}/`),
+  );
+}
+
+export function getPublishedV2Pages() {
+  return sourceV2.getPages().filter((page) => isPublishedV2Url(page.url));
+}
+
+export function getPublishedV2Page(slug?: string[]) {
+  const page = sourceV2.getPage(slug);
+  return page && isPublishedV2Url(page.url) ? page : undefined;
+}
+
+export function generatePublishedV2Params() {
+  return sourceV2.generateParams().filter((params) => {
+    const page = sourceV2.getPage(params.slug);
+    return Boolean(page && isPublishedV2Url(page.url));
+  });
+}
+
 export const openapi = createOpenAPI();

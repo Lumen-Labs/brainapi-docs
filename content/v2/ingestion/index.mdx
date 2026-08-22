@@ -1,0 +1,48 @@
+---
+title: Ingestion overview
+description: Choose the smallest ingestion path that preserves the knowledge your application needs
+---
+
+Ingestion turns source material into representations that later retrieval surfaces can use. Choose the path from the structure you already have, not from the retrieval feature you hope to use.
+
+## Choose an input path
+
+| Input | Endpoint | Choose it when |
+| --- | --- | --- |
+| Plain text or pre-extracted Markdown | `POST /ingest/` | Language contains the facts and relationships to discover. |
+| PDF, document, or other uploaded file | `POST /ingest/file` | BrainAPI or a configured parser must extract text first. |
+| Known triples or events | `POST /ingest/structured` | Your application already knows subjects, predicates, objects, IDs, or timestamps. |
+| Search-only passages | `POST /ingest/` with `skip_enrichment=true` | You need ranked passage retrieval without graph enrichment. |
+
+## Choose a structured mode
+
+| Mode | Behavior | Typical use |
+| --- | --- | --- |
+| `deterministic` | Writes supported structure without LLM enrichment. | Imports, catalog attributes, preferences, controlled events. |
+| `hybrid` | Preserves supplied structure and fills supported missing information. | Partially structured application events. |
+| `enrich` | Uses the enrichment path for the supplied data. | Inputs where additional semantic detail is worth model cost. |
+
+If `mode` is omitted, BrainAPI infers a safe path from the payload. `skip_enrichment=true` prevents enrichment and is useful when supplied facts must remain literal.
+
+## Direct edges or event hubs
+
+Use a direct `subject → predicate → object` triple for static facts such as `HAS`, membership, or `PREFERS`. Add `event` and `event_obj` together when an action needs a first-class event with time or context. Sending only one member of the pair is invalid.
+
+## Understand task completion
+
+Text and structured endpoints return `202` and a `task_id`. Poll the same brain through `/tasks/{task_id}`. Do not query immediately and assume missing data means ingestion failed.
+
+## Prepare for retrieval
+
+- Context can use graph and passage representations.
+- Search requires PostgreSQL and `SEARCH_ENABLED=true`; lexical indexes are populated during compatible ingestion.
+- Catalog personalization requires passages mapped to stable graph `node_id` values.
+- Recommendations require a target node and useful relationships or interactions.
+
+## Continue
+
+- [Save text](/v2/ingestion/text)
+- [Save files](/v2/ingestion/files)
+- [Save structured data](/v2/ingestion/structured-data)
+- [Track ingestion tasks](/v2/ingestion/tasks)
+- [Choose a retrieval surface](/v2/retrieval)

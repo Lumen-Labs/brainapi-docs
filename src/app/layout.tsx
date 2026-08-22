@@ -4,6 +4,18 @@ import { Inter, Outfit } from "next/font/google";
 import type { ReactNode } from "react";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "katex/dist/katex.min.css";
+import type { Metadata } from "next";
+import { DOCS_ORIGIN } from "@/lib/site";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(DOCS_ORIGIN),
+  title: {
+    default: "BrainAPI documentation",
+    template: "%s | BrainAPI",
+  },
+  description:
+    "Build, retrieve, extend, and operate BrainAPI knowledge and memory systems.",
+};
 
 const inter = Inter({
   subsets: ["latin"],
@@ -40,7 +52,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 { name: "V1", value: "v1" },
               ],
               defaultTag: "v2",
-              allowClear: true,
+              allowClear: false,
             },
           }}
         >

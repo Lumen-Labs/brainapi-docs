@@ -1,0 +1,5301 @@
+{
+  "components": {
+    "schemas": {
+      "AddEntityRequest": {
+        "description": "Request model for adding a new entity to the graph.",
+        "properties": {
+          "brain_id": {
+            "default": "default",
+            "title": "Brain Id",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "identification_params": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identification Params"
+          },
+          "labels": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Labels",
+            "type": "array"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "properties": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Properties"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "AddEntityRequest",
+        "type": "object"
+      },
+      "AddRelationshipRequest": {
+        "description": "Request model for adding a new relationship between two entities.",
+        "properties": {
+          "brain_id": {
+            "default": "default",
+            "title": "Brain Id",
+            "type": "string"
+          },
+          "object_uuid": {
+            "title": "Object Uuid",
+            "type": "string"
+          },
+          "predicate_description": {
+            "title": "Predicate Description",
+            "type": "string"
+          },
+          "predicate_name": {
+            "title": "Predicate Name",
+            "type": "string"
+          },
+          "subject_uuid": {
+            "title": "Subject Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject_uuid",
+          "predicate_name",
+          "predicate_description",
+          "object_uuid"
+        ],
+        "title": "AddRelationshipRequest",
+        "type": "object"
+      },
+      "Body_ingest_file_ingest_file_post": {
+        "properties": {
+          "file": {
+            "format": "binary",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_ingest_file_ingest_file_post",
+        "type": "object"
+      },
+      "CreateBrainRequest": {
+        "description": "Request body for the create brain endpoint.",
+        "properties": {
+          "brain_id": {
+            "title": "Brain Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "brain_id"
+        ],
+        "title": "CreateBrainRequest",
+        "type": "object"
+      },
+      "GetContextRequestBody": {
+        "description": "Request body for the get context endpoint.",
+        "properties": {
+          "apply_fact_filter": {
+            "default": true,
+            "title": "Apply Fact Filter",
+            "type": "boolean"
+          },
+          "brain_id": {
+            "default": "default",
+            "title": "Brain Id",
+            "type": "string"
+          },
+          "cross_event_bridges": {
+            "default": 3,
+            "minimum": 0.0,
+            "title": "Cross Event Bridges",
+            "type": "integer"
+          },
+          "historical_limit": {
+            "default": 10,
+            "title": "Historical Limit",
+            "type": "integer"
+          },
+          "max_facts": {
+            "default": 40,
+            "minimum": 0.0,
+            "title": "Max Facts",
+            "type": "integer"
+          },
+          "max_passages": {
+            "default": 8,
+            "title": "Max Passages",
+            "type": "integer"
+          },
+          "profile_stages": {
+            "default": false,
+            "title": "Profile Stages",
+            "type": "boolean"
+          },
+          "sufficiency_retry": {
+            "default": false,
+            "title": "Sufficiency Retry",
+            "type": "boolean"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "use_ppr": {
+            "default": true,
+            "title": "Use Ppr",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "GetContextRequestBody",
+        "type": "object"
+      },
+      "GetContextResponse": {
+        "description": "Response for the get context endpoint.",
+        "properties": {
+          "graph_session_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Graph Session Ids"
+          },
+          "historical_context": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Historical Context",
+            "type": "array"
+          },
+          "paths": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paths"
+          },
+          "source_passages": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Source Passages",
+            "type": "array"
+          },
+          "stage_timings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Timings"
+          },
+          "temporal_conflicts": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temporal Conflicts"
+          },
+          "text_context": {
+            "title": "Text Context",
+            "type": "string"
+          },
+          "topics": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topics"
+          },
+          "triples": {
+            "items": {
+              "$ref": "#/components/schemas/GetContextTriple-Output"
+            },
+            "title": "Triples",
+            "type": "array"
+          }
+        },
+        "required": [
+          "text_context",
+          "triples"
+        ],
+        "title": "GetContextResponse",
+        "type": "object"
+      },
+      "GetContextTriple-Input": {
+        "description": "Triple for the get context endpoint.",
+        "properties": {
+          "identified_entity": {
+            "title": "Identified Entity",
+            "type": "string"
+          },
+          "source_chunk_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Chunk Ids"
+          },
+          "source_session_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Session Ids"
+          },
+          "triple": {
+            "maxItems": 5,
+            "minItems": 5,
+            "prefixItems": [
+              {
+                "$ref": "#/components/schemas/Node"
+              },
+              {
+                "$ref": "#/components/schemas/Predicate"
+              },
+              {
+                "$ref": "#/components/schemas/Node"
+              },
+              {
+                "$ref": "#/components/schemas/Predicate"
+              },
+              {
+                "$ref": "#/components/schemas/Node"
+              }
+            ],
+            "title": "Triple",
+            "type": "array"
+          }
+        },
+        "required": [
+          "identified_entity",
+          "triple"
+        ],
+        "title": "GetContextTriple",
+        "type": "object"
+      },
+      "GetContextTriple-Output": {
+        "description": "Triple for the get context endpoint.",
+        "properties": {
+          "identified_entity": {
+            "title": "Identified Entity",
+            "type": "string"
+          },
+          "source_chunk_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Chunk Ids"
+          },
+          "source_session_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Session Ids"
+          },
+          "triple": {
+            "maxItems": 5,
+            "minItems": 5,
+            "prefixItems": [
+              {
+                "$ref": "#/components/schemas/Node"
+              },
+              {
+                "$ref": "#/components/schemas/Predicate"
+              },
+              {
+                "$ref": "#/components/schemas/Node"
+              },
+              {
+                "$ref": "#/components/schemas/Predicate"
+              },
+              {
+                "$ref": "#/components/schemas/Node"
+              }
+            ],
+            "title": "Triple",
+            "type": "array"
+          }
+        },
+        "required": [
+          "identified_entity",
+          "triple"
+        ],
+        "title": "GetContextTriple",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "IdentificationParams": {
+        "additionalProperties": true,
+        "description": "Identification params model.\nMust have a name property.\nThan can contain other properties.",
+        "properties": {
+          "entity_types": {
+            "default": [],
+            "description": "The types of the entity to identify.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Entity Types",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "IdentificationParams",
+        "type": "object"
+      },
+      "IngestionRequestBody": {
+        "description": "Request body for the ingestion endpoint.",
+        "properties": {
+          "brain_id": {
+            "default": "default",
+            "description": "The brain identifier to store the data in.",
+            "title": "Brain Id",
+            "type": "string"
+          },
+          "data": {
+            "discriminator": {
+              "mapping": {
+                "json": "#/components/schemas/IngestionTaskJsonArgs",
+                "text": "#/components/schemas/IngestionTaskTextArgs"
+              },
+              "propertyName": "data_type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/IngestionTaskJsonArgs"
+              },
+              {
+                "$ref": "#/components/schemas/IngestionTaskTextArgs"
+              }
+            ],
+            "title": "Data"
+          },
+          "identification_params": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The parameters used to identify the data.",
+            "title": "Identification Params"
+          },
+          "meta_keys": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The shared keys that should not be treated as nodes. (eg: email because each person has an email). The keys specified here will not be analyzed but just added to the metadata.",
+            "title": "Meta Keys"
+          },
+          "observate_for": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": [],
+            "description": "What to look for and describe in the data during observation. If not provided, the observations will be generic",
+            "title": "Observate For"
+          },
+          "preferred_extraction_entities": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": [],
+            "description": "The entities that are preferred to be extracted from the data. If not provided, the extraction will be done on all the entities in the data.",
+            "title": "Preferred Extraction Entities"
+          },
+          "skip_enrichment": {
+            "default": false,
+            "description": "Persist the text chunk and embedding only. Skip observations and knowledge-graph enrichment (Scout/Architect).",
+            "title": "Skip Enrichment",
+            "type": "boolean"
+          },
+          "source_timestamp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Reference timestamp for the source content (e.g. session date). Used to resolve relative dates like 'yesterday' into absolute dates.",
+            "title": "Source Timestamp"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "IngestionRequestBody",
+        "type": "object"
+      },
+      "IngestionStructuredRequestBody": {
+        "description": "Request body for the structured ingestion endpoint.",
+        "properties": {
+          "anchor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialNodeFilter"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The related information to connect the structured data to."
+          },
+          "brain_id": {
+            "default": "default",
+            "description": "The brain identifier to store the data in.",
+            "title": "Brain Id",
+            "type": "string"
+          },
+          "data": {
+            "description": "The list of event-centric information triples to ingest.",
+            "items": {
+              "$ref": "#/components/schemas/IngestionTripleSet"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "deterministic",
+                  "hybrid",
+                  "enrich"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Ingest mode. deterministic: no LLM (triples only; UUID anchor or exact name+type match). hybrid: persist submitted triples then optionally enrich from text. enrich: same as hybrid with LLM backfill. When omitted, inferred as hybrid if text is set else deterministic.",
+            "title": "Mode"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Additional text context for the structured data.",
+            "title": "Text"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "IngestionStructuredRequestBody",
+        "type": "object"
+      },
+      "IngestionTaskJsonArgs": {
+        "description": "Arguments for the ingestion task when the data type is JSON.",
+        "properties": {
+          "data_type": {
+            "const": "json",
+            "default": "json",
+            "title": "Data Type",
+            "type": "string"
+          },
+          "json_data": {
+            "additionalProperties": true,
+            "title": "Json Data",
+            "type": "object"
+          }
+        },
+        "required": [
+          "json_data"
+        ],
+        "title": "IngestionTaskJsonArgs",
+        "type": "object"
+      },
+      "IngestionTaskTextArgs": {
+        "description": "Arguments for the ingestion task when the data type is TEXT.",
+        "properties": {
+          "data_type": {
+            "const": "text",
+            "default": "text",
+            "title": "Data Type",
+            "type": "string"
+          },
+          "text_data": {
+            "title": "Text Data",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text_data"
+        ],
+        "title": "IngestionTaskTextArgs",
+        "type": "object"
+      },
+      "IngestionTripleSet": {
+        "properties": {
+          "event": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RequestPartialNode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The optional event node. Omit for a direct subject-predicate-object edge."
+          },
+          "event_obj": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RequestPartialPredicate"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The optional event-to-object predicate. Paired with event when present."
+          },
+          "object": {
+            "$ref": "#/components/schemas/RequestPartialNode"
+          },
+          "subj_event": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RequestPartialPredicate"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The optional event predicate of the triple."
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RequestPartialNode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The optional actor of the triple."
+          }
+        },
+        "required": [
+          "object"
+        ],
+        "title": "IngestionTripleSet",
+        "type": "object"
+      },
+      "Node": {
+        "description": "Node model.",
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "happened_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The date and time the node happened at if known otherwise None. Mostly used for event nodes.",
+            "title": "Happened At"
+          },
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Labels",
+            "type": "array"
+          },
+          "last_updated": {
+            "description": "The date and time the node was last updated.",
+            "format": "date-time",
+            "title": "Last Updated",
+            "type": "string"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The metadata of the node.",
+            "title": "Metadata"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "observations": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Observation"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The observations of the node.",
+            "title": "Observations"
+          },
+          "polarity": {
+            "anyOf": [
+              {
+                "enum": [
+                  "positive",
+                  "negative",
+                  "neutral"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "neutral",
+            "description": "The polarity of the node.",
+            "title": "Polarity"
+          },
+          "properties": {
+            "additionalProperties": true,
+            "title": "Properties",
+            "type": "object"
+          },
+          "uuid": {
+            "title": "Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "labels",
+          "name"
+        ],
+        "title": "Node",
+        "type": "object"
+      },
+      "Observation": {
+        "description": "Observation model.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "inserted_at": {
+            "description": "The date and time the observation was inserted.",
+            "format": "date-time",
+            "title": "Inserted At",
+            "type": "string"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata"
+          },
+          "resource_id": {
+            "description": "The id of the resource the observation is about.",
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "text": {
+            "description": "The text of the observation.",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "resource_id"
+        ],
+        "title": "Observation",
+        "type": "object"
+      },
+      "PartialNodeFilter": {
+        "description": "Partial node filter model.",
+        "properties": {
+          "meta_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "An extra description that explains what this node is about, helpful for entity resolution.",
+            "title": "Meta Description"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The name of the node to filter by.",
+            "title": "Name"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The type of the node to filter by.",
+            "title": "Type"
+          },
+          "uuid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The uuid of the node to filter by.",
+            "title": "Uuid"
+          }
+        },
+        "title": "PartialNodeFilter",
+        "type": "object"
+      },
+      "Predicate": {
+        "description": "Predicate model.",
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The amount of the predicate.",
+            "title": "Amount"
+          },
+          "deprecated": {
+            "default": false,
+            "description": "Whether the predicate is deprecated.",
+            "title": "Deprecated",
+            "type": "boolean"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "enum": [
+                  "in",
+                  "out",
+                  "neutral"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "neutral",
+            "description": "The direction of the predicate.",
+            "title": "Direction"
+          },
+          "flow_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Unique identitier for contextualizing the predicate into the context flow",
+            "title": "Flow Key"
+          },
+          "last_updated": {
+            "description": "The date and time the predicate was last updated.",
+            "format": "date-time",
+            "title": "Last Updated",
+            "type": "string"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "enum": [
+                  "1",
+                  "2",
+                  "3"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The level of the predicate. 1: directly connected to the main node. 2: connected to similar nodes of same label, not directly connected.3: connected to similar nodes of different label, not directly connected.",
+            "title": "Level"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "observations": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Observation"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The observations of the predicate.",
+            "title": "Observations"
+          },
+          "properties": {
+            "additionalProperties": true,
+            "title": "Properties",
+            "type": "object"
+          },
+          "uuid": {
+            "title": "Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ],
+        "title": "Predicate",
+        "type": "object"
+      },
+      "RecommendRequestBody": {
+        "description": "Request body for event-graph recommendations.",
+        "properties": {
+          "asymmetric_direction": {
+            "default": "outbound",
+            "enum": [
+              "outbound",
+              "inbound",
+              "both"
+            ],
+            "title": "Asymmetric Direction",
+            "type": "string"
+          },
+          "behavior_weights": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Behavior Weights"
+          },
+          "brain_id": {
+            "default": "default",
+            "title": "Brain Id",
+            "type": "string"
+          },
+          "dampen_degree": {
+            "default": false,
+            "title": "Dampen Degree",
+            "type": "boolean"
+          },
+          "diversify": {
+            "default": true,
+            "title": "Diversify",
+            "type": "boolean"
+          },
+          "exclude_seen": {
+            "default": false,
+            "title": "Exclude Seen",
+            "type": "boolean"
+          },
+          "include_asymmetric": {
+            "default": true,
+            "title": "Include Asymmetric",
+            "type": "boolean"
+          },
+          "include_attribute_pref": {
+            "default": false,
+            "title": "Include Attribute Pref",
+            "type": "boolean"
+          },
+          "include_multi_interest": {
+            "default": true,
+            "title": "Include Multi Interest",
+            "type": "boolean"
+          },
+          "labels": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Labels"
+          },
+          "polarity": {
+            "default": "same",
+            "enum": [
+              "same",
+              "opposite"
+            ],
+            "title": "Polarity",
+            "type": "string"
+          },
+          "recency_half_life_days": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recency Half Life Days"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          },
+          "top_k": {
+            "default": 20,
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Top K",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "RecommendRequestBody",
+        "type": "object"
+      },
+      "RequestPartialNode": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The description of the node.",
+            "title": "Description"
+          },
+          "happened_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The date and time the node happened at if known otherwise None. Mostly used for event nodes.",
+            "title": "Happened At"
+          },
+          "labels": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional labels; defaults to [type] when omitted.",
+            "title": "Labels"
+          },
+          "name": {
+            "description": "The name of the node.",
+            "title": "Name",
+            "type": "string"
+          },
+          "properties": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The properties of the node.",
+            "title": "Properties"
+          },
+          "type": {
+            "description": "The type of the node.",
+            "title": "Type",
+            "type": "string"
+          },
+          "uuid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The id of the node.",
+            "title": "Uuid"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ],
+        "title": "RequestPartialNode",
+        "type": "object"
+      },
+      "RequestPartialPredicate": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The amount of the relationship, if it is a quantitative relationship.",
+            "title": "Amount"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The description of the relationship.",
+            "title": "Description"
+          },
+          "name": {
+            "description": "The name of the relationship.",
+            "title": "Name",
+            "type": "string"
+          },
+          "properties": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The properties of the relationship.",
+            "title": "Properties"
+          },
+          "uuid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The id of the relationship.",
+            "title": "Uuid"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "RequestPartialPredicate",
+        "type": "object"
+      },
+      "RetrieveNeighborsAiModeRequestBody": {
+        "description": "Request body for the retrieve neighbors AI mode endpoint.",
+        "properties": {
+          "brain_id": {
+            "default": "default",
+            "description": "The brain identifier to store the data in.",
+            "title": "Brain Id",
+            "type": "string"
+          },
+          "identification_params": {
+            "$ref": "#/components/schemas/IdentificationParams",
+            "description": "The identification parameters of the entity to get neighbors for."
+          },
+          "limit": {
+            "default": 10,
+            "description": "The number of neighbors to return.",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "looking_for": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The description of the neighbors to look for.",
+            "title": "Looking For"
+          }
+        },
+        "required": [
+          "identification_params",
+          "looking_for"
+        ],
+        "title": "RetrieveNeighborsAiModeRequestBody",
+        "type": "object"
+      },
+      "RetrieveNeighborsRequestResponse": {
+        "description": "Response for the retrieve neighbors endpoint.",
+        "properties": {
+          "count": {
+            "default": 0,
+            "description": "The number of neighbors found.",
+            "title": "Count",
+            "type": "integer"
+          },
+          "main_node": {
+            "$ref": "#/components/schemas/Node",
+            "description": "The main node of the neighbors."
+          },
+          "neighbors": {
+            "items": {
+              "$ref": "#/components/schemas/RetrievedNeighborNode-Output"
+            },
+            "title": "Neighbors",
+            "type": "array"
+          }
+        },
+        "required": [
+          "main_node",
+          "neighbors"
+        ],
+        "title": "RetrieveNeighborsRequestResponse",
+        "type": "object"
+      },
+      "RetrieveNeighborsWithIdentificationParamsRequestBody": {
+        "description": "Request body for the retrieve neighbors with identification params endpoint.",
+        "properties": {
+          "brain_id": {
+            "default": "default",
+            "description": "The brain identifier to store the data in.",
+            "title": "Brain Id",
+            "type": "string"
+          },
+          "identification_params": {
+            "$ref": "#/components/schemas/IdentificationParams",
+            "description": "The identification parameters of the entity to get neighbors for."
+          },
+          "limit": {
+            "default": 10,
+            "description": "The number of neighbors to return.",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "look_for": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional filter for what type of neighbors to look for.",
+            "title": "Look For"
+          }
+        },
+        "required": [
+          "identification_params"
+        ],
+        "title": "RetrieveNeighborsWithIdentificationParamsRequestBody",
+        "type": "object"
+      },
+      "RetrieveRequestResponse": {
+        "description": "Response for the retrieve endpoint.",
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/TextChunk"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "observations": {
+            "items": {
+              "$ref": "#/components/schemas/Observation"
+            },
+            "title": "Observations",
+            "type": "array"
+          },
+          "relationships": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Relationships",
+            "type": "array"
+          }
+        },
+        "required": [
+          "data",
+          "observations",
+          "relationships"
+        ],
+        "title": "RetrieveRequestResponse",
+        "type": "object"
+      },
+      "RetrievedNeighborNode-Input": {
+        "description": "Node model for the retrieve neighbors endpoint.",
+        "properties": {
+          "most_common": {
+            "$ref": "#/components/schemas/Node"
+          },
+          "neighbor": {
+            "$ref": "#/components/schemas/Node"
+          },
+          "relationship": {
+            "$ref": "#/components/schemas/Predicate"
+          },
+          "similarity_score": {
+            "default": 0.0,
+            "description": "The similarity score of the neighbor to the main node.",
+            "title": "Similarity Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "neighbor",
+          "relationship",
+          "most_common"
+        ],
+        "title": "RetrievedNeighborNode",
+        "type": "object"
+      },
+      "RetrievedNeighborNode-Output": {
+        "description": "Node model for the retrieve neighbors endpoint.",
+        "properties": {
+          "most_common": {
+            "$ref": "#/components/schemas/Node"
+          },
+          "neighbor": {
+            "$ref": "#/components/schemas/Node"
+          },
+          "relationship": {
+            "$ref": "#/components/schemas/Predicate"
+          },
+          "similarity_score": {
+            "default": 0.0,
+            "description": "The similarity score of the neighbor to the main node.",
+            "title": "Similarity Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "neighbor",
+          "relationship",
+          "most_common"
+        ],
+        "title": "RetrievedNeighborNode",
+        "type": "object"
+      },
+      "SearchHit": {
+        "properties": {
+          "channel": {
+            "title": "Channel",
+            "type": "string"
+          },
+          "extras": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extras"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Labels",
+            "type": "array"
+          },
+          "node_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Node Id"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "scores": {
+            "$ref": "#/components/schemas/SearchHitScores"
+          },
+          "snippet": {
+            "title": "Snippet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "channel",
+          "score",
+          "scores",
+          "snippet"
+        ],
+        "title": "SearchHit",
+        "type": "object"
+      },
+      "SearchHitScores": {
+        "properties": {
+          "bm25": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bm25"
+          },
+          "cc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cc"
+          },
+          "dense": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dense"
+          },
+          "graph": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Graph"
+          },
+          "personalize": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Personalize"
+          },
+          "plugin": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plugin"
+          },
+          "rerank": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rerank"
+          },
+          "rrf": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rrf"
+          }
+        },
+        "title": "SearchHitScores",
+        "type": "object"
+      },
+      "SearchRequestBody": {
+        "properties": {
+          "brain_id": {
+            "default": "default",
+            "title": "Brain Id",
+            "type": "string"
+          },
+          "channels": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Channels",
+            "type": "array"
+          },
+          "community_labels": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Community Labels"
+          },
+          "expand": {
+            "default": "none",
+            "enum": [
+              "none",
+              "neighbors"
+            ],
+            "title": "Expand",
+            "type": "string"
+          },
+          "extras": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extras"
+          },
+          "fusion": {
+            "anyOf": [
+              {
+                "enum": [
+                  "rrf",
+                  "cc"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fusion"
+          },
+          "fusion_alpha": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fusion Alpha"
+          },
+          "k": {
+            "default": 10,
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "K",
+            "type": "integer"
+          },
+          "mode": {
+            "default": "default",
+            "enum": [
+              "default",
+              "catalog"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "node_labels": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Node Labels"
+          },
+          "profile_stages": {
+            "default": false,
+            "title": "Profile Stages",
+            "type": "boolean"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "rerank": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "none or plugin:<name>. Unknown plugin names return 400.",
+            "title": "Rerank"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "SearchRequestBody",
+        "type": "object"
+      },
+      "SearchResponse": {
+        "properties": {
+          "channel_lists": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel Lists"
+          },
+          "facets": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Facets"
+          },
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/SearchHit"
+            },
+            "title": "Hits",
+            "type": "array"
+          },
+          "node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Node Ids",
+            "type": "array"
+          },
+          "stage_timings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Timings"
+          }
+        },
+        "required": [
+          "hits"
+        ],
+        "title": "SearchResponse",
+        "type": "object"
+      },
+      "TextChunk": {
+        "description": "Text chunk model.",
+        "properties": {
+          "brain_version": {
+            "default": "0.0.0",
+            "description": "The version of the brain when the chunk was inserted.",
+            "title": "Brain Version",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "inserted_at": {
+            "description": "The date and time the chunk was inserted.",
+            "format": "date-time",
+            "title": "Inserted At",
+            "type": "string"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata"
+          },
+          "text": {
+            "description": "The text of the chunk.",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "TextChunk",
+        "type": "object"
+      },
+      "UpdateEntityRequest": {
+        "description": "Request model for updating an existing entity in the graph.",
+        "properties": {
+          "brain_id": {
+            "default": "default",
+            "title": "Brain Id",
+            "type": "string"
+          },
+          "new_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Description"
+          },
+          "new_labels": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Labels"
+          },
+          "new_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Name"
+          },
+          "new_properties": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Properties"
+          },
+          "properties_to_remove": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Properties To Remove"
+          },
+          "uuid": {
+            "title": "Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uuid"
+        ],
+        "title": "UpdateEntityRequest",
+        "type": "object"
+      },
+      "UpdateRelationshipRequest": {
+        "description": "Request model for updating an existing relationship's properties.",
+        "properties": {
+          "brain_id": {
+            "default": "default",
+            "title": "Brain Id",
+            "type": "string"
+          },
+          "new_properties": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Properties"
+          },
+          "properties_to_remove": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Properties To Remove"
+          },
+          "uuid": {
+            "title": "Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uuid"
+        ],
+        "title": "UpdateRelationshipRequest",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "scheme": "bearer",
+        "type": "http"
+      },
+      "BrainPAT": {
+        "in": "header",
+        "name": "BrainPAT",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "Core BrainAPI HTTP API. Official plugin routes are documented separately.",
+    "title": "BrainAPI V2 Core API",
+    "version": "2.17.0-dev"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/ingest/": {
+      "post": {
+        "description": "Accept data for asynchronous ingestion.",
+        "operationId": "ingest_data_ingest__post",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestionRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Ingest Data",
+        "tags": [
+          "ingest"
+        ]
+      }
+    },
+    "/ingest/file": {
+      "post": {
+        "description": "Ingest a file into the processing pipeline and save to the memory.",
+        "operationId": "ingest_file_ingest_file_post",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_ingest_file_ingest_file_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Ingest File",
+        "tags": [
+          "ingest"
+        ]
+      }
+    },
+    "/ingest/structured": {
+      "post": {
+        "description": "Accept structured data for asynchronous ingestion.",
+        "operationId": "ingest_structured_data_ingest_structured_post",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestionStructuredRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Ingest Structured Data",
+        "tags": [
+          "ingest"
+        ]
+      }
+    },
+    "/meta/entity-labels": {
+      "get": {
+        "description": "Retrieve all unique node labels present in the graph.\n\nParameters:\n    brain_id (str): Identifier of the brain/graph to query. Defaults to \"default\".\n\nReturns:\n    labels (list[str]): List of unique node label names.",
+        "operationId": "get_entities_labels_meta_entity_labels_get",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Entities Labels",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/meta/entity-properties": {
+      "get": {
+        "description": "Retrieve all unique property keys used by entities in the specified brain/graph.\n\nParameters:\n    brain_id (str): Identifier of the brain/graph to query; defaults to \"default\".\n\nReturns:\n    list[str]: A list of property key names present on entities in the graph.",
+        "operationId": "get_entity_properties_meta_entity_properties_get",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Entity Properties",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/meta/login-info": {
+      "get": {
+        "description": "Resolve whether a BrainPAT is the system token or scoped to a single brain.",
+        "operationId": "get_login_info_meta_login_info_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Login Info",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/meta/relationships-properties": {
+      "get": {
+        "description": "Retrieve all unique relationship types present in the graph for the specified brain.\n\nParameters:\n    brain_id (str): Identifier of the brain/graph to query. Defaults to \"default\".\n\nReturns:\n    A list of relationship type names (strings) found in the specified graph.",
+        "operationId": "get_relationships_properties_meta_relationships_properties_get",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Relationships Properties",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/model/entity": {
+      "post": {
+        "description": "Create a new entity (node) in the knowledge graph.\n\nReturns:\n    Response payload containing details of the created node.",
+        "operationId": "add_entity_model_entity_post",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddEntityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Add Entity",
+        "tags": [
+          "model"
+        ]
+      },
+      "put": {
+        "description": "Update an entity (node) in the graph.\n\n@returns The controller's response containing the updated node representation or an operation result.",
+        "operationId": "update_entity_model_entity_put",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEntityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Update Entity",
+        "tags": [
+          "model"
+        ]
+      }
+    },
+    "/model/relationship": {
+      "post": {
+        "description": "Create a relationship linking two nodes in the graph.\n\nReturns:\n    relationship (dict): Representation of the created relationship.",
+        "operationId": "add_relationship_model_relationship_post",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddRelationshipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Add Relationship",
+        "tags": [
+          "model"
+        ]
+      },
+      "put": {
+        "description": "Update properties of an existing relationship.\n\nUses the following fields from `request`: `uuid`, `brain_id`, `new_properties` (defaults to an empty dict if missing), and `properties_to_remove` (defaults to an empty list if missing).\n\nReturns:\n    The updated relationship representation or a result object describing the outcome of the update.",
+        "operationId": "update_relationship_model_relationship_put",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRelationshipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Update Relationship",
+        "tags": [
+          "model"
+        ]
+      }
+    },
+    "/retrieve/": {
+      "get": {
+        "description": "Retrieve data from the knowledge graph and data store.",
+        "operationId": "retrieve_retrieve__get",
+        "parameters": [
+          {
+            "description": "The text to search for.",
+            "in": "query",
+            "name": "text",
+            "required": true,
+            "schema": {
+              "description": "The text to search for.",
+              "title": "Text",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The number of results to return.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "description": "The number of results to return.",
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The entities to prioritize in the relationships, separated by commas.",
+            "in": "query",
+            "name": "preferred_entities",
+            "required": true,
+            "schema": {
+              "description": "The entities to prioritize in the relationships, separated by commas.",
+              "title": "Preferred Entities",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetrieveRequestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Retrieve",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/changelogs": {
+      "get": {
+        "description": "Retrieve a paginated list of changelogs.\n\nParameters:\n    types (Optional[str]): Optional comma-separated changelog types to filter by; each type will be applied as a filter.\n    query_text (Optional[str]): Optional text used to filter changelogs by content or metadata.\n\nReturns:\n    list: Changelog records matching the provided filters, constrained by `limit` and `skip`.",
+        "operationId": "get_changelogs_list_retrieve_changelogs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Skip",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "types",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Types"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query_text",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query Text"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Changelogs List",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/changelogs/types": {
+      "get": {
+        "description": "Retrieve all unique changelog types for the specified brain.\n\nParameters:\n    brain_id (str): Identifier of the brain to query; defaults to \"default\".\n\nReturns:\n    list[str]: List of unique changelog type names.",
+        "operationId": "get_changelog_types_retrieve_changelogs_types_get",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Changelog Types",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/changelogs/{id}": {
+      "get": {
+        "description": "Retrieve a changelog entry by its unique identifier.\n\nParameters:\n    id (str): Unique identifier of the changelog entry.\n    brain_id (str): Brain identifier to query. Defaults to \"default\".\n\nReturns:\n    The changelog entry corresponding to the specified identifier.",
+        "operationId": "get_changelog_by_id_retrieve_changelogs__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Changelog By Id",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/context": {
+      "post": {
+        "description": "Handle an HTTP request to retrieve an entity's contextual information.\n\nParameters:\n    request (GetContextRequestBody): Request body containing:\n        - text: The text to search context for.\n        - brain_id: The brain/workspace identifier to query.\n\nReturns:\n    GetContextResponse: Response containing the context information.",
+        "operationId": "get_context_retrieve_context_post",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetContextRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetContextResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Context",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/entities": {
+      "get": {
+        "description": "Retrieve entities matching optional label and text filters with pagination.\n\nParameters:\n    node_labels (Optional[str]): Comma-separated node labels to filter by (e.g. \"Person,Company\"); when provided, only entities with any of these labels are returned.\n    query_text (Optional[str]): Free-text filter to match entity properties or content.\n    brain_id (str): Identifier of the brain/knowledge store to query.\n\nReturns:\n    list: A list of entity records that match the provided filters and pagination parameters.",
+        "operationId": "get_entities_retrieve_entities_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Skip",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "node_labels",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Node Labels"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query_text",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query Text"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Entities",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/entities/neighbors": {
+      "get": {
+        "description": "Get the neighbors of an entity.",
+        "operationId": "get_neighbors_retrieve_entities_neighbors_get",
+        "parameters": [
+          {
+            "description": "The UUID of the entity to get neighbors for.",
+            "in": "query",
+            "name": "uuid",
+            "required": true,
+            "schema": {
+              "description": "The UUID of the entity to get neighbors for.",
+              "title": "Uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The number of neighbors to return.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "description": "The number of neighbors to return.",
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The description of what in the neighbors should share with the target.",
+            "in": "query",
+            "name": "look_for",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The description of what in the neighbors should share with the target.",
+              "title": "Look For"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetrieveNeighborsRequestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Neighbors",
+        "tags": [
+          "retrieve"
+        ]
+      },
+      "post": {
+        "description": "Get the neighbors of an entity.",
+        "operationId": "get_neighbors_with_identification_params_retrieve_entities_neighbors_post",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetrieveNeighborsWithIdentificationParamsRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetrieveNeighborsRequestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Neighbors With Identification Params",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/entities/neighbors/ai-mode": {
+      "post": {
+        "description": "Retrieve neighboring entities using AI-mode identification parameters.\n\nParameters:\n    request (RetrieveNeighborsAiModeRequestBody): Request body containing:\n        - identification_params: parameters that identify the target entity or entities.\n        - looking_for: description of the desired neighbors or relation types.\n        - limit: maximum number of neighbor results to return.\n\nReturns:\n    list: Neighboring entities that match the AI-mode identification and search criteria.",
+        "operationId": "get_neighbors_ai_mode_retrieve_entities_neighbors_ai_mode_post",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetrieveNeighborsAiModeRequestBody",
+                "description": "The request body for the retrieve neighbors AI mode endpoint."
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Neighbors Ai Mode",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/entity/context": {
+      "get": {
+        "description": "Retrieve contextual information for an entity identified by `target`.\n\nParameters:\n    target (str): Identifier or name of the target entity.\n    context_depth (int): Maximum depth of related context to include.\n    brain_id (str): Identifier of the brain/knowledge graph to query.\n\nReturns:\n    dict: A mapping containing the entity's contextual information.",
+        "operationId": "get_entity_context_retrieve_entity_context_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "target",
+            "required": true,
+            "schema": {
+              "title": "Target",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "context_depth",
+            "required": false,
+            "schema": {
+              "default": 3,
+              "title": "Context Depth",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Entity Context",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/entity/info": {
+      "get": {
+        "description": "Retrieve detailed information for an entity identified by the given target and query.\n\nParameters:\n    target (str): Identifier or name of the target entity to retrieve.\n    query (str): Query text used to refine or disambiguate the requested entity information.\n    max_depth (int): Maximum graph depth to traverse when collecting related information.\n    brain_id (str): Identifier of the brain/namespace to query.\n\nReturns:\n    dict: A mapping containing the entity's attributes and related contextual information.",
+        "operationId": "get_entity_info_retrieve_entity_info_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "target",
+            "required": true,
+            "schema": {
+              "title": "Target",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": true,
+            "schema": {
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_depth",
+            "required": false,
+            "schema": {
+              "default": 3,
+              "title": "Max Depth",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Entity Info",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/entity/status": {
+      "get": {
+        "description": "Retrieve status information for a specified entity.\n\nParameters:\n    target (str): Identifier or name of the entity to inspect.\n    types (Optional[List[str]]): Optional list of entity types to filter the status computation.\n    brain_id (str): Identifier of the brain (knowledge graph) to query.\n\nReturns:\n    status (dict): A dictionary containing the entity's status details.",
+        "operationId": "get_entity_status_retrieve_entity_status_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "target",
+            "required": true,
+            "schema": {
+              "title": "Target",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Types"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Entity Status",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/entity/synergies": {
+      "get": {
+        "description": "Retrieve synergies for a specified entity.\n\nParameters:\n    target: Identifier or name of the target entity.\n    polarity: \"same\" for matching node polarity; \"opposite\" for positive\u2194negative.\n    do: If True, only direct synergies are returned.\n    pa: If True, potential anchors are returned.\n    ppa: If True, seed anchors are returned.\n    top_k: Maximum synergies to return (default 50).\n    labels: Optional candidate label filter.\n    brain_id: Identifier of the knowledge brain to query.\n\nReturns:\n    Synergy records for the target entity matching the requested polarity.",
+        "operationId": "get_entity_synergies_retrieve_entity_synergies_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "target",
+            "required": true,
+            "schema": {
+              "title": "Target",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "polarity",
+            "required": false,
+            "schema": {
+              "default": "same",
+              "enum": [
+                "same",
+                "opposite"
+              ],
+              "title": "Polarity",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "do",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Do",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pa",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Pa",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ppa",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Ppa",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "top_k",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Top K",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Labels"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Entity Synergies",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/hops": {
+      "get": {
+        "description": "Compute graph hops for the given query.\n\nParameters:\n    query (str): Search text or entity identifier to start hop traversal from.\n    degrees (int): Maximum number of hop degrees to traverse (default 2).\n    flattened (bool): If True, return a flattened list of hops; otherwise preserve nested hop structure.\n    brain_id (str): Identifier of the brain (knowledge graph) to query.\n\nReturns:\n    list: Hops (paths) connecting matching entities up to the specified degree; the exact structure varies based on `flattened`.",
+        "operationId": "get_hops_retrieve_hops_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "query",
+            "required": true,
+            "schema": {
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "degrees",
+            "required": false,
+            "schema": {
+              "const": 2,
+              "default": 2,
+              "title": "Degrees",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "flattened",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Flattened",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Hops",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/observations": {
+      "get": {
+        "description": "Retrieve a list of observations filtered by the provided parameters.\n\nParameters:\n    limit (int): Maximum number of observations to return.\n    skip (int): Number of observations to skip (offset).\n    resource_id (Optional[str]): If provided, only return observations for this resource identifier.\n    labels (Optional[str]): Comma-separated observation labels to filter by; when provided, labels are treated as a list of strings.\n    query_text (Optional[str]): Full-text query to filter observations.\n    brain_id (str): Identifier of the brain/tenant to query.\n\nReturns:\n    list: A list of observation records that match the provided filters.",
+        "operationId": "get_observations_list_retrieve_observations_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Skip",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "resource_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Resource Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "labels",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Labels"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query_text",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query Text"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Observations List",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/observations/labels": {
+      "get": {
+        "description": "Get all unique labels from observations.",
+        "operationId": "get_observation_labels_retrieve_observations_labels_get",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Observation Labels",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/observations/{id}": {
+      "get": {
+        "description": "Get observation by ID.",
+        "operationId": "get_observation_by_id_retrieve_observations__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Observation By Id",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/recommend": {
+      "get": {
+        "description": "Ranked event-graph recommendations composing synergies, asymmetric\ncomplementary walks, multi-interest medoids, and optional attribute\npreferences (retrieval-time only; no training).",
+        "operationId": "get_recommend_retrieve_recommend_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "target",
+            "required": true,
+            "schema": {
+              "title": "Target",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "polarity",
+            "required": false,
+            "schema": {
+              "default": "same",
+              "enum": [
+                "same",
+                "opposite"
+              ],
+              "title": "Polarity",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "top_k",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Top K",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_asymmetric",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Include Asymmetric",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_multi_interest",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Include Multi Interest",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_attribute_pref",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Attribute Pref",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "diversify",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Diversify",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "asymmetric_direction",
+            "required": false,
+            "schema": {
+              "default": "outbound",
+              "enum": [
+                "outbound",
+                "inbound",
+                "both"
+              ],
+              "title": "Asymmetric Direction",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "exclude_seen",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Exclude Seen",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "recency_half_life_days",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Recency Half Life Days"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dampen_degree",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Dampen Degree",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Labels"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Recommend",
+        "tags": [
+          "retrieve"
+        ]
+      },
+      "post": {
+        "operationId": "post_recommend_retrieve_recommend_post",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecommendRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Post Recommend",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/relationships": {
+      "get": {
+        "description": "Retrieve relationships filtered by types, node labels, and query criteria.\n\nParameters:\n    relationship_types (Optional[str]): Comma-separated relationship types to include.\n    from_node_labels (Optional[str]): Comma-separated source node labels to filter.\n    to_node_labels (Optional[str]): Comma-separated target node labels to filter.\n    query_text (Optional[str]): Text to match against relationships or nodes.\n    query_search_target (Optional[str]): Target of the text query, such as \"all\", \"source\", or \"target\".\n    limit (int): Maximum number of relationships to return.\n    skip (int): Number of relationships to skip.\n    brain_id (str): Brain (dataset) identifier.\n\nReturns:\n    List of relationship records matching the filters.",
+        "operationId": "get_relationships_retrieve_relationships_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Skip",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "relationship_types",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Relationship Types"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from_node_labels",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Node Labels"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to_node_labels",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Node Labels"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query_text",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query Text"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query_search_target",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "all",
+              "title": "Query Search Target"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Relationships",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/search": {
+      "get": {
+        "operationId": "get_search_retrieve_search_get",
+        "parameters": [
+          {
+            "description": "The search query.",
+            "in": "query",
+            "name": "query",
+            "required": true,
+            "schema": {
+              "description": "The search query.",
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Number of hits to return.",
+            "in": "query",
+            "name": "k",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "description": "Number of hits to return.",
+              "maximum": 200,
+              "minimum": 1,
+              "title": "K",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Comma-separated channels: passages, entities, events, communities, and/or plugin:<name>.",
+            "in": "query",
+            "name": "channels",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "passages",
+              "description": "Comma-separated channels: passages, entities, events, communities, and/or plugin:<name>.",
+              "title": "Channels"
+            }
+          },
+          {
+            "description": "Comma-separated node labels to filter the entities channel.",
+            "in": "query",
+            "name": "node_labels",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated node labels to filter the entities channel.",
+              "title": "Node Labels"
+            }
+          },
+          {
+            "description": "Comma-separated hub labels for the communities channel.",
+            "in": "query",
+            "name": "community_labels",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated hub labels for the communities channel.",
+              "title": "Community Labels"
+            }
+          },
+          {
+            "description": "Optional 1-hop expansion from graph channel seeds.",
+            "in": "query",
+            "name": "expand",
+            "required": false,
+            "schema": {
+              "default": "none",
+              "description": "Optional 1-hop expansion from graph channel seeds.",
+              "enum": [
+                "none",
+                "neighbors"
+              ],
+              "title": "Expand",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Fusion override. Default is SEARCH_FUSION.",
+            "in": "query",
+            "name": "fusion",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "rrf",
+                    "cc"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Fusion override. Default is SEARCH_FUSION.",
+              "title": "Fusion"
+            }
+          },
+          {
+            "description": "none or plugin:<name>. Unknown plugin names return 400.",
+            "in": "query",
+            "name": "rerank",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "none or plugin:<name>. Unknown plugin names return 400.",
+              "title": "Rerank"
+            }
+          },
+          {
+            "description": "Optional USER uuid or id for query-gated rerank of retrieved hits.",
+            "in": "query",
+            "name": "target",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional USER uuid or id for query-gated rerank of retrieved hits.",
+              "title": "Target"
+            }
+          },
+          {
+            "in": "query",
+            "name": "profile_stages",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Profile Stages",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Search",
+        "tags": [
+          "retrieve"
+        ]
+      },
+      "post": {
+        "operationId": "post_search_retrieve_search_post",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Post Search",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/structured-data": {
+      "get": {
+        "description": "Get a list of structured data.",
+        "operationId": "get_structured_data_list_retrieve_structured_data_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Skip",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "types",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Types"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query_text",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query Text"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Structured Data List",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/structured-data/types": {
+      "get": {
+        "description": "Get all unique types from structured data.",
+        "operationId": "get_structured_data_types_retrieve_structured_data_types_get",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Structured Data Types",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/structured-data/{id}": {
+      "get": {
+        "description": "Get structured data by ID.",
+        "operationId": "get_structured_data_by_id_retrieve_structured_data__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Structured Data By Id",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/text-chunks": {
+      "get": {
+        "description": "Get text chunks by a query text and optional metadata equality filters.",
+        "operationId": "get_text_chunks_retrieve_text_chunks_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Skip",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query_text",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query Text"
+            }
+          },
+          {
+            "in": "query",
+            "name": "metadata_eq",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Metadata Eq"
+            }
+          },
+          {
+            "in": "query",
+            "name": "order",
+            "required": false,
+            "schema": {
+              "default": "desc",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "title": "Order",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Text Chunks",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/vectors/stores": {
+      "get": {
+        "description": "List available vector store names and dimensions.",
+        "operationId": "get_vector_stores_retrieve_vectors_stores_get",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Vector Stores",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/vectors/{store}": {
+      "get": {
+        "description": "List vectors in a store with pagination.",
+        "operationId": "get_vectors_list_retrieve_vectors__store__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store",
+            "required": true,
+            "schema": {
+              "title": "Store",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Skip",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_embeddings",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Embeddings",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Vectors List",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/system/brains": {
+      "post": {
+        "description": "Create a new brain",
+        "operationId": "create_brain_system_brains_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBrainRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Create Brain",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/system/brains-list": {
+      "get": {
+        "description": "Get the list of brains.",
+        "operationId": "get_brains_list_system_brains_list_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Brains List",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/tasks/": {
+      "get": {
+        "operationId": "get_tasks_tasks__get",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Tasks",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}": {
+      "get": {
+        "description": "Get the result of a task by its ID.",
+        "operationId": "get_task_tasks__task_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Task",
+        "tags": [
+          "tasks"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "description": "Local BrainAPI",
+      "url": "http://localhost:8000"
+    }
+  ],
+  "tags": [
+    {
+      "description": "BrainAPI ingest operations.",
+      "name": "ingest"
+    },
+    {
+      "description": "BrainAPI retrieve operations.",
+      "name": "retrieve"
+    },
+    {
+      "description": "BrainAPI model operations.",
+      "name": "model"
+    },
+    {
+      "description": "BrainAPI meta operations.",
+      "name": "meta"
+    },
+    {
+      "description": "BrainAPI tasks operations.",
+      "name": "tasks"
+    },
+    {
+      "description": "BrainAPI system operations.",
+      "name": "system"
+    }
+  ]
+}

@@ -2,10 +2,17 @@
   "name": "brainapi-docs",
   "version": "0.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22 <23"
+  },
   "scripts": {
     "build": "next build",
     "dev": "next dev --turbo",
     "start": "next start",
+    "api:sync": "../../brainapi2/.venv/bin/python scripts/sync-v2-openapi.py --source ../../brainapi2",
+    "api:check": "../../brainapi2/.venv/bin/python scripts/sync-v2-openapi.py --source ../../brainapi2 --check",
+    "api:generate": "node scripts/generate-v2-api.mjs",
+    "docs:check": "node scripts/check-docs.mjs",
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {

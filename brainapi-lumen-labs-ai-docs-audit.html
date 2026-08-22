@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BrainAPI documentation audit — baseline</title>
+  <style>
+    :root { color-scheme: light dark; --bg:#f7f7f5; --panel:#fff; --soft:#f0f0ec; --text:#20201d; --muted:#65645f; --border:#d9d8d2; }
+    @media (prefers-color-scheme:dark){:root{--bg:#171715;--panel:#22221f;--soft:#2b2b27;--text:#f3f2ed;--muted:#b6b4ac;--border:#41413b}}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:14px/1.55 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:980px;margin:auto;padding:32px 20px 60px}.score-hero{display:flex;align-items:center;gap:24px;padding:24px;background:var(--panel);border:1px solid var(--border);border-radius:16px;margin-bottom:18px}.score-circle{width:92px;height:92px;border-radius:50%;border:4px solid #BA7517;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none}.score-num{font-size:31px;font-weight:700;line-height:1}.score-denom,.score-sub,.cat-score,.check-note,.scope{color:var(--muted)}.score-title{font-size:21px;font-weight:700;margin-bottom:5px}.score-sub{line-height:1.65}.scope{padding:14px 16px;background:var(--soft);border-radius:10px;margin:0 0 18px}.readiness{display:flex;gap:12px;align-items:center;padding:14px 16px;margin:0 0 18px;border:1px solid #639922;border-radius:10px;background:var(--panel)}.readiness strong{font-size:18px;color:#639922}.legend{display:flex;gap:18px;margin:0 0 16px}.leg{display:flex;align-items:center;gap:7px}.dot{width:10px;height:10px;border-radius:50%}.dot-pass{background:#639922}.dot-warn{background:#BA7517}.dot-fail{background:#E24B4A}.category{margin-bottom:16px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--panel)}.cat-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 16px;background:var(--soft)}.cat-left{display:flex;align-items:baseline;gap:10px}.cat-name{font-weight:700}.cat-pills{display:flex;gap:6px;flex-wrap:wrap}.pill{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:650}.pill-pass{background:#EAF3DE;color:#27500A}.pill-warn{background:#FAEEDA;color:#633806}.pill-fail{background:#FCEBEB;color:#791F1F}.check-row{display:flex;align-items:flex-start;gap:11px;padding:10px 16px;border-top:1px solid var(--border)}.check-icon{flex:none;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:1px;font-size:11px;font-weight:800}.icon-pass{background:#EAF3DE;color:#3B6D11}.icon-warn{background:#FAEEDA;color:#854F0B}.icon-fail{background:#FCEBEB;color:#A32D2D}.check-label{font-weight:600}.check-note{font-size:12px;margin-top:2px}.footer{margin-top:24px;color:var(--muted);font-size:12px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:620px){.score-hero{align-items:flex-start}.cat-header{align-items:flex-start;flex-direction:column}.score-circle{width:72px;height:72px}.score-num{font-size:25px}}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <h1 class="sr-only">Documentation audit for brainapi.lumen-labs.ai</h1>
+  <section class="score-hero">
+    <div class="score-circle"><span class="score-num">64</span><span class="score-denom">/100</span></div>
+    <div><div class="score-title">brainapi.lumen-labs.ai — live V2 baseline</div><div class="score-sub">18 pass · 6 warn · 9 fail · 33 checks<br>Strongest: Internal linking &amp; flow · Weakest: Versioning &amp; maintenance</div></div>
+  </section>
+  <p class="scope"><strong>Scope:</strong> this score records the live deployment before the portal rebuild. Evidence notes explicitly identify improvements already present in the uncommitted documentation working tree; those improvements are not credited until deployed and re-audited.</p>
+  <div class="readiness"><strong>97/100</strong><span><b>Post-change repository readiness:</b> 32 checks are satisfied in the clean production build. The remaining failure is the root-domain Cloudflare crawler policy, supplied separately for deployment. This is a projected post-deploy score, not a claim about the current live site.</span></div>
+  <div class="legend"><span class="leg"><span class="dot dot-pass"></span>Pass</span><span class="leg"><span class="dot dot-warn"></span>Warn</span><span class="leg"><span class="dot dot-fail"></span>Fail</span></div>
+  <div id="categories"></div>
+  <p class="footer">Audit date: 22 August 2026 · Method: docs-auditor rubric, seven equally weighted categories. Warn earns half credit. Final score rounded to the nearest integer.</p>
+</main>
+<script>
+const categories=[
+{name:"1. AI & LLM Discoverability",score:"2.5/5",checks:[
+{status:"pass",label:"1.1 llms.txt present at root domain",note:"The live docs publish a populated /docs/llms.txt index."},
+{status:"pass",label:"1.2 llms-full.txt present",note:"The live docs publish a full V2 Markdown feed."},
+{status:"warn",label:"1.3 Docs pages listed in llms.txt",note:"Pages are listed, but the live index trails current Search and plugin work in the working tree."},
+{status:"fail",label:"1.4 AI bots allowed in robots.txt",note:"The root Cloudflare policy blocks both training and user/search-oriented agents instead of separating their purposes."},
+{status:"fail",label:"1.5 Docs pages in sitemap.xml",note:"No documentation sitemap was available at the expected live URL."}]},
+{name:"2. Structure & Navigation",score:"3.5/6",checks:[
+{status:"pass",label:"2.1 Introduction / overview page with real content",note:"The live V2 landing page explains the product and links into the main feature areas."},
+{status:"warn",label:"2.2 Quickstart with actionable steps",note:"Installation and ingestion material exists, but the live path is stale and does not form one verified ingest-to-retrieve flow. A replacement exists locally."},
+{status:"fail",label:"2.3 API Reference section present",note:"The live V2 site has endpoint guidance but no complete, grouped API reference."},
+{status:"pass",label:"2.4 Sidebar / navigation menu present",note:"A persistent categorized Fumadocs sidebar is available."},
+{status:"fail",label:"2.5 Breadcrumb navigation present",note:"Breadcrumb context was not consistently exposed across sampled live pages."},
+{status:"pass",label:"2.6 Search functionality present",note:"Documentation search is present and V2-scoped by default."}]},
+{name:"3. Content Completeness",score:"3.5/6",checks:[
+{status:"fail",label:"3.1 Use cases / tutorials / examples section present",note:"The live Use Cases route is a placeholder rather than two complete task tutorials."},
+{status:"pass",label:"3.2 Code examples present",note:"Multiple sampled ingestion, retrieval, and plugin pages contain runnable examples."},
+{status:"pass",label:"3.3 Multiple language examples",note:"cURL, Python, and TypeScript/JavaScript examples are represented."},
+{status:"fail",label:"3.4 Changelog / release notes present",note:"No substantive live V2 changelog or release hub was found."},
+{status:"warn",label:"3.5 FAQ / troubleshooting section present",note:"Failure notes are distributed across pages, but the live site lacks a complete troubleshooting hub."},
+{status:"pass",label:"3.6 Error messages / status codes documented",note:"Authentication, ingestion, Search, and task pages document relevant HTTP behavior."}]},
+{name:"4. Content Quality",score:"2/3",checks:[
+{status:"warn",label:"4.1 Intro explains the product and audience",note:"The product is described, but application developers, operators, and extension authors do not have equally clear entry paths on the live page."},
+{status:"warn",label:"4.2 Quickstart gets a reader to a working state",note:"The live sequence omits a cohesive expected-output and failure-diagnostic path. The local rewrite addresses this."},
+{status:"pass",label:"4.3 Sampled pages have sufficient depth",note:"Established ingestion, retrieval, and plugin pages are substantive and structured rather than stubs."}]},
+{name:"5. Technical SEO & Crawlability",score:"4/5",checks:[
+{status:"pass",label:"5.1 HTTPS enforced",note:"Sampled production documentation URLs use HTTPS."},
+{status:"pass",label:"5.2 Meta titles present",note:"Sampled pages render title metadata."},
+{status:"pass",label:"5.3 Meta descriptions present",note:"Sampled pages render descriptions from MDX frontmatter."},
+{status:"fail",label:"5.4 Canonical URLs present and correct",note:"Self-referencing canonical tags were absent from sampled live pages."},
+{status:"pass",label:"5.5 No noindex directives",note:"Published docs pages are not marked noindex."}]},
+{name:"6. Internal Linking & Flow",score:"4/4",checks:[
+{status:"pass",label:"6.1 Docs pages cross-link",note:"Body links connect concepts, setup guides, retrieval surfaces, and plugin references."},
+{status:"pass",label:"6.2 Next / previous navigation present",note:"Fumadocs provides footer navigation through the page tree."},
+{status:"pass",label:"6.3 Links to GitHub / source code",note:"The docs link to BrainAPI and official plugin repositories."},
+{status:"pass",label:"6.4 Community / support links present",note:"The sidebar provides a direct Discord community link."}]},
+{name:"7. Versioning & Maintenance",score:"1.5/4",checks:[
+{status:"pass",label:"7.1 Version indicator visible",note:"V1 and V2 are selectable in the documentation UI."},
+{status:"fail",label:"7.2 Last updated / freshness signal",note:"Sampled live pages do not expose Git-derived last-updated dates."},
+{status:"warn",label:"7.3 Install commands include version pinning",note:"Install commands are useful but generally use moving package or image versions."},
+{status:"fail",label:"7.4 Deprecation notices present",note:"V1 remains selectable beside V2 without an explicit Legacy/deprecation label."}]}
+];
+const icon={pass:"✓",warn:"!",fail:"✗"};const root=document.getElementById("categories");
+for(const category of categories){const counts={pass:0,warn:0,fail:0};category.checks.forEach(c=>counts[c.status]++);const section=document.createElement("section");section.className="category";section.innerHTML=`<div class="cat-header"><div class="cat-left"><span class="cat-name">${category.name}</span><span class="cat-score">${category.score}</span></div><div class="cat-pills">${["pass","warn","fail"].filter(s=>counts[s]).map(s=>`<span class="pill pill-${s}">${counts[s]} ${s}</span>`).join("")}</div></div><div>${category.checks.map(c=>`<div class="check-row"><span class="check-icon icon-${c.status}">${icon[c.status]}</span><div><div class="check-label">${c.label}</div><div class="check-note">${c.note}</div></div></div>`).join("")}</div>`;root.appendChild(section)}
+</script>
+</body>
+</html>

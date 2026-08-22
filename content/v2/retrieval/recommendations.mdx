@@ -1,0 +1,108 @@
+---
+title: Recommendations
+description: Train-free graph recommendations around a target entity or user
+---
+
+`GET|POST /retrieve/recommend` ranks item nodes connected to a target through the event graph. It is a recommendation surface, not a text-search endpoint: callers provide a target entity/user instead of a query.
+
+<AgentNote>
+- Required: `target`; default `top_k=20`, range 1…200
+- Use GET for common controls and POST for custom `behavior_weights`
+- Returns graph nodes, scores, contributing nodes, and a recommendation channel
+- Evaluate next-item behavior with RecSys metrics, never Search nDCG
+</AgentNote>
+
+## Search versus Recommendations
+
+| | Search | Recommendations |
+| --- | --- | --- |
+| Input | Query text, optional user target | Target node/user |
+| First stage | BM25/dense/plugin/graph retrieval | Event-graph walks and affinities |
+| Output | Passage or node hits | Item nodes |
+| Personalization | Query-gated rerank of retrieved `node_id`s | Target affinity is the primary task |
+| Benchmark | Recall/nDCG/MRR | HitRate/Recall@K |
+
+## Usage
+
+<Tabs items={["GET", "POST"]}>
+  <Tab value="GET">
+    ```bash
+    curl --get "<DEPLOYMENT_URL>/retrieve/recommend" \
+      -H "BrainPAT: YOUR_BRAIN_PAT" \
+      -H "X-Brain-ID: commerce" \
+      --data-urlencode "target=user:u01" \
+      --data-urlencode "top_k=20" \
+      --data-urlencode "include_attribute_pref=true" \
+      --data-urlencode "exclude_seen=true"
+    ```
+  </Tab>
+  <Tab value="POST">
+    ```bash
+    curl -X POST "<DEPLOYMENT_URL>/retrieve/recommend" \
+      -H "Content-Type: application/json" \
+      -H "BrainPAT: YOUR_BRAIN_PAT" \
+      -H "X-Brain-ID: commerce" \
+      -d '{
+        "target": "user:u01",
+        "top_k": 20,
+        "include_attribute_pref": true,
+        "exclude_seen": true,
+        "behavior_weights": {"view": 0.1, "purchase": 1.0}
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+## Request reference
+
+| Field | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `target` | string | required | Target node UUID or resolvable identifier. |
+| `polarity` | `same` \| `opposite` | `same` | Match or invert candidate polarity. |
+| `top_k` | integer | `20` | Return count, 1 through 200. |
+| `labels` | string[] | unset | Candidate node-label filter. |
+| `include_asymmetric` | boolean | `true` | Include complementary directional walks. |
+| `include_multi_interest` | boolean | `true` | Combine multiple interest regions. |
+| `include_attribute_pref` | boolean | `false` | Score shared attribute hubs. |
+| `diversify` | boolean | `true` | Avoid a near-duplicate-only list. |
+| `asymmetric_direction` | `outbound` \| `inbound` \| `both` | `outbound` | Direction for asymmetric evidence. |
+| `exclude_seen` | boolean | `false` | Remove items already connected through observed behavior. |
+| `recency_half_life_days` | number | unset | Optional non-negative decay half-life. |
+| `dampen_degree` | boolean | `false` | Reduce high-degree popularity effects. |
+| `behavior_weights` | object | unset | POST only; per-behavior weight overrides. |
+
+## Behavior weights
+
+The built-in table treats stronger intent as more evidence:
+
+| Behavior aliases | Default weight |
+| --- | ---: |
+| `view`, `click`, unknown behavior | 0.2 |
+| `cart`, `add_to_cart`, `follow` | 0.5 |
+| `favorite`, `favourite`, `wishlist` | 0.7 |
+| `purchase`, `buy`, `bought` | 1.0 |
+
+Aliases are normalized across capitalization, spaces, dashes, and underscores. POST can supply a custom `behavior_weights` map without changing server-wide defaults.
+
+## Response
+
+```json
+{
+  "target_node": {"uuid": "user:u01", "labels": ["USER"], "name": "u01"},
+  "recommendations": [
+    {
+      "node": {"uuid": "sku-42", "labels": ["PRODUCT"], "name": "Oak table"},
+      "score": 0.84,
+      "connected_by": [{"uuid": "event-7", "labels": ["EVENT"], "name": "Purchase"}],
+      "channel": "asymmetric"
+    }
+  ]
+}
+```
+
+Channel names describe the graph mechanism that contributed the item. They are not Search channels and should not be fused with Search metrics.
+
+## Related
+
+- [Catalog search personalization](/v2/retrieval/search/catalog-personalization)
+- [Structured ingestion](/v2/ingestion/structured-data)

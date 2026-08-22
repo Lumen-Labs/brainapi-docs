@@ -1,0 +1,154 @@
+---
+title: Search benchmark
+description: Evaluate ranked BrainAPI Search on toy, Amazon ESCI, and Wayfair WANDS corpora
+---
+
+The Search harness evaluates `POST /retrieve/search` over HTTP. It ingests an isolated corpus, maps catalog document markers to BrainAPI chunk ids, records ranked-retrieval metrics, and upserts successful reports under `benchmarks.search`.
+
+<Callout type="warn">
+  Search brains must start with `searchbench`. Never point this harness at
+  `locomoconv*`, `beam*`, LongMemEval brains, or `demorecsys`.
+</Callout>
+
+## Prerequisites
+
+```dotenv
+SEARCH_ENABLED="true"
+DATA_DB="postgresql"
+BRAIN_CREATION_ALLOWED="true"
+BRAINPAT_TOKEN="..."
+BRAINAPI_URL="http://localhost:8000"
+```
+
+At least one of `SEARCH_USE_DENSE` or `SEARCH_USE_BM25` must be true. Product-default runs enable both and use RRF.
+
+```bash
+cd benchmarks
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+## Pipeline
+
+```text
+JSONL documents
+  → POST /ingest/ with skip_enrichment=true
+  → optional POST /ingest/structured for catalog graph
+  → GET /retrieve/text-chunks to map DOCID markers
+  → POST /retrieve/search with profile_stages=true
+  → Recall@K, nDCG@10, MRR, p50/p95
+  → runs/<run_id>/report.json
+  → REPORTS.json when status=ok
+```
+
+Search ingest still chunks and embeds documents. `--enrich` explicitly restores Scout/Architect work. `--ingest-graph` writes generic item-to-hub triples; it is not part of the passages-only quality control.
+
+## Start with the toy corpus
+
+```bash
+cd benchmarks
+./search.sh smoke
+./search.sh evaluate --fusion rrf
+./search.sh report --run <run_id>
+```
+
+The bundled toy set has keyword and paraphrase queries so lexical and semantic retrieval can both contribute.
+
+## Product-search datasets
+
+| Dataset | Download | Graded gains | Default local cap |
+| --- | --- | --- | --- |
+| Amazon ESCI / Shopping Queries | `./search.sh download --name esci` | Exact 1, Substitute 0.1, Complement 0.01, Irrelevant 0 | 80 queries, 2,000 products, 40 candidates/query |
+| Wayfair WANDS | `./search.sh download --name wands` | Exact 1, Partial 0.5, Irrelevant 0 | 80 queries, 2,000 products, 40 candidates/query |
+
+### ESCI
+
+```bash
+./search.sh evaluate \
+  --dataset data/search_esci.jsonl \
+  --brain searchbenchesci \
+  --run search-esci
+```
+
+### Frozen WANDS control
+
+```bash
+./search.sh --brain searchbenchwands evaluate \
+  --dataset data/search_wands.jsonl \
+  --run search-wands-passages-k50 \
+  --channels passages \
+  --k 50 \
+  --ks 5,10,20,50
+
+# Re-evaluate without re-ingesting:
+./search.sh --brain searchbenchwands evaluate \
+  --dataset data/search_wands.jsonl \
+  --run search-wands-passages-k50-rerun \
+  --channels passages \
+  --k 50 \
+  --ks 5,10,20,50 \
+  --skip-ingest
+```
+
+The frozen WANDS file refuses overwrite. Its quality control is passages-only, `k=50`, and `rerank=none` on `searchbenchwands`.
+
+## Channels and plugins
+
+```bash
+# Core graph channels on an isolated graph brain
+./search.sh evaluate \
+  --dataset data/search_wands.jsonl \
+  --brain searchbenchwandsgraph \
+  --ingest-graph \
+  --channels passages,entities,communities
+
+# Cross-encoder second stage
+./search.sh evaluate --rerank plugin:cross-encoder
+
+# SPLADE after its plugin index has been built
+./search.sh evaluate --channels plugin:splade
+```
+
+`--ingest-graph` is refused on frozen quality brains including
+`searchbenchwands`, `searchbenchesci74`, `searchbenchescies`, and
+`searchbenchesciltr2`. Use a new `searchbench*` brain for architecture work.
+
+## Metrics
+
+| Metric | Meaning |
+| --- | --- |
+| Recall@K | Fraction of relevant documents present in the first K results |
+| nDCG@10 | Rank-sensitive gain; uses ESCI/WANDS graded labels when present |
+| MRR | Reciprocal rank of the first relevant result, averaged over queries |
+| p50/p95 retrieve | Search latency percentiles excluding `embed.query` RTT |
+
+Gold matches either a mapped chunk id or a graph hit whose id equals the catalog `doc_id`. Search does not use an LLM judge.
+
+## Current ledger examples
+
+These rows are snapshots from the repository ledger, not hosted-service SLAs:
+
+| Claim | Run | Dataset/path | nDCG@10 | Recall@50 | p50 retrieve |
+| --- | --- | --- | ---: | ---: | ---: |
+| Frozen quality control | `search-wands-passages-k50` | WANDS, passages, k=50 | 0.8232 | 0.8366 | 86.595 ms |
+| Product control | `search-esci-74-passages-k50` | ESCI n=74, passages, k=50 | 0.4999 | 0.8340 | 60.091 ms |
+| Architecture demo | `search-wandsgraph-communities-k50` | WANDS graph, communities | 0.4094 | 0.2870 | 5609.238 ms |
+
+The architecture-demo row answers whether the graph path works on an isolated catalog brain. It is not a quality claim against the frozen WANDS 0.8232 or ESCI 0.4999 controls.
+
+## Isolation and interpretation rules
+
+- Never wipe or ingest graph/interactions into a frozen quality brain.
+- Never use `/retrieve/context` as the Search metric path.
+- Never report Recommendation HitRate as Search quality.
+- Keep harness-local/exhaustive/model-training experiments distinct from product HTTP runs.
+- Record `embed.query` separately; the default Search p50 target excludes it.
+- Only successful scored reports belong in `benchmarks.search`.
+
+## Related
+
+- [Search API](/v2/retrieval/search)
+- [Search theory](/v2/retrieval/search/theory)
+- [Results ledger](/v2/benchmarks/reports-ledger)

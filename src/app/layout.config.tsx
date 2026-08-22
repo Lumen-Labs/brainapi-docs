@@ -15,20 +15,27 @@ export const baseOptions: BaseLayoutProps = {
     ),
     url: "https://brainapi.lumen-labs.ai",
   },
-  links: [],
+  githubUrl: "https://github.com/Lumen-Labs/brainapi-docs",
+  links: [
+    {
+      text: "Report a docs issue",
+      url: "https://github.com/Lumen-Labs/brainapi-docs/issues/new",
+      external: true,
+    },
+  ],
 };
 
 export const docsSidebarTabs = [
   {
-    title: "V1 Docs",
-    description: "Documentation for BrainAPI V1",
+    title: "V1 · Legacy",
+    description: "Legacy BrainAPI documentation",
     url: "/v1",
     urls: new Set(["/v1"]),
     icon: <BookOpenIcon className="w-full h-full p-[2px]" />,
   },
   {
-    title: "V2 Docs",
-    description: "Documentation for BrainAPI V2",
+    title: "V2 · Current",
+    description: "Current BrainAPI documentation",
     url: "/v2",
     icon: <BookOpenIcon className="w-full h-full p-[2px]" />,
   },

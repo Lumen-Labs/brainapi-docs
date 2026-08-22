@@ -1,12 +1,11 @@
-import { sourceV2 } from "@/lib/source";
+import { getPublishedV2Pages } from "@/lib/source";
 import { getLLMText } from "@/lib/get-llm-text";
 import { DOCS_BASE } from "@/lib/site";
 
 export const revalidate = false;
 
 export async function GET() {
-  const pages = sourceV2
-    .getPages()
+  const pages = getPublishedV2Pages()
     .slice()
     .sort((a, b) => a.url.localeCompare(b.url));
   const scanned = await Promise.all(pages.map(getLLMText));

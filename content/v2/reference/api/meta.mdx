@@ -1,0 +1,71 @@
+---
+title: Metadata API
+description: BrainAPI meta operations.
+full: true
+_openapi:
+  toc:
+    - depth: 2
+      title: Get Entities Labels
+      url: '#get-entities-labels'
+    - depth: 2
+      title: Get Entity Properties
+      url: '#get-entity-properties'
+    - depth: 2
+      title: Get Login Info
+      url: '#get-login-info'
+    - depth: 2
+      title: Get Relationships Properties
+      url: '#get-relationships-properties'
+  structuredData:
+    headings:
+      - content: Get Entities Labels
+        id: get-entities-labels
+      - content: Get Entity Properties
+        id: get-entity-properties
+      - content: Get Login Info
+        id: get-login-info
+      - content: Get Relationships Properties
+        id: get-relationships-properties
+    contents:
+      - content: |-
+          Retrieve all unique node labels present in the graph.
+
+          Parameters:
+              brain_id (str): Identifier of the brain/graph to query. Defaults to "default".
+
+          Returns:
+              labels (list[str]): List of unique node label names.
+        heading: get-entities-labels
+      - content: >-
+          Retrieve all unique property keys used by entities in the specified
+          brain/graph.
+
+
+          Parameters:
+              brain_id (str): Identifier of the brain/graph to query; defaults to "default".
+
+          Returns:
+              list[str]: A list of property key names present on entities in the graph.
+        heading: get-entity-properties
+      - content: >-
+          Resolve whether a BrainPAT is the system token or scoped to a single
+          brain.
+        heading: get-login-info
+      - content: >-
+          Retrieve all unique relationship types present in the graph for the
+          specified brain.
+
+
+          Parameters:
+              brain_id (str): Identifier of the brain/graph to query. Defaults to "default".
+
+          Returns:
+              A list of relationship type names (strings) found in the specified graph.
+        heading: get-relationships-properties
+---
+
+{/* Generated from schemas\/brainapi-v2.openapi.json. Run npm run api:generate after syncing the schema. */}
+
+BrainAPI meta operations.
+
+<APIPage document={"schemas/brainapi-v2.openapi.json"} operations={[{"path":"/meta/entity-labels","method":"get"},{"path":"/meta/entity-properties","method":"get"},{"path":"/meta/login-info","method":"get"},{"path":"/meta/relationships-properties","method":"get"}]} webhooks={[]} hasHead={true} />

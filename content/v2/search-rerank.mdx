@@ -1,0 +1,215 @@
+---
+title: Search Rerank
+description: Add a bounded cross-encoder second stage when candidate recall is good but the top order needs finer judgment
+---
+
+Search Rerank is the official cross-encoder plugin for `POST /retrieve/search`. It registers `rerank="plugin:cross-encoder"`, reads each query and candidate together, and reorders a bounded candidate head.
+
+The key word is **rerank**: this plugin does not search the corpus and cannot recover a passage absent from its input. Core hybrid or another first stage must find the candidates first.
+
+| Contract | Value |
+| --- | --- |
+| Registry package | `search-rerank` `0.1.0` |
+| Compatibility | BrainAPI `>=2.17.0` |
+| Search hook | `rerank="plugin:cross-encoder"` |
+| Default model | `cross-encoder/ms-marco-MiniLM-L-6-v2` |
+| Health route | `GET /search-rerank/health` |
+| Extra dependency | `sentence-transformers` |
+
+## Mental model
+
+A first-stage retriever must score many documents cheaply. It normally encodes the query and document independently or uses lexical postings. A cross-encoder instead receives a pair such as:
+
+```text
+[query] retention exceptions for contractors after termination
+[candidate] Contractor records may be retained for seven years when...
+```
+
+Because the model sees both texts at once, it can model relationships among “contractors,” “exceptions,” and “after termination” more directly than a single query or passage vector. The tradeoff is pairwise inference: ten candidates require ten query-candidate predictions.
+
+```text
+BM25/dense/plugin candidates
+        ↓
+bounded candidate head
+        ↓
+cross-encoder pair scores
+        ↓
+reordered head + untouched tail
+```
+
+## Why use a second stage?
+
+Reranking is useful when the relevant passage is already retrieved but near-duplicate candidates are ordered poorly. Examples include:
+
+- Policies that differ by worker type, jurisdiction, or exception.
+- Research abstracts that mention the same topic but answer different questions.
+- Support procedures for similar products or versions.
+- API pages where a parameter appears in several languages or client libraries.
+
+It is not a remedy for missing source text, incomplete ingestion, or low first-stage recall.
+
+## Install
+
+```bash
+./bin/brainapi install search-rerank
+```
+
+Or install the repository as a local plugin:
+
+```bash
+git clone https://github.com/Lumen-Labs/brainapi-plugin-search-rerank.git plugins/search-rerank
+```
+
+Restart BrainAPI so the plugin entrypoint registers `cross-encoder`. Ensure `sentence-transformers` is installed in the BrainAPI environment. The model is not loaded during installation or startup; the first rerank request loads it lazily.
+
+## Policy-library example
+
+Assume policy passages are already ingested into `policy-library`. First establish that the core request retrieves the relevant policy in its candidate head. Then opt into reranking:
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/retrieve/search" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -H "X-Brain-ID: policy-library" \
+  -d '{
+    "query": "retention exceptions for contractors after termination",
+    "k": 10,
+    "channels": ["passages"],
+    "rerank": "plugin:cross-encoder",
+    "profile_stages": true
+  }'
+```
+
+An eligible hit exposes the second-stage score:
+
+```json
+{
+  "id": "policy-contractor-retention",
+  "channel": "passages",
+  "score": 0.91,
+  "scores": {
+    "bm25": 5.7,
+    "dense": 0.78,
+    "rrf": 0.0318,
+    "cc": null,
+    "rerank": 0.91,
+    "plugin": null,
+    "graph": null,
+    "personalize": null
+  },
+  "snippet": "Contractor records may be retained after termination only when...",
+  "labels": [],
+  "extras": {"audience": "contractor"},
+  "node_id": null
+}
+```
+
+The number is model-specific and comparable only within the same request/model. A higher score is not a calibrated probability or a quality guarantee.
+
+## Candidate limits
+
+BrainAPI bounds pairwise work in core:
+
+| Search mode | First-stage pool | Maximum reranked head |
+| --- | ---: | ---: |
+| `default` | Requested `k` | 10 |
+| `catalog` | `min(200, max(k, 50))` | 50 |
+
+Default mode is appropriate for ordinary interactive ranking. Catalog mode intentionally retrieves a deeper pool for second-stage work and is outside the default Search latency target.
+
+If the reranker returns fewer candidates than it received, core preserves omitted candidates and the untouched tail. A custom reranker must return only ids supplied in its candidate head.
+
+## Four-class ESCI output
+
+Some catalog relevance models produce four logits: Exact, Substitute, Complement, and Irrelevant. When the configured model returns that shape, the plugin applies softmax and calculates the gain expectation:
+
+$$
+1.0\,P(Exact)+0.1\,P(Substitute)+0.01\,P(Complement)+0.0\,P(Irrelevant)
+$$
+
+Binary or single-logit models use their raw score. This compatibility does not mean the default MiniLM model is a four-class ESCI model.
+
+## Configuration
+
+```dotenv
+SEARCH_RERANK_MODEL="cross-encoder/ms-marco-MiniLM-L-6-v2"
+```
+
+Changing the checkpoint changes relevance, download size, memory use, and inference time. Treat a model override as an evaluated deployment change, not a cosmetic setting.
+
+## Health and cold starts
+
+```bash
+curl "<DEPLOYMENT_URL>/search-rerank/health" \
+  -H "BrainPAT: YOUR_BRAIN_PAT"
+```
+
+```json
+{
+  "plugin": "search-rerank",
+  "rerank": "plugin:cross-encoder",
+  "model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "loaded": false,
+  "max_k": 10,
+  "error": null
+}
+```
+
+- `loaded=false` is normal before the first successful prediction.
+- `loaded=true` confirms that the current process has the model in memory.
+- `error` contains the latest load failure.
+- Restarting BrainAPI unloads the model; the next rerank request pays the cold-start cost again.
+- There is no document index to build or lose.
+
+## When to choose Search Rerank
+
+Choose it when:
+
+- Candidate Recall@K is already high.
+- Relevance depends on fine query-passage relationships.
+- Top-order quality matters enough to justify pairwise latency.
+- Your deployment can download and hold the selected model.
+
+Avoid it when:
+
+- Relevant passages are missing from the first-stage head.
+- Exact identifiers already navigate correctly.
+- `k` is large and pairwise inference does not fit the latency budget.
+- You have no judged queries with which to verify the model’s domain fit.
+- The desired surface is `/retrieve/context`; this hook never runs there.
+
+## Evaluate before adoption
+
+1. Freeze a representative query set and relevance judgments.
+2. Record the core candidate Recall@10. If it is weak, fix retrieval first.
+3. Run the same stored corpus and queries with and without the reranker.
+4. Compare nDCG/MRR and regressions by query slice, not only the mean.
+5. Record p50/p95 and the plugin stage timing, including a cold run and warm runs.
+
+The default model is a general checkpoint. It can improve, preserve, or degrade a particular domain; the architecture alone does not predict the outcome.
+
+### Idea to test: domain-specific model
+
+**Hypothesis:** a model trained on judged policy pairs distinguishes audience and exception language better than the default checkpoint. **Measure:** held-out nDCG/MRR and warm/cold latency against the default. **Stop:** do not deploy it if the improvement is unstable or the operational cost exceeds the product budget.
+
+### Idea to test: application-level routing
+
+**Hypothesis:** only nuanced natural-language queries need reranking, while error codes and exact titles do not. **Measure:** predeclare query categories and compare routed versus always-on quality, latency, and routing errors. **Stop:** keep one predictable path if routing adds complexity without a clear slice-specific win.
+
+## Failure diagnosis
+
+| Symptom | Meaning | Action |
+| --- | --- | --- |
+| HTTP 400 unknown reranker | Hook is not registered in this process | Install/restart and use `plugin:cross-encoder` |
+| HTTP 400 for `linear` | Core linear reranking is not implemented | Use `none` or a registered plugin |
+| Health `error` is non-null | Model loading or initialization failed | Check dependency, model path, download access, and process logs |
+| First request is much slower | Lazy model cold start | Warm deliberately if your deployment requires predictable first-request latency |
+| Ranking changes but quality falls | Model/domain mismatch or weak candidate text | Inspect regressions and revert to core order |
+| Relevant result never appears | First-stage recall failure | Change candidate retrieval; a reranker cannot recover it |
+
+## Related
+
+- [Search levels](/v2/retrieval/search/levels)
+- [Search recipes](/v2/retrieval/search/recipes)
+- [Search theory](/v2/retrieval/search/theory)
+- [Search SPLADE](/v2/search-splade) and [Search ColBERT](/v2/search-colbert) for first-stage alternatives

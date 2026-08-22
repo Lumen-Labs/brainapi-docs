@@ -1,0 +1,92 @@
+---
+title: Configuration
+description: Configure BrainAPI security, models, storage, ingestion, retrieval, plugins, and observability
+---
+
+BrainAPI reads configuration from the project `.env`. Start from `.env.example`, choose one coherent provider and storage combination, and keep the API, worker, and MCP processes on the same settings.
+
+## Security and brains
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `BRAINPAT_TOKEN` | Required | System administrator PAT. |
+| `BRAIN_CREATION_ALLOWED` | `false` in runtime when unset | Create a missing selected brain automatically. The example file opts into `true`. |
+| `DEFAULT_BRAIN_FALLBACK` | `false` in runtime when unset | Resolve a missing selection to `default`. The example file opts into `true`. |
+| `CONSOLE_ENABLED` | `true` | Serve the web console from the API process. |
+
+Use explicit brain creation and selection in production. See [Authentication and brains](/v2/brains-and-auth).
+
+## Model providers
+
+`MODELS_MODE` is required and must be `local` or `remote`. It determines provider defaults, but explicit provider variables win:
+
+| Variable | Local default | Remote default |
+| --- | --- | --- |
+| `LLM_SMALL_PROVIDER` | `ollama` | `gcp_vertex` |
+| `LLM_LARGE_PROVIDER` | `ollama` | `azure` |
+| `EMBEDDINGS_PROVIDER` | `ollama` | `azure` |
+
+Supported configured providers include Ollama, Azure, Google Vertex AI, Amazon Bedrock, OpenAI, Anthropic, and DeepSeek where the requested model role is implemented. BrainAPI validates credentials only for providers in use.
+
+Embedding dimensions must match the selected model and existing indexes. Changing a dimension without rebuilding vector indexes causes shape or retrieval failures.
+
+## Storage
+
+| Variable | Runtime default | Common alternatives |
+| --- | --- | --- |
+| `DATA_DB` | `mongo` | `postgresql` |
+| `GRAPH_DB` | `neo4j` | `networkx` |
+| `VECTOR_DB` | `milvus` | `postgresql` |
+
+Search requires `DATA_DB=postgresql`. PostgreSQL Search uses halfvec HNSW for embedding dimensions above 2000 and float32 reranking after ANN candidate generation.
+
+Configure only credentials relevant to the chosen backends: `POSTGRES_*`, `MONGO_*`, `NEO4J_*`, `MILVUS_*`, and `REDIS_*`. Redis stores task and brain/PAT cache state and backs Celery in the common deployment.
+
+## Ingestion pipeline
+
+| Variable | Runtime default | Meaning |
+| --- | --- | --- |
+| `PIPELINE_MODE` | `accurate` | `accurate` or `lightweight`. |
+| `OCR_MODE` | `docling` | `docparser` or local `docling`; `.env.example` opts into `docparser`. |
+| `AGENTIC_ARCHITECTURE` | `custom` | `custom` or `langchain`. |
+| `RUN_GRAPH_CONSOLIDATOR` | `false` | Enable LLM graph consolidation. |
+| `RUN_OBSERVATIONS` | `false` | Generate observation notes. |
+| `JANITOR_BATCH_SIZE` | `20` | Relationships per Janitor batch. |
+| `INGEST_JANITOR_MAX_LLM_CALLS` | `2` | Janitor LLM-call ceiling per session. |
+| `INGEST_ARCHITECT_MODE` | `batch` | `batch`, `schema`, or `tooler`. |
+
+The remaining `INGEST_ARCHITECT_*` controls tune unit splitting, escalation, prior context, and scratchpad size. Keep defaults until an ingestion evaluation identifies a concrete failure.
+
+## Search and Context
+
+| Variable | Default | Constraint |
+| --- | --- | --- |
+| `SEARCH_ENABLED` | `false` | Requires PostgreSQL. |
+| `SEARCH_USE_DENSE` | `true` | At least one of dense/BM25 must be enabled. |
+| `SEARCH_USE_BM25` | `true` | At least one of dense/BM25 must be enabled. |
+| `SEARCH_FUSION` | `rrf` | `rrf` or `cc`. |
+| `SEARCH_FUSION_ALPHA` | `0.5` | Convex-combination weight for `cc`. |
+| `SEARCH_BM25_K1` | `1.2` | BM25 term saturation. |
+| `SEARCH_BM25_B` | `0.75` | BM25 length normalization. |
+| `SEARCH_COMMUNITY_LABELS` | `TYPE,CLASS,TOPIC` | Labels eligible as community hubs. |
+| `SEARCH_NEIGHBOR_FANOUT` | `50` | Maximum one-hop members per seed. |
+| `SEARCH_LITERAL_FILL` | `false` | Opt into literal-fill behavior. |
+| `CONTEXT_PASSAGE_MODE` | `hybrid` | `hybrid`, `bm25`, `dense`, or `ilike` when Search is enabled. |
+
+`SEARCH_FTS_REGCONFIG` selects a PostgreSQL FTS configuration globally. `SEARCH_FTS_BRAINS` limits that selection to named brains. Read [Search theory](/v2/retrieval/search/theory) before tuning ranking constants.
+
+## Plugins and MCP
+
+`PLUGINS_DIR` defaults to `plugins`; `PLUGIN_REGISTRY_URL` defaults to `https://registry.brain-api.dev`. Publisher credentials are required only for registry mutation. MCP OAuth deployments use `MCP_OAUTH_ISSUER_URL` and `MCP_RESOURCE_SERVER_URL`.
+
+## Observability
+
+`TRACE_TRACKER_ENABLED=false` disables trace tracking by default. Queue, slow-request, heartbeat, resource, health-timeout, and loop-iteration variables set bounded monitoring thresholds. Search callers can also request `profile_stages=true` to inspect query-stage timing.
+
+## Validate a configuration
+
+```bash
+brainapi doctor
+```
+
+Then verify the API root, worker/task flow, selected storage backends, MCP health, and any installed plugin health endpoints. Use [Health and troubleshooting](/v2/troubleshooting) when validation fails.

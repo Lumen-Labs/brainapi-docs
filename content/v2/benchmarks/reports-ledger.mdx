@@ -14,7 +14,7 @@ description: How REPORTS.json records published benchmark scores
 | `description` | Human summary of the file |
 | `benchmarks.<suite>` | Per-suite object with `name` + `leaderboard` |
 
-Suites: `locomo`, `longmemeval`, `beam`.
+Suites: `locomo`, `longmemeval`, `beam`, `recsys`, and `search`.
 
 ## Leaderboard entries
 
@@ -27,6 +27,10 @@ Each suite stores a `leaderboard` array. Common fields:
 | `scope` | all | e.g. `conv-26`, `1M/1` |
 | `headline_judge_accuracy` / `_pct` | LoCoMo | Judge accuracy fraction / percent |
 | `headline_score` | BEAM | Continuous `[0,1]` mean of ability scores |
+| `hit_rate@K` / `recall@K` | RecSys | Held-out next-item recommendation metrics |
+| `ndcg@10` / `recall@K` / `mrr` | Search | Ranked query-retrieval metrics |
+| `p50_retrieve_ms` / `p95_retrieve_ms` | Search | Retrieval latency excluding the separately measured query embedding |
+| `claim` / `protocol` | Search | Separates quality controls from architecture demonstrations |
 | `answer_model` / `judge_model` | all | Models used for the claim |
 | `brain` | all | Brain id measured |
 | `git_sha` | all | Code under test |
@@ -38,6 +42,7 @@ Each suite stores a `leaderboard` array. Common fields:
 - Successful scored runs (`status: ok`)
 - Real metrics — skip failed/junk runs, nonsense 0% scores, and broken manifests
 - Upsert by `run_id` under the suite (harnesses do this automatically via `write_report`)
+- Search rows labeled `architecture-demo` stay visibly separate from frozen/default quality rows
 
 If you patch `runs/<id>/report.json` by hand, update `REPORTS.json` yourself with the same schema.
 
@@ -52,6 +57,13 @@ Pulled from the repo ledger (do not treat as a live SLA — re-check `REPORTS.js
 | LoCoMo | `locomo-compose-sota-conv26-v4d` | sota / conv-26 | 95.39% judge accuracy |
 | BEAM | `beam-1m-1-product-v3c-compose` | product / 1M/1 | 0.790 headline score |
 | LongMemEval | — | — | No published rows yet in current ledger |
+| RecSys | `recsys-20260805T200653Z` | graph / `demorecsys` | HitRate@10 0.100 |
+| Search | `search-wands-passages-k50` | WANDS passages control | nDCG@10 0.8232 |
+
+Search also contains research and architecture rows. For example,
+`search-wandsgraph-communities-k50` is explicitly marked
+`claim: architecture-demo`; it must not replace the WANDS passages control in a
+headline quality comparison.
 
 ## Adding a suite
 
@@ -65,3 +77,5 @@ Pulled from the repo ledger (do not treat as a live SLA — re-check `REPORTS.js
 - [LoCoMo](/v2/benchmarks/locomo)
 - [LongMemEval](/v2/benchmarks/longmemeval)
 - [BEAM](/v2/benchmarks/beam)
+- [RecSys](/v2/benchmarks/recsys)
+- [Search](/v2/benchmarks/search)

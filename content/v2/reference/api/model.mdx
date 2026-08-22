@@ -1,0 +1,67 @@
+---
+title: Model API
+description: BrainAPI model operations.
+full: true
+_openapi:
+  toc:
+    - depth: 2
+      title: Add Entity
+      url: '#add-entity'
+    - depth: 2
+      title: Update Entity
+      url: '#update-entity'
+    - depth: 2
+      title: Add Relationship
+      url: '#add-relationship'
+    - depth: 2
+      title: Update Relationship
+      url: '#update-relationship'
+  structuredData:
+    headings:
+      - content: Add Entity
+        id: add-entity
+      - content: Update Entity
+        id: update-entity
+      - content: Add Relationship
+        id: add-relationship
+      - content: Update Relationship
+        id: update-relationship
+    contents:
+      - content: |-
+          Create a new entity (node) in the knowledge graph.
+
+          Returns:
+              Response payload containing details of the created node.
+        heading: add-entity
+      - content: >-
+          Update an entity (node) in the graph.
+
+
+          @returns The controller's response containing the updated node
+          representation or an operation result.
+        heading: update-entity
+      - content: |-
+          Create a relationship linking two nodes in the graph.
+
+          Returns:
+              relationship (dict): Representation of the created relationship.
+        heading: add-relationship
+      - content: >-
+          Update properties of an existing relationship.
+
+
+          Uses the following fields from `request`: `uuid`, `brain_id`,
+          `new_properties` (defaults to an empty dict if missing), and
+          `properties_to_remove` (defaults to an empty list if missing).
+
+
+          Returns:
+              The updated relationship representation or a result object describing the outcome of the update.
+        heading: update-relationship
+---
+
+{/* Generated from schemas\/brainapi-v2.openapi.json. Run npm run api:generate after syncing the schema. */}
+
+BrainAPI model operations.
+
+<APIPage document={"schemas/brainapi-v2.openapi.json"} operations={[{"path":"/model/entity","method":"post"},{"path":"/model/entity","method":"put"},{"path":"/model/relationship","method":"post"},{"path":"/model/relationship","method":"put"}]} webhooks={[]} hasHead={true} />

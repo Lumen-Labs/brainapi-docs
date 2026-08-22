@@ -1,0 +1,51 @@
+---
+title: API overview
+description: Understand BrainAPI core routes, authentication, brain scope, generated contracts, and plugin boundaries
+---
+
+The core REST API is served by FastAPI, normally at `http://localhost:8000`. This reference is generated from the current `2.17.0-dev` route and Pydantic contract, then annotated with middleware authentication and brain-scoping behavior that FastAPI cannot infer automatically.
+
+## Common request shape
+
+```bash
+curl --fail-with-body http://localhost:8000/<path> \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: $BRAIN_ID"
+```
+
+`Authorization: Bearer <token>` is also supported. System routes require the system PAT. Most other routes require a brain selected by header, query, body, or multipart field; prefer the header.
+
+## Core API groups
+
+| Group | Purpose |
+| --- | --- |
+| [Ingest](/v2/reference/api/ingest) | Submit text, files, or structured data. |
+| [Retrieve](/v2/reference/api/retrieve) | Read context, search hits, graph data, chunks, observations, and recommendations. |
+| [Model](/v2/reference/api/model) | Create or update entities and relationships. |
+| [Metadata](/v2/reference/api/meta) | Resolve PAT scope and inspect graph labels/properties. |
+| [Tasks](/v2/reference/api/tasks) | List and inspect asynchronous task state. |
+| [System](/v2/reference/api/system) | List and create brains with the system PAT. |
+
+## Generated versus authored guidance
+
+Generated pages are the exact field/type reference. Task guides explain why and when to use an operation, how several operations form a workflow, and which failure to diagnose. Link to generated reference instead of copying field tables into every tutorial.
+
+## Plugin APIs
+
+Plugins register routes dynamically at startup and are not part of the core snapshot. Their pages document installation, compatibility, health, lifecycle, and route contracts. See [Plugins overview](/v2/plugins).
+
+## Unavailable System operations
+
+The source currently declares reset, delete, and create-backup route stubs, but each raises `NotImplementedError`. They are deliberately absent from generated usable endpoints. Do not integrate them until implementation and tests ship.
+
+## Contract synchronization
+
+The checked-in schema is exported from the sibling `brainapi2` source:
+
+```bash
+npm run api:sync
+npm run api:generate
+npm run api:check
+```
+
+`api:check` fails when the current source produces a different documented schema.

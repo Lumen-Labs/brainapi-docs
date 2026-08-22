@@ -9,6 +9,7 @@ import { notFound } from "next/navigation";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { getMDXComponents } from "@/mdx-components";
 import { LlmsPointer } from "@/components/agent-note";
+import { absoluteDocsUrl } from "@/lib/site";
 
 export default async function Page(props: {
   params: Promise<{ slug?: string[] }>;
@@ -23,6 +24,15 @@ export default async function Page(props: {
     <DocsPage
       toc={page.data.toc}
       full={page.data.full}
+      {...(page.data.lastModified
+        ? { lastUpdate: page.data.lastModified }
+        : {})}
+      editOnGithub={{
+        owner: "Lumen-Labs",
+        repo: "brainapi-docs",
+        sha: "main",
+        path: `content/v1/${page.file.path}`,
+      }}
     >
       <LlmsPointer />
       <DocsTitle>{page.data.title}</DocsTitle>
@@ -52,5 +62,8 @@ export async function generateMetadata(props: {
   return {
     title: page.data.title,
     description: page.data.description,
+    alternates: {
+      canonical: absoluteDocsUrl(page.url),
+    },
   };
 }

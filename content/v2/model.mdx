@@ -1,0 +1,61 @@
+---
+title: Manage entities and relationships
+description: Create and update graph entities and relationships with the Model API
+---
+
+Use the Model API when your application already knows the graph identity it wants to create or change. For bulk facts, events, or imports, [structured ingestion](/v2/ingestion/structured-data) is usually clearer.
+
+## Create an entity
+
+```bash
+curl --fail-with-body -X POST http://localhost:8000/model/entity \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: operations" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name":"Payments API",
+    "labels":["SERVICE"],
+    "description":"Public service for payment authorization",
+    "properties":{"owner":"payments-platform"}
+  }'
+```
+
+Optional `identification_params` control identity resolution; optional `metadata` is stored with the entity but is not part of the node properties argument passed to graph creation.
+
+## Update an entity
+
+`PUT /model/entity` identifies the node by `uuid`. Send only the fields to change. `properties_to_remove` deletes named properties; omitted fields are preserved.
+
+```json
+{
+  "uuid": "<entity-uuid>",
+  "new_description": "Payment authorization and capture service",
+  "new_properties": {"tier": "critical"},
+  "properties_to_remove": ["temporary_owner"]
+}
+```
+
+## Create a relationship
+
+```bash
+curl --fail-with-body -X POST http://localhost:8000/model/relationship \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: operations" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "subject_uuid":"<payments-api-uuid>",
+    "predicate_name":"DEPENDS_ON",
+    "predicate_description":"Requires token verification",
+    "object_uuid":"<identity-service-uuid>"
+  }'
+```
+
+Both nodes must resolve in the same brain. Use `PUT /model/relationship` with a relationship `uuid`, `new_properties`, and `properties_to_remove` to change its properties.
+
+## When not to use Model
+
+- Do not call the unimplemented System reset, delete, or backup routes; they currently raise `NotImplementedError`.
+- Do not use Model as an unaudited tenant-administration interface.
+- Do not create an event as a flat relationship when its timestamp or context must be queryable; use structured event ingestion.
+
+See the grouped [Model API reference](/v2/reference/api/model) for exact schemas.

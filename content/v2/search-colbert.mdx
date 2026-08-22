@@ -1,0 +1,250 @@
+---
+title: Search ColBERT
+description: Add token-level late-interaction retrieval for queries whose term relationships matter
+---
+
+Search ColBERT is the official late-interaction first-stage plugin for `POST /retrieve/search`. It registers channel `plugin:colbert`, stores token embeddings for each passage, and scores a query through MaxSim.
+
+ColBERT can introduce new candidates. It differs from dense retrieval because it preserves multiple token vectors instead of compressing a passage to one vector, and it differs from a cross-encoder because document vectors are computed before the query arrives.
+
+| Contract | Value |
+| --- | --- |
+| Registry package | `search-colbert` `0.1.0` |
+| Compatibility | BrainAPI `>=2.17.0` |
+| Search channel | `plugin:colbert` |
+| Default model | `colbert-ir/colbertv2.0` |
+| Index route | `POST /search-colbert/index` |
+| Health route | `GET /search-colbert/health` |
+| Extra dependencies | `torch`, `transformers`; optional `numpy` |
+
+## Mental model
+
+A dense dual encoder creates one query vector and one passage vector. That is fast and compact, but it compresses which words align. ColBERT retains a vector per token and delays the interaction until query time.
+
+For each query token, MaxSim finds the most similar document token and sums the matches:
+
+$$
+\operatorname{MaxSim}(q,d)=\sum_{i\in q}\max_{j\in d}\cos(q_i,d_j)
+$$
+
+For `Python async client connection pool timeout`, a relevant passage should offer strong token-level matches for the language, execution model, client, pool, and timeout concepts. A passage about a Java synchronous socket timeout may match several words but should not align every constraint as well.
+
+```text
+query token "Python" ───── best match ───── document token "Python"
+query token "async" ────── best match ───── document token "asynchronous"
+query token "pool" ─────── best match ───── document token "pooling"
+query token "timeout" ──── best match ───── document token "timeout"
+                                      sum the maxima
+```
+
+This illustration explains the mechanism, not an actual score from the default model.
+
+## Where ColBERT fits
+
+| Stage | Can add candidates? | Representation | Main tradeoff |
+| --- | --- | --- | --- |
+| BM25 | Yes | Literal sparse terms | Limited semantic matching |
+| Dense | Yes | One vector per passage | Token relationships are compressed |
+| SPLADE | Yes | Learned sparse terms | Expansion quality depends on model/domain |
+| ColBERT | Yes | Token-vector late interaction | Larger in-memory index and more query work |
+| Cross-encoder | No, reranks only | Joint query-passage model | Highest pairwise cost over a bounded head |
+
+## Why use ColBERT?
+
+Late interaction may help when relevance depends on several terms interacting, such as:
+
+- Programming language + client type + configuration name.
+- Research method + population + outcome.
+- Policy audience + exception + jurisdiction.
+- Product type + material + intended use.
+
+The benefit is corpus-dependent. More detailed representation also means more memory and computation than one-vector retrieval.
+
+## Install
+
+```bash
+./bin/brainapi install search-colbert
+```
+
+Or install the repository as a local plugin:
+
+```bash
+git clone https://github.com/Lumen-Labs/brainapi-plugin-search-colbert.git plugins/search-colbert
+```
+
+Restart BrainAPI after installation. `torch` and `transformers` are required; NumPy accelerates MaxSim when available, while a pure-Python fallback exists. The model loads lazily on the first encode. Device selection prefers MPS, then CUDA, then CPU.
+
+## Developer-documentation example
+
+After ingesting technical passages into `engineering-kb`, build an index:
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/search-colbert/index" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -d '{
+    "brain_id": "engineering-kb",
+    "limit": 5000
+  }'
+```
+
+Isolate the plugin first:
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/retrieve/search" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -H "X-Brain-ID: engineering-kb" \
+  -d '{
+    "query": "Python async client connection pool timeout",
+    "k": 20,
+    "channels": ["plugin:colbert"],
+    "profile_stages": true
+  }'
+```
+
+Then test it as a sidecar to the core baseline:
+
+```json
+{
+  "query": "Python async client connection pool timeout",
+  "k": 20,
+  "channels": ["passages", "plugin:colbert"],
+  "profile_stages": true
+}
+```
+
+Installing the plugin does not change omitted-channel behavior. The request must name `plugin:colbert`.
+
+## How candidates appear
+
+The plugin returns chunk ids, MaxSim scores, and text to core. A plugin-owned hit can expose:
+
+```json
+{
+  "channel": "plugin:colbert",
+  "scores": {
+    "bm25": null,
+    "dense": null,
+    "rrf": null,
+    "cc": null,
+    "rerank": null,
+    "plugin": {"colbert": 18.7},
+    "graph": null,
+    "personalize": null
+  }
+}
+```
+
+MaxSim scores depend on the query, model, tokenization, and indexed text.
+Sidecar candidates do not receive a core RRF/CC component merely by being
+merged after core fusion. Compare ordering and judged relevance, not raw scores
+across requests.
+
+Core freezes the first 10 ids of its fused ranking before filling the remaining window with plugin candidates and the core tail. This keeps the optional sidecar from silently replacing the default head.
+
+## Index lifecycle
+
+`POST /search-colbert/index` reads existing text chunks, encodes each passage into token vectors, and replaces the selected brain’s index.
+
+| Property | Behavior |
+| --- | --- |
+| `limit` | Default `1000`; valid range `1…20000` |
+| Sequence length | Maximum 180 tokens |
+| Replacement | Rebuilding resets the brain’s previous ColBERT index |
+| Storage | API process memory |
+| Restart | Clears every ColBERT index |
+| Scale boundary | In-memory MaxSim implementation, not PLAID serving |
+
+Newly ingested chunks require a rebuild. Every serving process needs its own index. Token-vector storage can grow quickly with document count and length, so the 20,000 request cap must not be interpreted as a universal safe capacity.
+
+## Configuration
+
+```dotenv
+SEARCH_COLBERT_MODEL="colbert-ir/colbertv2.0"
+```
+
+Changing models requires rebuilding every document index. Query vectors from one checkpoint must not be compared with document vectors from another.
+
+## Health
+
+```bash
+curl "<DEPLOYMENT_URL>/search-colbert/health?brain_id=engineering-kb" \
+  -H "BrainPAT: YOUR_BRAIN_PAT"
+```
+
+```json
+{
+  "plugin": "search-colbert",
+  "channel": "plugin:colbert",
+  "model": "colbert-ir/colbertv2.0",
+  "loaded": true,
+  "error": null,
+  "index": {
+    "brain_id": "engineering-kb",
+    "n_docs": 5000
+  }
+}
+```
+
+The index object appears only when `brain_id` is supplied. `loaded` reports encoder state in the current process. The health response does not estimate memory or prove relevance quality.
+
+## When to choose Search ColBERT
+
+Choose it when:
+
+- Relevance depends on several query terms matching in the right local context.
+- One-vector dense retrieval loses important token-level distinctions.
+- A first-stage recall problem remains after core hybrid evaluation.
+- The corpus and deployment fit an in-memory token-vector index.
+
+Avoid it when:
+
+- Exact BM25 or core hybrid already meets quality requirements.
+- The corpus is too large for the plugin’s in-memory MaxSim design.
+- You require durable indexes across process restarts without rebuild orchestration.
+- Index memory and query latency have not been measured.
+- The desired surface is `/retrieve/context`; this channel is Search-only.
+
+## Evaluate before adoption
+
+1. Freeze a core passages baseline and representative qrels.
+2. Run ColBERT alone to measure independent candidate recall.
+3. Run passages+ColBERT to measure the shipped merge behavior.
+4. Compare Recall@K, nDCG, and MRR by multi-term versus simple query slices.
+5. Record model load, indexing time, process memory, and p50/p95 latency.
+6. Repeat after restart to validate operational recovery.
+
+An improvement in one attractive multi-term example is not enough. ColBERT can lose to core hybrid when its checkpoint or truncation does not fit the corpus.
+
+### Idea to test: multi-constraint query slice
+
+**Hypothesis:** token-level interaction improves queries containing language, component, and configuration constraints. **Measure:** core versus passages+ColBERT Recall@K/nDCG on a predeclared slice. **Stop:** remove the plugin if the result is not repeatable or simple queries regress.
+
+### Idea to test: application-level routing
+
+**Hypothesis:** only longer multi-constraint queries justify ColBERT’s cost. **Measure:** routed versus always-on quality, routing errors, memory, and p50/p95. **Stop:** keep the predictable core path if the routing rule cannot be validated.
+
+### Idea to test: capacity envelope
+
+**Hypothesis:** the target corpus fits the process memory and rebuild window. **Measure:** token count, resident memory, index duration, query tail latency, and recovery time at staged corpus sizes. **Stop:** use a persistent/scalable late-interaction serving design if the in-memory envelope fails; this plugin does not provide PLAID.
+
+## Failure diagnosis
+
+| Symptom | Meaning | Action |
+| --- | --- | --- |
+| HTTP 400 unknown `plugin:colbert` | Hook is not registered | Install, restart, and inspect plugin loading |
+| HTTP 200 but no candidates | Index may be valid but empty, or retrieval may be weak | Check health for the exact brain and compare labeled queries |
+| Health omits `index` | `brain_id` was not supplied | Add `?brain_id=<id>` |
+| Health `error` is non-null | Encoder initialization failed | Check dependencies, checkpoint access, device errors, and logs |
+| Index disappears after restart | Expected in-memory lifecycle | Rebuild in every serving process |
+| Recent documents are absent | Snapshot predates ingestion | Rebuild after ingestion completes |
+| Memory or latency is excessive | Token-vector/MaxSim cost exceeds the deployment envelope | Reduce scope or choose core/SPLADE/external scalable serving |
+| Passage truncation hides decisive text | Content lies beyond 180 tokens | Improve chunking before assuming a ranking-model fix |
+
+## Related
+
+- [Search levels](/v2/retrieval/search/levels)
+- [Search recipes](/v2/retrieval/search/recipes)
+- [Search SPLADE](/v2/search-splade) for learned sparse retrieval
+- [Search Rerank](/v2/search-rerank) for bounded second-stage ordering

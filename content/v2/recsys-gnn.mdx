@@ -1,0 +1,98 @@
+---
+title: RecSys GNN
+description: Train and serve an additive LightGCN recommendation model
+---
+
+RecSys GNN is the official LightGCN plugin for BrainAPI. It exports user-item interactions from the knowledge graph, trains a NumPy LightGCN model, persists its artifacts, and serves a separate `/recsys/recommend` route. It is additive: it does not replace structured ingestion, graph synergies, or core `/retrieve/recommend`.
+
+| Contract | Value |
+| --- | --- |
+| Registry package | `recsys-gnn` `0.2.0` |
+| Compatibility | BrainAPI `>=2.14.0` |
+| Route prefix | `/recsys` |
+| Model | `lightgcn` |
+| Default brain | `demorecsys` |
+| Extra dependency | `numpy` |
+| Async Celery queue | `recsys_gnn` |
+
+## Install
+
+```bash
+./bin/brainapi install recsys-gnn
+```
+
+Or install the repository as a local plugin:
+
+```bash
+git clone https://github.com/Lumen-Labs/brainapi-plugin-recsys-gnn.git plugins/recsys-gnn
+```
+
+Restart BrainAPI after installation. `numpy` is declared by the plugin manifest. If you train with `wait=false`, start a Celery worker that consumes the `recsys_gnn` queue. The default `wait=true` trains inside the API process and does not require that queue.
+
+## Ingest, train, and rank
+
+```bash
+curl -X POST "<DEPLOYMENT_URL>/recsys/interactions" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -d '{
+    "user_id": "u1",
+    "item_id": "sku-42",
+    "behavior": "purchase",
+    "brain_id": "demorecsys",
+    "wait": true
+  }'
+
+curl -X POST "<DEPLOYMENT_URL>/recsys/train" \
+  -H "Content-Type: application/json" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -d '{
+    "brain_id": "demorecsys",
+    "model": "lightgcn",
+    "epochs": 20,
+    "embedding_dim": 64,
+    "n_layers": 3,
+    "wait": true
+  }'
+
+curl --get "<DEPLOYMENT_URL>/recsys/recommend" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  --data-urlencode "user_id=u1" \
+  --data-urlencode "top_k=20" \
+  --data-urlencode "brain_id=demorecsys" \
+  --data-urlencode "exclude_seen=true"
+```
+
+## API surface
+
+| Route | Purpose |
+| --- | --- |
+| `POST /recsys/interactions` | Map an interaction to deterministic event-hub structured ingestion |
+| `POST /recsys/train` | Export graph edges and train LightGCN |
+| `GET /recsys/recommend` | Rank items for a user from saved embeddings |
+| `GET /recsys/health` | Report plugin and model availability |
+
+Interaction requests default to `brain_id="demorecsys"`, `wait=true`, and `timeout_s=120`. View/click map to `View`, cart maps to `AddToCart`, purchase/buy maps to `Purchase`, and unknown behavior labels are title-cased. Use [Features Rec](/v2/features-rec) when you also need Favorite/Wishlist aliases and attribute preference weights.
+
+Training defaults to `epochs=20`, `embedding_dim=64`, `n_layers=3`, `wait=true`, and `timeout_s=600`. Only `model="lightgcn"` is implemented; `pinsage` and `comirec` are rejected. Exported graph edges use weights 3 for purchase, 2 for add-to-cart, and 1 for view.
+
+## Artifact lifecycle
+
+Training writes `user_emb.npy`, `item_emb.npy`, `id_maps.json`, and `meta.json` under `models/artifacts/<brain_id>/`. The directory is gitignored and is not shipped with the plugin. Back up, deploy, or retrain artifacts as part of your own release lifecycle.
+
+The recommendation route scores `item_emb @ user_vec`. With `exclude_seen=true`, items present in the training edges are masked from the returned ranking.
+
+## Health and failure behavior
+
+```bash
+curl "<DEPLOYMENT_URL>/recsys/health" \
+  -H "BrainPAT: YOUR_BRAIN_PAT"
+```
+
+- No saved model artifacts: `GET /recsys/recommend` returns HTTP 503 with `model_missing`; train first.
+- User absent from the trained id map: the route returns HTTP 404 with `user_unknown`.
+- `wait=false` without a worker on `recsys_gnn`: the queued train does not complete.
+- Brain ids beginning with `beam1m` or `locomoconv` are rejected on interaction ingestion and training.
+- Core `/retrieve/recommend` continues to work independently of this plugin and its artifacts.
+
+See [Recommendations](/v2/retrieval/recommendations) for the train-free graph path and when to prefer it.

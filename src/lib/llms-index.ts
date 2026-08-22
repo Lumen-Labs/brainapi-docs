@@ -1,4 +1,4 @@
-import { source, sourceV2 } from "@/lib/source";
+import { getPublishedV2Pages, source } from "@/lib/source";
 import { absoluteDocsUrl, DOCS_BASE } from "@/lib/site";
 import { pageIndexLineClean } from "@/lib/get-llm-text";
 
@@ -18,15 +18,16 @@ Machine surfaces:
 
 ## Task-shaped entry points
 
-- [Install BrainAPI](${absoluteDocsUrl("/v2/installation")}): Local and Docker setup, DeepSeek, pipeline env
+- [Choose a path](${absoluteDocsUrl("/v2/use-cases")}): Start as an app developer, operator, or extension author
+- [Quickstart](${absoluteDocsUrl("/v2/quickstart")}): Install, select a brain, ingest text, poll the task, and retrieve it
+- [Authentication and brains](${absoluteDocsUrl("/v2/brains-and-auth")}): BrainPAT, system PAT, and brain-resolution precedence
 - [Ingest text](${absoluteDocsUrl("/v2/ingestion/text")}): POST /ingest/ → 202 + task_id
-- [Structured triples](${absoluteDocsUrl("/v2/ingestion/structured-data")}): POST /ingest/structured event hubs
+- [Choose an ingestion path](${absoluteDocsUrl("/v2/ingestion")}): Text, file, structured, deterministic, hybrid, or enrich
 - [Poll tasks](${absoluteDocsUrl("/v2/ingestion/tasks")}): GET /tasks/{id}; 404 ≠ pending
-- [Retrieve context](${absoluteDocsUrl("/v2/retrieval/context")}): Hybrid graph + passages
-- [Chatbot plugin](${absoluteDocsUrl("/v2/chatbot")}): POST /chatbot/inference
-- [Chatbot memory](${absoluteDocsUrl("/v2/chatbot-memory")}): Conversation isolation
+- [Choose a retrieval surface](${absoluteDocsUrl("/v2/retrieval")}): Context, Search, Recommendations, graph APIs, or MCP
+- [API reference](${absoluteDocsUrl("/v2/reference")}): Grouped current core HTTP operations
+- [Troubleshoot BrainAPI](${absoluteDocsUrl("/v2/troubleshooting")}): Startup, auth, databases, tasks, Search, plugins, and MCP
 - [Docs MCP](${absoluteDocsUrl("/v2/agentic/docs-mcp")}): search_docs / get_page for coding agents
-- [Benchmarks](${absoluteDocsUrl("/v2/benchmarks")}): LoCoMo, LongMemEval, BEAM
 
 ## Area indexes
 
@@ -39,7 +40,7 @@ export function buildVersionLlmsTxt(
   version: "v1" | "v2",
 ): string {
   const pages =
-    version === "v2" ? sourceV2.getPages() : source.getPages();
+    version === "v2" ? getPublishedV2Pages() : source.getPages();
   const lines = pages
     .slice()
     .sort((a, b) => a.url.localeCompare(b.url))

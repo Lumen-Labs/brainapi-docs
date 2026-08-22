@@ -1,0 +1,37 @@
+---
+title: Errors and HTTP statuses
+description: Handle authentication, validation, task, storage, Search, and plugin failures consistently
+---
+
+BrainAPI normally returns JSON error bodies with a `detail` field. Pydantic validation errors include structured locations and messages. Log status, path, brain, request/task ID, and sanitized detail; never log PATs or provider secrets.
+
+## Common statuses
+
+| Status | Meaning | Retry? |
+| --- | --- | --- |
+| `200` | Synchronous request succeeded. | No. |
+| `202` | Asynchronous work was accepted and returned a `task_id`. | Poll the task; do not replay immediately. |
+| `400` | Missing/invalid brain, reserved brain, invalid Search plugin, or invalid control combination. | Fix the request/configuration. |
+| `401` | PAT is missing or invalid for the operation/brain. | Refresh or correct credentials. |
+| `404` | Resource/task is absent, or an opt-in route such as Search is disabled. | Diagnose before retrying. |
+| `406` | Selected brain does not exist and creation/fallback did not resolve it. | Create/select the intended brain. |
+| `422` | Request failed Pydantic validation. | Correct the fields and types. |
+| `500` | Unhandled server or plugin failure. | Inspect server logs; retry only if the operation is safe/idempotent. |
+| `503` | Required database was unavailable during request routing. | Retry with backoff after service recovery. |
+
+## Asynchronous requests
+
+A `202` response is not completion. Store the `task_id` with its brain and poll `/tasks/{task_id}`. A task `404` is not a pending state. Bound retries, back off, and surface terminal failure details.
+
+## Search errors
+
+- Search disabled: route returns `404` rather than behaving like Context.
+- Unknown or unloaded `plugin:*` retriever/reranker: `400`, never silent fallback.
+- Invalid `k`: validation failure; supported Search range is `1…200`.
+- Filters can validly produce fewer than `k`; this is not an error.
+
+## Safe retry guidance
+
+GET requests are normally safe to retry. Before retrying ingestion or Model writes, use stable task IDs or application idempotency where supported and check whether the original request was accepted. Retrying an accepted write blindly can duplicate work or events.
+
+See [Health and troubleshooting](/v2/troubleshooting) for symptom-led diagnosis.
