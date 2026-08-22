@@ -24,13 +24,11 @@ function absolutizeMarkdownLinks(body: string): string {
 
 async function readPageSource(page: AnyPage): Promise<string> {
   const absolutePath =
-    "absolutePath" in page.file
-      ? (page.file as { absolutePath?: string }).absolutePath
-      : undefined;
+    "absolutePath" in page ? page.absolutePath : undefined;
   if (absolutePath) {
     return fs.readFile(absolutePath, "utf8");
   }
-  const path = page.file.path;
+  const path = page.path;
   const roots = ["content/v2", "content/v1"];
   for (const root of roots) {
     try {

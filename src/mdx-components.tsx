@@ -4,10 +4,10 @@ import * as TabsComponents from "fumadocs-ui/components/tabs";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 import { CodeBlock } from "fumadocs-ui/components/codeblock";
 import { TypeTable } from "fumadocs-ui/components/type-table";
-import { openapi } from "./lib/source";
-import { APIPage } from "fumadocs-openapi/ui";
 import { ImageZoom } from "fumadocs-ui/components/image-zoom";
 import { AgentNote } from "@/components/agent-note";
+import type { ComponentProps } from "react";
+export { OpenAPIPage } from "@/components/api-page";
 
 // use this function to get MDX components, you will need it for rendering MDX
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
@@ -18,10 +18,9 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     CodeBlock,
     TypeTable,
     AgentNote,
-    APIPage: (props) => <APIPage {...openapi.getAPIPageProps(props)} />,
     img: (props) => (
       <ImageZoom
-        {...props}
+        {...(props as ComponentProps<typeof ImageZoom>)}
         className="p-4 bg-gray-200/20 border border-gray-200 rounded-lg"
       />
     ),

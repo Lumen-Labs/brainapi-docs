@@ -6,6 +6,7 @@ import {
 } from "fumadocs-mdx/config";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
+import lastModified from "fumadocs-mdx/plugins/last-modified";
 
 // You can customise Zod schemas for frontmatter and `meta.json` here
 // see https://fumadocs.vercel.app/docs/mdx/collections#define-docs
@@ -30,7 +31,7 @@ export const v2 = defineDocs({
 });
 
 export default defineConfig({
-  lastModifiedTime: "git",
+  plugins: [lastModified()],
   mdxOptions: {
     rehypePlugins: (v) => [rehypeKatex, ...v],
     remarkPlugins: [remarkMath],

@@ -1,40 +1,79 @@
-name: BrainAPI prod
+name: Deploy documentation
 
 on:
+  workflow_dispatch:
   push:
     branches: ["main"]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: brainapi-docs-production
+  cancel-in-progress: false
+
 jobs:
-  build:
+  deploy:
+    if: github.repository == 'Lumen-Labs/brainapi-docs'
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://brainapi.lumen-labs.ai/docs
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out the repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
+
       - name: Use Node.js 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: "npm"
-      - run: npm ci
-      - run: npm install -g env-cmd
-      - run: env-cmd -f .env.production npm run build
 
-      - name: Copy repository contents via scp
-        uses: appleboy/scp-action@master
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate documentation
+        run: npm run docs:check
+
+      - name: Validate public repository contents
+        run: npm run public:check
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      - name: Build production site
+        run: npm run build
+
+      - name: Package the runtime allowlist
+        run: tar -czf brainapi-docs-release.tgz .next public package.json package-lock.json ecosystem.config.js
+
+      - name: Upload the release artifact
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           port: ${{ secrets.PORT }}
           key: ${{ secrets.SSHKEY }}
-          source: "./"
-          target: "/home/${{ secrets.USERNAME }}/brainapi-docs"
-      - name: Restart PM2
-        uses: appleboy/ssh-action@master
+          source: brainapi-docs-release.tgz
+          target: "/home/${{ secrets.USERNAME }}/brainapi-docs/releases/${{ github.sha }}"
+
+      - name: Activate the release and restart PM2
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           port: ${{ secrets.PORT }}
           key: ${{ secrets.SSHKEY }}
-          script: pm2 restart brainapi-docs
+          script: |
+            set -eu
+            release="/home/${{ secrets.USERNAME }}/brainapi-docs/releases/${{ github.sha }}"
+            cd "$release"
+            tar -xzf brainapi-docs-release.tgz
+            rm brainapi-docs-release.tgz
+            npm ci --omit=dev --ignore-scripts
+            ln -sfn "$release" "/home/${{ secrets.USERNAME }}/brainapi-docs/current"
+            cd "/home/${{ secrets.USERNAME }}/brainapi-docs/current"
+            pm2 startOrReload ecosystem.config.js

@@ -1,45 +1,84 @@
-# brainapi-docs
+# BrainAPI documentation
 
-This is a Next.js application generated with
-[Create Fumadocs](https://github.com/fuma-nama/fumadocs).
+This repository contains the source for the public [BrainAPI documentation](https://brainapi.lumen-labs.ai/docs). It is a Next.js 15 and Fumadocs application with versioned documentation, generated API reference pages, searchable Markdown mirrors, and a documentation MCP endpoint.
 
-Run development server:
+## What is published
+
+- BrainAPI V2 is the current documentation set.
+- BrainAPI V1 remains available as legacy documentation.
+- Search, LLM indexes, Markdown mirrors, the sitemap, and Docs MCP share the same publication rules.
+- Benchmark sources and incomplete placeholder pages remain in the repository for review, but are intentionally excluded from every published surface.
+
+The publication predicate is implemented in `src/lib/source.ts`. Update it whenever a page is added to or removed from the public site.
+
+## Prerequisites
+
+- Node.js 22
+- npm 10 or later
+
+The repository includes `.nvmrc` for compatible Node version managers.
+
+## Run locally
 
 ```bash
+npm ci
 npm run dev
-# or
-pnpm dev
-# or
-yarn dev
 ```
 
-Open http://localhost:3000 with your browser to see the result.
+Open [http://localhost:3000/docs](http://localhost:3000/docs).
 
-## Explore
+## Validate a change
 
-In the project, you can see:
+```bash
+npm run docs:check
+npm run build
+```
 
-- `lib/source.ts`: Code for content source adapter, [`loader()`](https://fumadocs.dev/docs/headless/source-api) provides the interface to access your content.
-- `app/layout.config.tsx`: Shared options for layouts, optional but preferred to keep.
+`docs:check` validates the visible V2 navigation, internal links, anchors, JSON examples, and the checked-in OpenAPI snapshot. The production build also generates the HTML, Markdown, search, sitemap, and LLM surfaces.
 
-| Route                     | Description                                            |
-| ------------------------- | ------------------------------------------------------ |
-| `app/(home)`              | The route group for your landing page and other pages. |
-| `app/docs`                | The documentation layout and pages.                    |
-| `app/api/search/route.ts` | The Route Handler for search.                          |
+## Synchronize the V2 API reference
 
-### Fumadocs MDX
+The checked-in schema is generated from the BrainAPI source repository. Configure its location and Python environment when they are not in the default sibling layout:
 
-A `source.config.ts` config file has been included, you can customise different options like frontmatter schema.
+```bash
+BRAINAPI_SOURCE=/path/to/brainapi2 \
+BRAINAPI_PYTHON=/path/to/brainapi2/.venv/bin/python \
+npm run api:sync
+```
 
-Read the [Introduction](https://fumadocs.dev/docs/mdx) for further details.
+Verify that the snapshot is current without changing it:
 
-## Learn More
+```bash
+BRAINAPI_SOURCE=/path/to/brainapi2 \
+BRAINAPI_PYTHON=/path/to/brainapi2/.venv/bin/python \
+npm run api:check
+```
 
-To learn more about Next.js and Fumadocs, take a look at the following
-resources:
+Then regenerate the MDX reference pages when the schema changes:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js
-  features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Fumadocs](https://fumadocs.vercel.app) - learn about Fumadocs
+```bash
+npm run api:generate
+```
+
+## Repository layout
+
+| Path | Purpose |
+| --- | --- |
+| `content/v1` | Legacy BrainAPI documentation |
+| `content/v2` | Current task-first documentation |
+| `schemas` | Reviewable OpenAPI snapshots |
+| `scripts` | Documentation, link, and schema validation |
+| `src/app` | HTML, Markdown, LLM, search, sitemap, and MCP routes |
+| `src/lib` | Shared source and publication logic |
+| `public` | Public static assets |
+| `deploy` | Deployment-policy handoff files |
+
+## Contributions and security
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Report suspected vulnerabilities using GitHub private vulnerability reporting as described in [SECURITY.md](SECURITY.md); do not open a public security issue.
+
+Pull requests never receive production deployment secrets. Deployment runs only from `main` or a manual dispatch and is attached to the protected `production` environment.
+
+## License
+
+The repository is licensed under the [Apache License 2.0](LICENSE). Product names and third-party trademarks remain the property of their respective owners; see [NOTICE](NOTICE).

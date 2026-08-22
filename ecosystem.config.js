@@ -1,11 +1,3 @@
-// File: /ecosystem.config.js
-// Created Date: Sunday July 20th 2025
-// Author: Christian Nonis <redacted@example.invalid>
-// -----
-// Last Modified: Sunday July 20th 2025 12:34:58 pm
-// Modified By: the developer formerly known as Christian Nonis at <redacted@example.invalid>
-// -----
-
 module.exports = {
   apps: [
     {

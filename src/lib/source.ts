@@ -1,6 +1,6 @@
 import { docs, v2 } from "@/.source";
 import { loader } from "fumadocs-core/source";
-import { createOpenAPI, attachFile } from "fumadocs-openapi/server";
+import { createOpenAPI } from "fumadocs-openapi/server";
 import React, { createElement } from "react";
 import * as LucideIcons from "lucide-react";
 
@@ -18,19 +18,34 @@ function resolveIcon(iconName: string | undefined) {
   return undefined;
 }
 
+export const openapi = createOpenAPI({
+  input: ["content/v1/rest.json", "schemas/brainapi-v2.openapi.json"],
+});
+
+const openapiPreload = openapi.getSchemas().then((schemas) => ({
+  preloaded: {
+    docs: Object.fromEntries(
+      Object.entries(schemas).map(([id, schema]) => [id, schema.bundled]),
+    ),
+  },
+}));
+
+export function getOpenAPIPreload() {
+  return openapiPreload;
+}
+
 export const source = loader({
   baseUrl: "/v1",
   source: docs.toFumadocsSource(),
   icon: resolveIcon,
-  pageTree: {
-    attachFile,
-  },
+  plugins: [openapi.loaderPlugin()],
 });
 
 export const sourceV2 = loader({
   baseUrl: "/v2",
   source: v2.toFumadocsSource(),
   icon: resolveIcon,
+  plugins: [openapi.loaderPlugin()],
 });
 
 export function isPublishedV2Url(url: string): boolean {
@@ -61,5 +76,3 @@ export function generatePublishedV2Params() {
     return Boolean(page && isPublishedV2Url(page.url));
   });
 }
-
-export const openapi = createOpenAPI();

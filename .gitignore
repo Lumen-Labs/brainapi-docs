@@ -1,4 +1,4 @@
-# deps
+# dependencies
 /node_modules
 
 # generated content
@@ -6,23 +6,36 @@
 .content-collections
 .source
 
-# test & build
+# tests and builds
 /coverage
 /.next/
 /out/
 /build
 *.tsbuildinfo
 
-# misc
-.DS_Store
+# local configuration and credentials
+.env*
+!.env.example
 *.pem
-/.pnp
-.pnp.js
+*.key
+*.p12
+*.pfx
+
+# logs
+/logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# others
-.env*.local
+# editors and operating systems
+.DS_Store
+/.vscode/
+/.idea/
+*.swp
+
+# package managers and hosting
+/.pnp
+.pnp.js
 .vercel
 next-env.d.ts

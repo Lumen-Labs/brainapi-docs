@@ -1,4 +1,4 @@
-import { source } from "@/lib/source";
+import { getOpenAPIPreload, source } from "@/lib/source";
 import {
   DocsPage,
   DocsBody,
@@ -7,7 +7,7 @@ import {
 } from "fumadocs-ui/page";
 import { notFound } from "next/navigation";
 import { createRelativeLink } from "fumadocs-ui/mdx";
-import { getMDXComponents } from "@/mdx-components";
+import { getMDXComponents, OpenAPIPage } from "@/mdx-components";
 import { LlmsPointer } from "@/components/agent-note";
 import { absoluteDocsUrl } from "@/lib/site";
 
@@ -19,6 +19,7 @@ export default async function Page(props: {
   if (!page) notFound();
 
   const MDXContent = page.data.body;
+  const openapiPreload = await getOpenAPIPreload();
 
   return (
     <DocsPage
@@ -31,7 +32,7 @@ export default async function Page(props: {
         owner: "Lumen-Labs",
         repo: "brainapi-docs",
         sha: "main",
-        path: `content/v1/${page.file.path}`,
+        path: `content/v1/${page.path}`,
       }}
     >
       <LlmsPointer />
@@ -41,6 +42,12 @@ export default async function Page(props: {
         <MDXContent
           components={getMDXComponents({
             a: createRelativeLink(source, page),
+            APIPage: async (apiPageProps: Record<string, unknown>) => (
+              <OpenAPIPage
+                {...(apiPageProps as any)}
+                {...openapiPreload}
+              />
+            ),
           })}
         />
       </DocsBody>

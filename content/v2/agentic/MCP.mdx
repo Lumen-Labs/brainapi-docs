@@ -8,55 +8,57 @@ There are several ways to connect, you can use your client of choice to connect 
 
 Looking for documentation tools instead? Use the separate [Docs MCP](/v2/agentic/docs-mcp) at `https://brainapi.lumen-labs.ai/docs/mcp` (search + markdown fetch). The rest of this page covers the **product** MCP on your API host.
 
-## How to connect using **Claude Desktop MCP Client**
+## Connect Claude Desktop
 
-You can use the Claude Desktop MCP Client to connect to your remote or local BrainAPI instance.
-There are two ways to connect, if you have Node.js installed you can connect using the `@pyroprompts/mcp-stdio-to-streamable-http-adapter` package.
-Or by using the pre-built binary that you can download the [GitHub page](https://github.com/Lumen-Labs/brainapi2/releases/tag/mcp-bridge-v0.1.0).
+Claude Desktop uses a local stdio process, while BrainAPI exposes MCP over HTTP. Connect the two with either the Node.js adapter or the pre-built BrainAPI bridge.
 
-### 1. Open Claude Desktop and go to the Developer Settings
+### 1. Open the configuration file
 
-Open your Claude Desktop Application and go to the Developer Settings.
-![Claude Desktop Developer Settings](/images/claude-desktop-setting-1.png)
+In Claude Desktop, open **Settings**, select **Developer**, and choose **Edit Config**. Using the button avoids relying on an operating-system-specific or user-specific file path.
 
-### 2. Open the Config File
+### 2. Choose one bridge
 
-From the settings sidebar click into **Developer** and click the **Edit Config** button.
-![Claude Desktop Developer Settings](/images/claude-desktop-setting-2.png)
+If `npx` is available on Claude Desktop's process path, add the Node.js adapter:
 
-### 3. Add the Configuration
-
-Now you can edit the config and add the configuration for your BrainAPI instance inside the `mcpServers` object.
-Make sure to replace the `<your-mcp-name>`, `<your-mcp-url>` and `<your-pat>` with the correct values.
-
-<DynamicCodeBlock
-  lang="json"
-  code={`{
-      "mcpServers": {
-
-        // Add this if you are want to use Node.js
-        "<your-mcp-name>": {
-            "command": "~/.nvm/versions/node/v22.19.0/bin/npx",
-            "args": ["-y", "@pyroprompts/mcp-stdio-to-streamable-http-adapter"],
-            "env": {
-            "URI": "<your-mcp-url>/mcp",
-            "MCP_NAME": "<your-remote-mcp-server-name>",
-            "PATH": "~/.nvm/versions/node/v22.19.0/bin:/usr/local/bin:/usr/bin:/bin", // Replace with your own path
-            "BEARER_TOKEN": "<your-pat>"
-            }
-        },
-
-        // Add this if you are using the pre-built binary
-        "<your-mcp-server-name": {
-            "command": "/absolute/path/to/brainapi-mcp-http-adapter",
-            "args": [],
-            "env": {
-                "URI": "<your-mcp-url>/mcp",
-                "MCP_NAME": "<your-mcp-name>",
-                "BEARER_TOKEN": "<your-pat>"
-            }
-        }
-
+```json
+{
+  "mcpServers": {
+    "brainapi": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@pyroprompts/mcp-stdio-to-streamable-http-adapter"
+      ],
+      "env": {
+        "URI": "https://api.example.com/mcp",
+        "MCP_NAME": "brainapi",
+        "BEARER_TOKEN": "brainpat_replace_me"
+      }
+    }
+  }
 }
-`}
-/>
+```
+
+Alternatively, download the bridge from the [BrainAPI MCP bridge release](https://github.com/Lumen-Labs/brainapi2/releases/tag/mcp-bridge-v0.1.0) and configure its absolute executable path:
+
+```json
+{
+  "mcpServers": {
+    "brainapi": {
+      "command": "/absolute/path/to/brainapi-mcp-http-adapter",
+      "args": [],
+      "env": {
+        "URI": "https://api.example.com/mcp",
+        "MCP_NAME": "brainapi",
+        "BEARER_TOKEN": "brainpat_replace_me"
+      }
+    }
+  }
+}
+```
+
+Replace the example URL and PAT locally. Never commit the resulting configuration or share a screenshot containing its token or local file path.
+
+### 3. Restart and verify
+
+Save the file and restart Claude Desktop. The configured `brainapi` server should appear in the MCP tools list. If it does not, verify that the bridge command runs in a terminal, the URL ends in `/mcp`, and the PAT can access the intended BrainAPI instance.
