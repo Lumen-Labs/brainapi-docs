@@ -1,8 +1,10 @@
 ---
-title: Tasks API
-description: BrainAPI tasks operations.
+title: BrainAPI Tasks API
+description: Inspect asynchronous task status and results.
 full: true
 _openapi:
+  preload:
+    - schemas/brainapi-v2.openapi.json
   toc:
     - depth: 2
       title: Get Tasks
@@ -17,12 +19,23 @@ _openapi:
       - content: Get Task
         id: get-task
     contents:
+      - content: Get Tasks. See the BrainAPI developer documentation for request,
+          response, authentication, and retry semantics.
+        heading: get-tasks
       - content: Get the result of a task by its ID.
         heading: get-task
 ---
 
 {/* Generated from schemas\/brainapi-v2.openapi.json. Run npm run api:generate after syncing the schema. */}
 
-BrainAPI tasks operations.
-
-<APIPage document={"schemas/brainapi-v2.openapi.json"} operations={[{"path":"/tasks/","method":"get"},{"path":"/tasks/{task_id}","method":"get"}]} webhooks={[]} hasHead={true} />
+export default function Layout(props) {
+  const { APIPage, OpenAPIPage } = props.components ?? {};
+  // "APIPage" is the old name from v10, this allows both for backward compatibility
+  const Comp = OpenAPIPage ?? APIPage;
+  return (
+    <>
+      {props.children}
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/tasks/","method":"get"},{"path":"/tasks/{task_id}","method":"get"}]} showTitle showDescription />
+    </>
+  );
+}

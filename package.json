@@ -14,6 +14,8 @@
     "api:check": "node scripts/run-openapi-sync.mjs --check",
     "api:generate": "node scripts/generate-v2-api.mjs",
     "docs:check": "node scripts/check-docs.mjs",
+    "gateway:check": "node scripts/check-agent-gateway.mjs",
+    "agent:check": "node scripts/check-live-agent-readiness.mjs",
     "public:check": "node scripts/check-public-repo.mjs",
     "postinstall": "fumadocs-mdx"
   },

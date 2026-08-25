@@ -1,8 +1,10 @@
 ---
-title: System API
-description: BrainAPI system operations.
+title: BrainAPI System API
+description: Administer brains with a system personal access token.
 full: true
 _openapi:
+  preload:
+    - schemas/brainapi-v2.openapi.json
   toc:
     - depth: 2
       title: Create Brain
@@ -25,6 +27,14 @@ _openapi:
 
 {/* Generated from schemas\/brainapi-v2.openapi.json. Run npm run api:generate after syncing the schema. */}
 
-BrainAPI system operations.
-
-<APIPage document={"schemas/brainapi-v2.openapi.json"} operations={[{"path":"/system/brains","method":"post"},{"path":"/system/brains-list","method":"get"}]} webhooks={[]} hasHead={true} />
+export default function Layout(props) {
+  const { APIPage, OpenAPIPage } = props.components ?? {};
+  // "APIPage" is the old name from v10, this allows both for backward compatibility
+  const Comp = OpenAPIPage ?? APIPage;
+  return (
+    <>
+      {props.children}
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/system/brains","method":"post"},{"path":"/system/brains-list","method":"get"}]} showTitle showDescription />
+    </>
+  );
+}

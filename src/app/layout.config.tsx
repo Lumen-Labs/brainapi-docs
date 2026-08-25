@@ -18,6 +18,10 @@ export const baseOptions: BaseLayoutProps = {
   githubUrl: "https://github.com/Lumen-Labs/brainapi-docs",
   links: [
     {
+      text: "Developer Portal",
+      url: "/v2/developers",
+    },
+    {
       text: "Report a docs issue",
       url: "https://github.com/Lumen-Labs/brainapi-docs/issues/new",
       external: true,

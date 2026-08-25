@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "katex/dist/katex.min.css";
 import type { Metadata } from "next";
-import { DOCS_ORIGIN } from "@/lib/site";
+import { DOCS_BASE, DOCS_ORIGIN } from "@/lib/site";
 
 export const metadata: Metadata = {
   metadataBase: new URL(DOCS_ORIGIN),
@@ -34,6 +34,9 @@ export default function Layout({ children }: { children: ReactNode }) {
       className={`${inter.className} ${outfit.className}`}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="describedby" href={`${DOCS_BASE}/llms.txt`} type="text/plain" />
+      </head>
       <body className="flex flex-col min-h-screen">
         <GoogleAnalytics gaId="G-W1ZHLEVG8B" />
         <script

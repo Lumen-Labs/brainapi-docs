@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "brainapi-agent-gateway",
+  "main": "cloudflare-agent-gateway.mjs",
+  "compatibility_date": "2026-08-23",
+  "routes": [
+    { "pattern": "brain-api.dev/api/*", "zone_name": "brain-api.dev" },
+    { "pattern": "brain-api.dev/developers*", "zone_name": "brain-api.dev" },
+    { "pattern": "brain-api.dev/llms.txt", "zone_name": "brain-api.dev" },
+    { "pattern": "brain-api.dev/openapi.json", "zone_name": "brain-api.dev" },
+    { "pattern": "brain-api.dev/mcp", "zone_name": "brain-api.dev" },
+    { "pattern": "brain-api.dev/.well-known/mcp.json", "zone_name": "brain-api.dev" }
+  ],
+  "ratelimits": [
+    {
+      "name": "DEMO_RATE_LIMITER",
+      "namespace_id": "REPLACE_WITH_UNIQUE_POSITIVE_INTEGER",
+      "simple": { "limit": 30, "period": 60 }
+    }
+  ]
+}

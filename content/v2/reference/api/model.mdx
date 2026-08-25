@@ -1,8 +1,10 @@
 ---
-title: Model API
-description: BrainAPI model operations.
+title: BrainAPI Model API
+description: Create and update typed entities and relationships.
 full: true
 _openapi:
+  preload:
+    - schemas/brainapi-v2.openapi.json
   toc:
     - depth: 2
       title: Add Entity
@@ -62,6 +64,14 @@ _openapi:
 
 {/* Generated from schemas\/brainapi-v2.openapi.json. Run npm run api:generate after syncing the schema. */}
 
-BrainAPI model operations.
-
-<APIPage document={"schemas/brainapi-v2.openapi.json"} operations={[{"path":"/model/entity","method":"post"},{"path":"/model/entity","method":"put"},{"path":"/model/relationship","method":"post"},{"path":"/model/relationship","method":"put"}]} webhooks={[]} hasHead={true} />
+export default function Layout(props) {
+  const { APIPage, OpenAPIPage } = props.components ?? {};
+  // "APIPage" is the old name from v10, this allows both for backward compatibility
+  const Comp = OpenAPIPage ?? APIPage;
+  return (
+    <>
+      {props.children}
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/model/entity","method":"post"},{"path":"/model/entity","method":"put"},{"path":"/model/relationship","method":"post"},{"path":"/model/relationship","method":"put"}]} showTitle showDescription />
+    </>
+  );
+}

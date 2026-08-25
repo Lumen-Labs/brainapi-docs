@@ -1,8 +1,10 @@
 ---
-title: Retrieve API
-description: BrainAPI retrieve operations.
+title: BrainAPI Retrieve API
+description: Search and retrieve passages, graph data, observations, and recommendations.
 full: true
 _openapi:
+  preload:
+    - schemas/brainapi-v2.openapi.json
   toc:
     - depth: 2
       title: Retrieve
@@ -149,8 +151,9 @@ _openapi:
     contents:
       - content: Retrieve data from the knowledge graph and data store.
         heading: retrieve
-      - content: |-
+      - content: >-
           Retrieve a paginated list of changelogs.
+
 
           Parameters:
               types (Optional[str]): Optional comma-separated changelog types to filter by; each type will be applied as a filter.
@@ -159,8 +162,9 @@ _openapi:
           Returns:
               list: Changelog records matching the provided filters, constrained by `limit` and `skip`.
         heading: get-changelogs-list
-      - content: |-
+      - content: >-
           Retrieve all unique changelog types for the specified brain.
+
 
           Parameters:
               brain_id (str): Identifier of the brain to query; defaults to "default".
@@ -206,8 +210,9 @@ _openapi:
         heading: get-neighbors
       - content: Get the neighbors of an entity.
         heading: get-neighbors-with-identification-params
-      - content: |-
+      - content: >-
           Retrieve neighboring entities using AI-mode identification parameters.
+
 
           Parameters:
               request (RetrieveNeighborsAiModeRequestBody): Request body containing:
@@ -243,8 +248,9 @@ _openapi:
           Returns:
               dict: A mapping containing the entity's attributes and related contextual information.
         heading: get-entity-info
-      - content: |-
+      - content: >-
           Retrieve status information for a specified entity.
+
 
           Parameters:
               target (str): Identifier or name of the entity to inspect.
@@ -254,8 +260,9 @@ _openapi:
           Returns:
               status (dict): A dictionary containing the entity's status details.
         heading: get-entity-status
-      - content: |-
+      - content: >-
           Retrieve synergies for a specified entity.
+
 
           Parameters:
               target: Identifier or name of the target entity.
@@ -270,8 +277,9 @@ _openapi:
           Returns:
               Synergy records for the target entity matching the requested polarity.
         heading: get-entity-synergies
-      - content: |-
+      - content: >-
           Compute graph hops for the given query.
+
 
           Parameters:
               query (str): Search text or entity identifier to start hop traversal from.
@@ -282,8 +290,9 @@ _openapi:
           Returns:
               list: Hops (paths) connecting matching entities up to the specified degree; the exact structure varies based on `flattened`.
         heading: get-hops
-      - content: |-
+      - content: >-
           Retrieve a list of observations filtered by the provided parameters.
+
 
           Parameters:
               limit (int): Maximum number of observations to return.
@@ -305,6 +314,9 @@ _openapi:
           complementary walks, multi-interest medoids, and optional attribute
           preferences (retrieval-time only; no training).
         heading: get-recommend
+      - content: Post Recommend. See the BrainAPI developer documentation for request,
+          response, authentication, and retry semantics.
+        heading: post-recommend
       - content: >-
           Retrieve relationships filtered by types, node labels, and query
           criteria.
@@ -323,15 +335,19 @@ _openapi:
           Returns:
               List of relationship records matching the filters.
         heading: get-relationships
+      - content: Get Search. See the BrainAPI developer documentation for request,
+          response, authentication, and retry semantics.
+        heading: get-search
+      - content: Post Search. See the BrainAPI developer documentation for request,
+          response, authentication, and retry semantics.
+        heading: post-search
       - content: Get a list of structured data.
         heading: get-structured-data-list
       - content: Get all unique types from structured data.
         heading: get-structured-data-types
       - content: Get structured data by ID.
         heading: get-structured-data-by-id
-      - content: >-
-          Get text chunks by a query text and optional metadata equality
-          filters.
+      - content: Get text chunks by a query text and optional metadata equality filters.
         heading: get-text-chunks
       - content: List available vector store names and dimensions.
         heading: get-vector-stores
@@ -341,6 +357,14 @@ _openapi:
 
 {/* Generated from schemas\/brainapi-v2.openapi.json. Run npm run api:generate after syncing the schema. */}
 
-BrainAPI retrieve operations.
-
-<APIPage document={"schemas/brainapi-v2.openapi.json"} operations={[{"path":"/retrieve/","method":"get"},{"path":"/retrieve/changelogs","method":"get"},{"path":"/retrieve/changelogs/types","method":"get"},{"path":"/retrieve/changelogs/{id}","method":"get"},{"path":"/retrieve/context","method":"post"},{"path":"/retrieve/entities","method":"get"},{"path":"/retrieve/entities/neighbors","method":"get"},{"path":"/retrieve/entities/neighbors","method":"post"},{"path":"/retrieve/entities/neighbors/ai-mode","method":"post"},{"path":"/retrieve/entity/context","method":"get"},{"path":"/retrieve/entity/info","method":"get"},{"path":"/retrieve/entity/status","method":"get"},{"path":"/retrieve/entity/synergies","method":"get"},{"path":"/retrieve/hops","method":"get"},{"path":"/retrieve/observations","method":"get"},{"path":"/retrieve/observations/labels","method":"get"},{"path":"/retrieve/observations/{id}","method":"get"},{"path":"/retrieve/recommend","method":"get"},{"path":"/retrieve/recommend","method":"post"},{"path":"/retrieve/relationships","method":"get"},{"path":"/retrieve/search","method":"get"},{"path":"/retrieve/search","method":"post"},{"path":"/retrieve/structured-data","method":"get"},{"path":"/retrieve/structured-data/types","method":"get"},{"path":"/retrieve/structured-data/{id}","method":"get"},{"path":"/retrieve/text-chunks","method":"get"},{"path":"/retrieve/vectors/stores","method":"get"},{"path":"/retrieve/vectors/{store}","method":"get"}]} webhooks={[]} hasHead={true} />
+export default function Layout(props) {
+  const { APIPage, OpenAPIPage } = props.components ?? {};
+  // "APIPage" is the old name from v10, this allows both for backward compatibility
+  const Comp = OpenAPIPage ?? APIPage;
+  return (
+    <>
+      {props.children}
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/retrieve/","method":"get"},{"path":"/retrieve/changelogs","method":"get"},{"path":"/retrieve/changelogs/types","method":"get"},{"path":"/retrieve/changelogs/{id}","method":"get"},{"path":"/retrieve/context","method":"post"},{"path":"/retrieve/entities","method":"get"},{"path":"/retrieve/entities/neighbors","method":"get"},{"path":"/retrieve/entities/neighbors","method":"post"},{"path":"/retrieve/entities/neighbors/ai-mode","method":"post"},{"path":"/retrieve/entity/context","method":"get"},{"path":"/retrieve/entity/info","method":"get"},{"path":"/retrieve/entity/status","method":"get"},{"path":"/retrieve/entity/synergies","method":"get"},{"path":"/retrieve/hops","method":"get"},{"path":"/retrieve/observations","method":"get"},{"path":"/retrieve/observations/labels","method":"get"},{"path":"/retrieve/observations/{id}","method":"get"},{"path":"/retrieve/recommend","method":"get"},{"path":"/retrieve/recommend","method":"post"},{"path":"/retrieve/relationships","method":"get"},{"path":"/retrieve/search","method":"get"},{"path":"/retrieve/search","method":"post"},{"path":"/retrieve/structured-data","method":"get"},{"path":"/retrieve/structured-data/types","method":"get"},{"path":"/retrieve/structured-data/{id}","method":"get"},{"path":"/retrieve/text-chunks","method":"get"},{"path":"/retrieve/vectors/stores","method":"get"},{"path":"/retrieve/vectors/{store}","method":"get"}]} showTitle showDescription />
+    </>
+  );
+}

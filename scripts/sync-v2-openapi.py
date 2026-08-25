@@ -16,7 +16,8 @@ EXCLUDED_PATHS = {
     "/system/brains/{brain_id}/delete",
     "/system/brains/{brain_id}/create-backup",
 }
-CORE_TAGS = {"ingest", "retrieve", "model", "meta", "tasks", "system"}
+CORE_TAGS = {"public", "ingest", "retrieve", "model", "meta", "tasks", "system"}
+PUBLIC_PATHS = {"/health", "/demo/search"}
 
 
 def load_schema(source: Path) -> dict:
@@ -46,12 +47,37 @@ def load_schema(source: Path) -> dict:
         **schema.get("info", {}),
         "title": "BrainAPI V2 Core API",
         "version": "2.17.0-dev",
-        "description": "Core BrainAPI HTTP API. Official plugin routes are documented separately.",
+        "description": (
+            "Core BrainAPI HTTP API, including the unauthenticated health check and "
+            "read-only documentation search sandbox. Official plugin routes are documented separately."
+        ),
+        "contact": {
+            "name": "BrainAPI Support",
+            "email": "info@lumen-labs.ai",
+            "url": "https://brain-api.dev/developers",
+        },
+        "license": {
+            "name": "Business Source License 1.1",
+            "url": "https://github.com/Lumen-Labs/brainapi/blob/main/LICENSE",
+        },
     }
-    schema["servers"] = [{"url": "http://localhost:8000", "description": "Local BrainAPI"}]
+    schema["servers"] = [
+        {"url": "https://brain-api.dev/api", "description": "Managed BrainAPI gateway"},
+        {"url": "https://api.brain-api.dev", "description": "Direct managed API"},
+        {"url": "http://localhost:8000", "description": "Local BrainAPI"},
+    ]
+    tag_descriptions = {
+        "public": "Unauthenticated service health and the guarded read-only documentation search sandbox.",
+        "ingest": "Submit content for asynchronous ingestion into a brain.",
+        "retrieve": "Search and retrieve passages, graph data, observations, and recommendations.",
+        "model": "Create and update typed entities and relationships.",
+        "meta": "Inspect authentication scope and graph metadata.",
+        "tasks": "Inspect asynchronous task status and results.",
+        "system": "Administer brains with a system personal access token.",
+    }
     schema["tags"] = [
-        {"name": name, "description": f"BrainAPI {name} operations."}
-        for name in ("ingest", "retrieve", "model", "meta", "tasks", "system")
+        {"name": name, "description": tag_descriptions[name]}
+        for name in ("public", "ingest", "retrieve", "model", "meta", "tasks", "system")
     ]
 
     filtered: dict[str, dict] = {}
@@ -64,8 +90,11 @@ def load_schema(source: Path) -> dict:
                 continue
             if not CORE_TAGS.intersection(operation.get("tags", [])):
                 continue
-            operation["security"] = [{"BrainPAT": []}, {"BearerAuth": []}]
-            if not route.startswith("/system") and route != "/meta/login-info":
+            if route in PUBLIC_PATHS:
+                operation["security"] = []
+            else:
+                operation["security"] = [{"BrainPAT": []}, {"BearerAuth": []}]
+            if route not in PUBLIC_PATHS and not route.startswith("/system") and route != "/meta/login-info":
                 params = operation.setdefault("parameters", [])
                 if not any(p.get("name") == "X-Brain-ID" for p in params if isinstance(p, dict)):
                     params.append({
@@ -81,8 +110,17 @@ def load_schema(source: Path) -> dict:
     schema["paths"] = filtered
     components = schema.setdefault("components", {})
     components["securitySchemes"] = {
-        "BrainPAT": {"type": "apiKey", "in": "header", "name": "BrainPAT"},
-        "BearerAuth": {"type": "http", "scheme": "bearer"},
+        "BrainPAT": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "BrainPAT",
+            "description": "BrainAPI personal access token.",
+        },
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "description": "BrainAPI personal access token in an Authorization header.",
+        },
     }
     return schema
 

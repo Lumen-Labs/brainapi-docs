@@ -1,8 +1,10 @@
 ---
-title: Metadata API
-description: BrainAPI meta operations.
+title: BrainAPI Metadata API
+description: Inspect authentication scope and graph metadata.
 full: true
 _openapi:
+  preload:
+    - schemas/brainapi-v2.openapi.json
   toc:
     - depth: 2
       title: Get Entities Labels
@@ -27,8 +29,9 @@ _openapi:
       - content: Get Relationships Properties
         id: get-relationships-properties
     contents:
-      - content: |-
+      - content: >-
           Retrieve all unique node labels present in the graph.
+
 
           Parameters:
               brain_id (str): Identifier of the brain/graph to query. Defaults to "default".
@@ -47,8 +50,7 @@ _openapi:
           Returns:
               list[str]: A list of property key names present on entities in the graph.
         heading: get-entity-properties
-      - content: >-
-          Resolve whether a BrainPAT is the system token or scoped to a single
+      - content: Resolve whether a BrainPAT is the system token or scoped to a single
           brain.
         heading: get-login-info
       - content: >-
@@ -66,6 +68,14 @@ _openapi:
 
 {/* Generated from schemas\/brainapi-v2.openapi.json. Run npm run api:generate after syncing the schema. */}
 
-BrainAPI meta operations.
-
-<APIPage document={"schemas/brainapi-v2.openapi.json"} operations={[{"path":"/meta/entity-labels","method":"get"},{"path":"/meta/entity-properties","method":"get"},{"path":"/meta/login-info","method":"get"},{"path":"/meta/relationships-properties","method":"get"}]} webhooks={[]} hasHead={true} />
+export default function Layout(props) {
+  const { APIPage, OpenAPIPage } = props.components ?? {};
+  // "APIPage" is the old name from v10, this allows both for backward compatibility
+  const Comp = OpenAPIPage ?? APIPage;
+  return (
+    <>
+      {props.children}
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/meta/entity-labels","method":"get"},{"path":"/meta/entity-properties","method":"get"},{"path":"/meta/login-info","method":"get"},{"path":"/meta/relationships-properties","method":"get"}]} showTitle showDescription />
+    </>
+  );
+}

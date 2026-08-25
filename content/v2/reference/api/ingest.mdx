@@ -1,8 +1,10 @@
 ---
-title: Ingest API
-description: BrainAPI ingest operations.
+title: BrainAPI Ingest API
+description: Submit content for asynchronous ingestion into a brain.
 full: true
 _openapi:
+  preload:
+    - schemas/brainapi-v2.openapi.json
   toc:
     - depth: 2
       title: Ingest Data
@@ -32,6 +34,14 @@ _openapi:
 
 {/* Generated from schemas\/brainapi-v2.openapi.json. Run npm run api:generate after syncing the schema. */}
 
-BrainAPI ingest operations.
-
-<APIPage document={"schemas/brainapi-v2.openapi.json"} operations={[{"path":"/ingest/","method":"post"},{"path":"/ingest/file","method":"post"},{"path":"/ingest/structured","method":"post"}]} webhooks={[]} hasHead={true} />
+export default function Layout(props) {
+  const { APIPage, OpenAPIPage } = props.components ?? {};
+  // "APIPage" is the old name from v10, this allows both for backward compatibility
+  const Comp = OpenAPIPage ?? APIPage;
+  return (
+    <>
+      {props.children}
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/ingest/","method":"post"},{"path":"/ingest/file","method":"post"},{"path":"/ingest/structured","method":"post"}]} showTitle showDescription />
+    </>
+  );
+}

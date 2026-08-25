@@ -1,9 +1,9 @@
 ---
-title: API overview
+title: BrainAPI API Documentation
 description: Understand BrainAPI core routes, authentication, brain scope, generated contracts, and plugin boundaries
 ---
 
-The core REST API is served by FastAPI, normally at `http://localhost:8000`. This reference is generated from the current `2.17.0-dev` route and Pydantic contract, then annotated with middleware authentication and brain-scoping behavior that FastAPI cannot infer automatically.
+The core REST API is available through `https://brain-api.dev/api`, directly at `https://api.brain-api.dev`, or locally at `http://localhost:8000`. Download the machine-readable [BrainAPI OpenAPI 3.1 specification](https://brain-api.dev/openapi.json). This reference is generated from the current `2.17.0-dev` route and Pydantic contract, then annotated with middleware authentication and brain-scoping behavior that FastAPI cannot infer automatically.
 
 ## Common request shape
 
@@ -19,6 +19,7 @@ curl --fail-with-body http://localhost:8000/<path> \
 
 | Group | Purpose |
 | --- | --- |
+| [Public](/v2/reference/api/public) | Check service health or search the public documentation sandbox without credentials. |
 | [Ingest](/v2/reference/api/ingest) | Submit text, files, or structured data. |
 | [Retrieve](/v2/reference/api/retrieve) | Read context, search hits, graph data, chunks, observations, and recommendations. |
 | [Model](/v2/reference/api/model) | Create or update entities and relationships. |

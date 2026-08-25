@@ -38,6 +38,9 @@ jobs:
       - name: Validate documentation
         run: npm run docs:check
 
+      - name: Validate agent gateway contract
+        run: npm run gateway:check
+
       - name: Validate public repository contents
         run: npm run public:check
 

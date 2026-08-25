@@ -14,7 +14,7 @@ import { notFound } from "next/navigation";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { getMDXComponents, OpenAPIPage } from "@/mdx-components";
 import { LlmsPointer } from "@/components/agent-note";
-import { absoluteDocsUrl } from "@/lib/site";
+import { absoluteDocsUrl, markdownDocsUrl } from "@/lib/site";
 
 export default async function Page(props: {
   params: Promise<{ slug?: string[] }>;
@@ -76,6 +76,9 @@ export async function generateMetadata(props: {
     description: page.data.description,
     alternates: {
       canonical: absoluteDocsUrl(page.url),
+      types: {
+        "text/markdown": markdownDocsUrl(page.url),
+      },
     },
     openGraph: {
       title: page.data.title,

@@ -1,0 +1,110 @@
+---
+title: BrainAPI Developer Portal
+description: Integrate with BrainAPI through the public sandbox, authenticated REST API, MCP servers, OpenAPI contract, and official CLI
+icon: Code2
+---
+
+BrainAPI gives applications and agents durable, brain-scoped memory through typed REST and MCP interfaces. Start with the anonymous documentation sandbox, then use a personal access token when you are ready to ingest or retrieve your own data.
+
+<Cards>
+  <Card title="OpenAPI 3.1" href="https://brain-api.dev/openapi.json" description="Download the complete machine-readable REST contract." />
+  <Card title="API reference" href="/v2/reference" description="Browse generated operations, parameters, and response schemas." />
+  <Card title="BrainAPI CLI" href="/v2/tui" description="Install and operate a local BrainAPI stack." />
+  <Card title="Docs MCP" href="/v2/agentic/docs-mcp" description="Give an agent searchable access to these docs." />
+</Cards>
+
+## Try the anonymous sandbox
+
+The sandbox is read-only and searches a seeded brain containing public BrainAPI V2 documentation. It never accepts a caller-selected brain and has no ingest, model, task-mutation, graph-mutation, or system route.
+
+```bash
+curl --fail-with-body --get https://brain-api.dev/api/demo/search \
+  --data-urlencode 'query=How do I ingest text?' \
+  --data 'k=5'
+```
+
+Queries are limited to 500 characters and `k` is limited to 10. The production edge permits 30 demo requests per minute per client, followed by a 60-second block. The sandbox has no SLA and contains no customer data.
+
+Check whether the API is reachable without credentials:
+
+```bash
+curl --fail-with-body https://brain-api.dev/api/health
+```
+
+## Get an API key
+
+Managed BrainAPI uses a personal access token (PAT). Request a managed BrainPAT from [BrainAPI support](mailto:info@lumen-labs.ai), including the brain or environment you need. Self-hosted operators set `BRAINPAT_TOKEN` and create or select brains according to [Authentication and brains](/v2/brains-and-auth).
+
+Send the token either in the `BrainPAT` header or as a Bearer token. Prefer `X-Brain-ID` for brain scope. Keep tokens server-side and never send one to the anonymous sandbox.
+
+## Authenticated quickstart
+
+Submit text to your brain:
+
+```bash
+curl --fail-with-body https://brain-api.dev/api/ingest/ \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: $BRAIN_ID" \
+  -H 'Content-Type: application/json' \
+  --data '{"text":"BrainAPI gives an agent durable memory."}'
+```
+
+Ingestion returns HTTP `202` with a `task_id`. Poll the task until it reaches a terminal state:
+
+```bash
+curl --fail-with-body "https://brain-api.dev/api/tasks/$TASK_ID" \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: $BRAIN_ID"
+```
+
+Then retrieve context or use the typed [Search API](/v2/retrieval/search).
+
+## OpenAPI and function calling
+
+Use [`https://brain-api.dev/openapi.json`](https://brain-api.dev/openapi.json) to generate a client or convert operations into LLM tools. Every operation has a stable lower-snake-case `operationId`, a description, typed parameters and request bodies, typed success and error responses, and an explicit security declaration.
+
+The canonical managed server is `https://brain-api.dev/api`; `https://api.brain-api.dev` is the direct managed API host. The same contract also documents `http://localhost:8000` for self-hosting.
+
+## Error handling
+
+All API failures are JSON. BrainAPI preserves the legacy `detail` field and adds an agent-readable envelope:
+
+```json
+{
+  "detail": "Existing detail value",
+  "error": {
+    "code": "AUTH_INVALID",
+    "message": "Authentication failed.",
+    "resolution": "Send a valid BrainPAT or Bearer token for the selected brain.",
+    "request_id": "8d630dea-207f-4515-a40e-a779c64d6f2c"
+  }
+}
+```
+
+Handle stable codes such as `AUTH_INVALID`, `BRAIN_ID_REQUIRED`, `BRAIN_NOT_FOUND`, `VALIDATION_ERROR`, `RESOURCE_NOT_FOUND`, `METHOD_NOT_ALLOWED`, `RATE_LIMITED`, `SERVICE_UNAVAILABLE`, and `INTERNAL_ERROR`. Log `error.request_id`; it matches the `X-Request-ID` response header. Retry `429` and `503` only with bounded exponential backoff. Do not automatically retry validation, authentication, or permission failures.
+
+## MCP for agents
+
+Use the authenticated [Product MCP](/v2/agentic/MCP) when an agent should work with your knowledge graph. Use the public [Docs MCP](/v2/agentic/docs-mcp) when it should search or read BrainAPI documentation:
+
+```text
+https://brain-api.dev/mcp
+```
+
+The Docs MCP uses Streamable HTTP and exposes documentation-only tools. Its discovery metadata is available at [`/.well-known/mcp.json`](https://brain-api.dev/.well-known/mcp.json).
+
+## BrainAPI CLI
+
+Install the official [`brainapi-tui@0.4.0` package](https://www.npmjs.com/package/brainapi-tui). It installs the `brainapi` executable:
+
+```bash
+npm install -g brainapi-tui@0.4.0
+brainapi init
+brainapi start
+```
+
+See the [BrainAPI CLI guide](/v2/tui) for configuration, health checks, upgrades, and the managed local layout.
+
+## Support and operational limits
+
+Read [Health and troubleshooting](/v2/troubleshooting) before escalating. For managed access, security questions, or persistent API failures, contact [info@lumen-labs.ai](mailto:info@lumen-labs.ai) and include the `X-Request-ID`. Sandbox availability and customer rate limits may differ; your managed environment agreement is authoritative.

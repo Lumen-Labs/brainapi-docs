@@ -1,0 +1,48 @@
+---
+title: BrainAPI Public API
+description: Unauthenticated service health and the guarded read-only
+  documentation search sandbox.
+full: true
+_openapi:
+  preload:
+    - schemas/brainapi-v2.openapi.json
+  toc:
+    - depth: 2
+      title: Demo Search
+      url: '#demo-search'
+    - depth: 2
+      title: Health
+      url: '#health'
+  structuredData:
+    headings:
+      - content: Demo Search
+        id: demo-search
+      - content: Health
+        id: health
+    contents:
+      - content: >-
+          Search the fixed public demo brain using passages-only BM25 retrieval.
+
+
+          This endpoint never accepts a caller-selected brain and exposes no
+          write path.
+
+          Production applies an additional per-client rate limit at the edge.
+        heading: demo-search
+      - content: Return public liveness metadata without accessing customer data.
+        heading: health
+---
+
+{/* Generated from schemas\/brainapi-v2.openapi.json. Run npm run api:generate after syncing the schema. */}
+
+export default function Layout(props) {
+  const { APIPage, OpenAPIPage } = props.components ?? {};
+  // "APIPage" is the old name from v10, this allows both for backward compatibility
+  const Comp = OpenAPIPage ?? APIPage;
+  return (
+    <>
+      {props.children}
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/demo/search","method":"get"},{"path":"/health","method":"get"}]} showTitle showDescription />
+    </>
+  );
+}

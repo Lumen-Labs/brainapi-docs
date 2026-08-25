@@ -12,6 +12,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: absoluteDocsUrl(page.url),
       lastModified: page.data.lastModified,
       changeFrequency: "weekly" as const,
-      priority: page.url === "/v2" ? 1 : page.url.startsWith("/v2") ? 0.8 : 0.5,
+      priority:
+        page.url === "/v2"
+          ? 1
+          : page.url === "/v2/developers"
+            ? 0.95
+            : page.url === "/v2/reference"
+              ? 0.9
+              : page.url.startsWith("/v2")
+                ? 0.8
+                : 0.5,
     }));
 }
