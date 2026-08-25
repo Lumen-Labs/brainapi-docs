@@ -51,7 +51,7 @@ jobs:
         run: npm run build
 
       - name: Package the runtime allowlist
-        run: tar -czf brainapi-docs-release.tgz .next public package.json package-lock.json ecosystem.config.js
+        run: tar -czf brainapi-docs-release.tgz .next content public package.json package-lock.json ecosystem.config.js
 
       - name: Upload the release artifact
         uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0

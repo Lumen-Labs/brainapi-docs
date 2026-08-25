@@ -235,6 +235,17 @@ if (mcpDiscovery.authentication?.required !== false || mcpDiscovery.capabilities
   errors.push("Docs MCP discovery must declare unauthenticated tool capability");
 }
 
+const deployWorkflow = await readFile(
+  path.join(root, ".github", "workflows", "deploy.yaml"),
+  "utf8",
+);
+const runtimePackageCommand = deployWorkflow
+  .split("\n")
+  .find((line) => line.includes("tar -czf brainapi-docs-release.tgz"));
+if (!runtimePackageCommand?.split(/\s+/).includes("content")) {
+  errors.push("Production runtime package must include content for Markdown and Docs MCP reads");
+}
+
 if (errors.length) {
   console.error(`Documentation validation failed with ${errors.length} issue(s):`);
   errors.forEach((error) => console.error(`- ${error}`));
