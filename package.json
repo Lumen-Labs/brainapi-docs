@@ -24,7 +24,7 @@
     "@next/third-parties": "16.3.2",
     "fumadocs-core": "16.15.0",
     "fumadocs-mdx": "15.3.1",
-    "fumadocs-openapi": "11.3.0",
+    "fumadocs-openapi": "11.3.3",
     "fumadocs-ui": "16.15.0",
     "katex": "^0.18.4",
     "lucide-react": "1.33.0",
