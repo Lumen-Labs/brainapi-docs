@@ -1,0 +1,35 @@
+---
+title: Interview
+description: Host a Q&A so someone can tell a brain what they know
+---
+
+Interview is a dashboard Add-data method. The brain owner describes who to learn from and what to capture. BrainAPI then hosts a shareable Q&A. Answers are saved with the same text ingest path as notes you paste yourself.
+
+This is not a copy of a person. A one-hour interview captures specific work, not a full decision policy.
+
+## When to use it
+
+Use Interview when the knowledge lives in someone's head: hiring rules, how an incident was handled, tools that never made it into a wiki.
+
+Use [save text](/v2/ingestion/text), [files](/v2/ingestion/files), or [structured data](/v2/ingestion/structured-data) when you already have the words or records.
+
+## What happens
+
+1. In the dashboard, open a brain → **Data** → **Interview**.
+2. Say who the person is and what to learn. **Prepare interview** builds a topic list you can edit.
+3. **Create interview link** returns a URL like `https://brainapi.lumen-labs.ai/forms/…`.
+4. The interviewee opens the link (no BrainAPI account). After they agree, the interviewer asks one question at a time about a real recent incident, then confirms what it will save.
+5. Confirmed answers become a text ingest job titled `Interview · {topic}`. Follow it on **Activity**.
+
+The public page never shows the rest of the brain. The access key never appears in the link.
+
+## Limits
+
+- Links expire (default 14 days) and can be paused or revoked.
+- Optional passcode and “only one person may use this link”.
+- Writes use the owner's monthly allowance (`form_interview` usage source).
+- Guests are rate-limited.
+
+## API
+
+There is no BrainAPI interview endpoint. The dashboard calls `POST /ingest/` with a labeled Q&A transcript after teach-back. Optional `group_tracking` is `interview-{id}`.

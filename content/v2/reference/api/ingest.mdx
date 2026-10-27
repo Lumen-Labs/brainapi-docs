@@ -13,6 +13,9 @@ _openapi:
       title: Ingest File
       url: '#ingest-file'
     - depth: 2
+      title: Ingest Url
+      url: '#ingest-url'
+    - depth: 2
       title: Ingest Structured Data
       url: '#ingest-structured-data'
   structuredData:
@@ -21,6 +24,8 @@ _openapi:
         id: ingest-data
       - content: Ingest File
         id: ingest-file
+      - content: Ingest Url
+        id: ingest-url
       - content: Ingest Structured Data
         id: ingest-structured-data
     contents:
@@ -28,6 +33,8 @@ _openapi:
         heading: ingest-data
       - content: Ingest a file into the processing pipeline and save to the memory.
         heading: ingest-file
+      - content: Accept a public https URL for asynchronous crawl-and-ingest.
+        heading: ingest-url
       - content: Accept structured data for asynchronous ingestion.
         heading: ingest-structured-data
 ---
@@ -41,7 +48,7 @@ export default function Layout(props) {
   return (
     <>
       {props.children}
-      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/ingest/","method":"post"},{"path":"/ingest/file","method":"post"},{"path":"/ingest/structured","method":"post"}]} showTitle showDescription />
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/ingest/","method":"post"},{"path":"/ingest/file","method":"post"},{"path":"/ingest/url","method":"post"},{"path":"/ingest/structured","method":"post"}]} showTitle showDescription />
     </>
   );
 }

@@ -11,6 +11,7 @@ Ingestion turns source material into representations that later retrieval surfac
 | --- | --- | --- |
 | Plain text or pre-extracted Markdown | `POST /ingest/` | Language contains the facts and relationships to discover. |
 | PDF, document, or other uploaded file | `POST /ingest/file` | BrainAPI or a configured parser must extract text first. |
+| Public website URL | `POST /ingest/url` | You have a public `https` URL and want cleaned page JSON (title, headings, core, facts), not raw Markdown. |
 | Known triples or events | `POST /ingest/structured` | Your application already knows subjects, predicates, objects, IDs, or timestamps. |
 | Search-only passages | `POST /ingest/` with `skip_enrichment=true` | You need ranked passage retrieval without graph enrichment. |
 
@@ -43,6 +44,8 @@ Text and structured endpoints return `202` and a `task_id`. Poll the same brain 
 
 - [Save text](/v2/ingestion/text)
 - [Save files](/v2/ingestion/files)
+- [Save URLs](/v2/ingestion/urls)
 - [Save structured data](/v2/ingestion/structured-data)
+- [Interview someone](/v2/ingestion/interview)
 - [Track ingestion tasks](/v2/ingestion/tasks)
 - [Choose a retrieval surface](/v2/retrieval)

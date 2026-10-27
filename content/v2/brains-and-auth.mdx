@@ -65,6 +65,27 @@ curl http://localhost:8000/meta/login-info \
   -H "BrainPAT: $BRAINPAT_TOKEN"
 ```
 
+## Rotate a brain access key
+
+Replace a brain's PAT with the system token. The old PAT stops working immediately and the new PAT is returned once.
+
+```bash
+curl -X POST http://localhost:8000/system/brains/support-docs/rotate-pat \
+  -H "BrainPAT: $BRAINPAT_TOKEN"
+```
+
+| Status | Code | Meaning | Check |
+| --- | --- | --- | --- |
+| `200` | n/a | PAT replaced. The response carries the new PAT. | Store it in your secret manager before closing the response. |
+| `400` | `BRAIN_ID_INVALID` | Brain ID is malformed. | Use letters and numbers, starting with a letter. |
+| `404` | `BRAIN_NOT_FOUND` | Brain does not exist. | List brains and use an existing ID. |
+| `409` | `BRAIN_LIFECYCLE_BUSY` | Another lifecycle operation is running on this brain. | Wait for it to finish, then retry. |
+| `503` | `BRAIN_PAT_CACHE_INVALIDATION_FAILED` | The PAT was replaced, but cached credentials could not be cleared. | Read the new PAT from `/system/brains-list`, check cache health, then rotate again. |
+
+A `503` with `BRAIN_PAT_CACHE_INVALIDATION_FAILED` means the new PAT is already saved. Do not assume the old PAT is rejected everywhere until the cache is cleared.
+
+The BrainAPI dashboard calls this endpoint when you choose **Replace access key** on a brain's Connect page. The dashboard only offers it when the brain's software version supports it.
+
 ## Failure behavior
 
 | Status | Meaning | Check |

@@ -3,7 +3,7 @@ title: Ingestion tasks
 description: Poll async ingest jobs and handle 202 / 404 correctly
 ---
 
-Text, file, and structured ingest endpoints accept work asynchronously. They return **202 Accepted** with a `task_id`. Use the tasks API to wait until the graph write finishes.
+Text, file, URL, and structured ingest endpoints accept work asynchronously. They return **202 Accepted** with a `task_id`. Use the tasks API to wait until the graph write finishes.
 
 <AgentNote>
 - After ingest: read `task_id` from **202** body
@@ -62,6 +62,7 @@ Structured and file ingest always mint a new UUID `task_id` in the 202 body.
 | `POST /ingest/` | `Ingestion accepted` | Honors `Task-Identifier` |
 | `POST /ingest/structured` | `Structured ingestion accepted` | New UUID each call |
 | `POST /ingest/file` | `File ingestion accepted` | New UUID each call |
+| `POST /ingest/url` | `URL ingestion accepted` | New UUID each call; parent fans out one child task per cleaned page |
 
 Queue unavailable → **503** `Task queue unavailable`.
 
@@ -98,4 +99,5 @@ Lists known tasks for the brain (from the task key index). Useful for the consol
 
 - [Saving text](/v2/ingestion/text)
 - [Saving files](/v2/ingestion/files)
+- [Saving URLs](/v2/ingestion/urls)
 - [Structured data](/v2/ingestion/structured-data)

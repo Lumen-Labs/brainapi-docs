@@ -1,0 +1,44 @@
+---
+title: Saving URLs
+description: How to ingest a public website into a brain from a seed URL
+---
+
+URL ingest is for public websites. BrainAPI does not fetch the seed URL itself. It asks the configured crawler (Lumen Crawler by default) to render pages, wait for cleanup JSON, and then ingest only the fields that matter: title, headings, core content, contacts, and CTAs. Chrome, navigation, and raw Markdown are dropped.
+
+`POST /ingest/url` returns **202 Accepted** with `{ "message": "URL ingestion accepted", "task_id": "…" }`. Poll with [ingestion tasks](/v2/ingestion/tasks).
+
+<AgentNote>
+- `POST /ingest/url` with JSON `{ "url": "https://…" }`, auth with `BrainPAT`
+- `url` must be public `https`; `max_pages` defaults to 10 and caps at 100
+- Requires `LUMEN_CRAWLER_KEY`; missing config is **503**
+- **202** + `task_id` → poll `GET /tasks/{id}`; **404** ≠ pending
+</AgentNote>
+
+<Callout type="info">
+  Each cleaned page becomes one text ingest job. Set `skip_enrichment=true` to store
+  passages without Scout/Architect. Optional `allowed_domains` adds extra eTLD+1 hosts
+  (max 20). `group_tracking` rolls up ingest cost the same way as text and file ingest.
+</Callout>
+
+## Usage
+
+<Tabs items={["cURL"]}>
+  <Tab value="cURL">
+    Post a seed URL to `POST /ingest/url`. Expect HTTP 202 and a `task_id`.
+    <DynamicCodeBlock
+      lang="bash"
+      code={`curl -X POST "<DEPLOYMENT_URL>/ingest/url" \\
+      -H "Content-Type: application/json" \\
+      -H "X-Brain-ID: mybrain123" \\
+      -H "BrainPAT: YOUR_BRAIN_PAT" \\
+      -d '{"url":"https://example.com","max_pages":10}'
+# → {"message":"URL ingestion accepted","task_id":"…"}`}
+    />
+  </Tab>
+</Tabs>
+
+<Callout type="info">
+  After 202, poll `GET /tasks/` with the returned task id until the parent crawl
+  finishes. Child page tasks are listed on the parent as `counts.task_ids`.
+  See [Ingestion tasks](/v2/ingestion/tasks).
+</Callout>

@@ -1042,6 +1042,54 @@
         "title": "IngestionRequestBody",
         "type": "object"
       },
+      "IngestionUrlRequestBody": {
+        "properties": {
+          "url": {
+            "description": "Public https URL to crawl.",
+            "title": "Url",
+            "type": "string"
+          },
+          "max_pages": {
+            "default": 10,
+            "description": "Maximum pages to crawl. Each cleaned page becomes one ingest job.",
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Max Pages",
+            "type": "integer"
+          },
+          "allowed_domains": {
+            "description": "Extra eTLD+1 hosts to include, max 20.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Allowed Domains",
+            "type": "array"
+          },
+          "group_tracking": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional ingest-cost rollup key for this request (1-128 chars, [A-Za-z0-9._:-]).",
+            "title": "Group Tracking"
+          },
+          "skip_enrichment": {
+            "default": false,
+            "description": "Persist cleaned page text and embeddings only. Skip Scout/Architect.",
+            "title": "Skip Enrichment",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "IngestionUrlRequestBody",
+        "type": "object"
+      },
       "IngestionStructuredRequestBody": {
         "description": "Request body for the structured ingestion endpoint.",
         "properties": {
@@ -4115,6 +4163,157 @@
           }
         ],
         "summary": "Ingest Structured Data",
+        "tags": [
+          "ingest"
+        ]
+      }
+    },
+    "/ingest/url": {
+      "post": {
+        "description": "Accept a public https URL for asynchronous crawl-and-ingest.",
+        "operationId": "ingest_ingest_url_post",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestionUrlRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestionAcceptedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authentication failed"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Operation forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method not allowed"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Brain not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal service error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Dependency unavailable"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Ingest Url",
         "tags": [
           "ingest"
         ]
