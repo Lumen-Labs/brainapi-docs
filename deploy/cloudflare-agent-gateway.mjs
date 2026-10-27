@@ -5,7 +5,7 @@ const API_ROUTES = [
   ["GET", /^\/health$/],
   ["GET", /^\/demo\/search$/],
   ["POST", /^\/ingest\/$/],
-  ["POST", /^\/ingest\/(file|structured)$/],
+  ["POST", /^\/ingest\/(file|structured|url)$/],
   ["GET", /^\/meta\/(entity-labels|entity-properties|login-info|relationships-properties)$/],
   ["POST", /^\/model\/(entity|relationship)$/],
   ["PUT", /^\/model\/(entity|relationship)$/],
