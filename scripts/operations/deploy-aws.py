@@ -96,20 +96,27 @@ def main():
         alarms = cloudwatch.describe_alarms(AlarmNames=ERROR_ALARMS)["MetricAlarms"]
         if len(alarms) != len(ERROR_ALARMS) or any(alarm["StateValue"] == "ALARM" for alarm in alarms):
             raise RuntimeError("Deployment error alarms are missing or already in ALARM")
-        # Protect against reusing any previously uploaded release directory.
+        # Reserve the release before uploading. A missing-key HEAD requires ListBucket.
+        manifest_key = f"releases/{args.release}/manifest.json"
         try:
-            s3.head_object(Bucket=BUCKET, Key=f"releases/{args.release}/manifest.json")
+            s3.put_object(
+                Bucket=BUCKET,
+                Key=manifest_key,
+                Body=json.dumps({"release": args.release, "status": "reserved"}),
+                ServerSideEncryption="AES256",
+                ContentType="application/json",
+                IfNoneMatch="*",
+            )
         except s3.exceptions.ClientError as error:
-            if error.response["Error"]["Code"] not in ["404", "NoSuchKey"]:
-                raise
-        else:
-            raise RuntimeError("Release already exists")
+            if error.response["Error"]["Code"] in ("412", "PreconditionFailed"):
+                raise RuntimeError("Release already exists") from error
+            raise
         unchanged = "docs" if args.component == "maas" else "maas"
         s3.copy_object(Bucket=BUCKET, Key=f"releases/{args.release}/{unchanged}-runtime.tgz", CopySource={"Bucket": BUCKET, "Key": f"releases/{previous}/{unchanged}-runtime.tgz"}, ServerSideEncryption="AES256")
         s3.upload_file(str(args.archive), BUCKET, f"releases/{args.release}/{args.component}-runtime.tgz", ExtraArgs={"ServerSideEncryption": "AES256"})
         with args.archive.open("rb") as artifact:
             digest = hashlib.file_digest(artifact, "sha256").hexdigest()
-        s3.put_object(Bucket=BUCKET, Key=f"releases/{args.release}/manifest.json", Body=json.dumps({"release": args.release, "previous": previous, "component": args.component, "sha256": digest}), ServerSideEncryption="AES256", ContentType="application/json")
+        s3.put_object(Bucket=BUCKET, Key=manifest_key, Body=json.dumps({"release": args.release, "previous": previous, "component": args.component, "sha256": digest}), ServerSideEncryption="AES256", ContentType="application/json")
         changed = True
         safe_unlock = False
         set_release(args.release)

@@ -37,7 +37,6 @@ class DeploymentSafetyTests(unittest.TestCase):
         ]}
         self.ssm.get_parameter.return_value = {"Parameter": {"Value": json.dumps({"owner": "test-owner"})}}
         self.s3.exceptions.ClientError = ClientError
-        self.s3.head_object.side_effect = ClientError({"Error": {"Code": "404"}}, "HeadObject")
 
     def run_deployment(self):
         session = MagicMock()
@@ -46,6 +45,16 @@ class DeploymentSafetyTests(unittest.TestCase):
              patch.object(deploy.uuid, "uuid4", return_value="test-owner"), \
              patch("sys.argv", ["deploy-aws.py", "--component", "maas", "--archive", str(self.archive), "--release", "candidate123"]):
             deploy.main()
+
+    def test_existing_release_cannot_be_overwritten(self):
+        self.s3.put_object.side_effect = ClientError(
+            {"Error": {"Code": "PreconditionFailed"}}, "PutObject"
+        )
+        with self.assertRaisesRegex(RuntimeError, "Release already exists"):
+            self.run_deployment()
+        self.s3.copy_object.assert_not_called()
+        self.s3.upload_file.assert_not_called()
+        self.cfn.update_stack.assert_not_called()
 
     def test_overlapping_refresh_cannot_publish_or_update_capacity(self):
         self.asg.describe_instance_refreshes.return_value = {"InstanceRefreshes": [{"Status": "InProgress"}]}
