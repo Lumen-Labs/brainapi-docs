@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: brainapi-docs-production
@@ -50,46 +51,19 @@ jobs:
       - name: Build production site
         run: npm run build
 
-      - name: Package the runtime allowlist
-        run: tar -czf brainapi-docs-release.tgz .next content public package.json package-lock.json ecosystem.config.js
-
-      - name: Upload the release artifact
-        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
+      - name: Authenticate to the production fleet
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          port: ${{ secrets.PORT }}
-          key: ${{ secrets.SSHKEY }}
-          source: brainapi-docs-release.tgz
-          target: "/home/${{ secrets.USERNAME }}/brainapi-docs/releases/${{ github.sha }}"
+          role-to-assume: arn:aws:iam::515310961483:role/brainapi-maas-production-deploy
+          aws-region: eu-central-1
 
-      - name: Activate the release and restart PM2
-        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          port: ${{ secrets.PORT }}
-          key: ${{ secrets.SSHKEY }}
-          script: |
-            set -eu
-            release="/home/${{ secrets.USERNAME }}/brainapi-docs/releases/${{ github.sha }}"
-            cd "$release"
-            tar -xzf brainapi-docs-release.tgz
-            rm brainapi-docs-release.tgz
-            npm ci --omit=dev --ignore-scripts
-            ln -sfn "$release" "/home/${{ secrets.USERNAME }}/brainapi-docs/current"
-            cd "/home/${{ secrets.USERNAME }}/brainapi-docs/current"
-            pm2 delete brainapi-docs >/dev/null 2>&1 || true
-            pm2 start ecosystem.config.js --only brainapi-docs >/dev/null
+      - name: Package the private runtime
+        run: tar -czf brainapi-docs-release.tgz --exclude=.next/cache .next node_modules content public package.json package-lock.json ecosystem.config.js
 
-            for attempt in 1 2 3 4 5 6 7 8 9 10; do
-              if curl --fail --silent --show-error \
-                "http://127.0.0.1:3877/docs/v2/quickstart" >/dev/null; then
-                exit 0
-              fi
-              sleep 2
-            done
-
-            echo "The deployed documentation did not become healthy." >&2
-            pm2 logs brainapi-docs --lines 50 --nostream >&2
-            exit 1
+      - name: Roll the AWS fleet
+        run: |
+          python3 -m venv "$RUNNER_TEMP/deploy-venv"
+          "$RUNNER_TEMP/deploy-venv/bin/pip" install boto3
+          "$RUNNER_TEMP/deploy-venv/bin/python" -m unittest discover -s scripts/operations -p test_deploy_aws.py
+          "$RUNNER_TEMP/deploy-venv/bin/python" scripts/operations/deploy-aws.py --component docs \
+            --archive brainapi-docs-release.tgz --release "docs-${GITHUB_SHA}-${GITHUB_RUN_ID}"
