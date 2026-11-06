@@ -13,6 +13,7 @@ import time
 import uuid
 
 import boto3
+from botocore.exceptions import ClientError, WaiterError
 
 STACK = "brainapi-maas-prod"
 BUCKET = "brainapi-maas-prod-515310961483-eu-central-1"
@@ -57,8 +58,26 @@ def main():
 
     def set_release(release):
         params = [{"ParameterKey": p["ParameterKey"], **({"ParameterValue": release} if p["ParameterKey"] == "ReleaseId" else {"UsePreviousValue": True})} for p in stack()["Parameters"]]
-        cfn.update_stack(StackName=STACK, UsePreviousTemplate=True, Parameters=params, Capabilities=["CAPABILITY_NAMED_IAM"])
-        cfn.get_waiter("stack_update_complete").wait(StackName=STACK, WaiterConfig={"Delay": 15, "MaxAttempts": 120})
+        token = str(uuid.uuid4())
+        cfn.update_stack(
+            StackName=STACK,
+            UsePreviousTemplate=True,
+            Parameters=params,
+            Capabilities=["CAPABILITY_NAMED_IAM"],
+            ClientRequestToken=token,
+        )
+        try:
+            cfn.get_waiter("stack_update_complete").wait(
+                StackName=STACK, WaiterConfig={"Delay": 15, "MaxAttempts": 120}
+            )
+        except WaiterError:
+            try:
+                for event in cfn.describe_stack_events(StackName=STACK)["StackEvents"]:
+                    if event.get("ClientRequestToken") == token and event["ResourceStatus"].endswith("_FAILED"):
+                        print(event["LogicalResourceId"], event.get("ResourceStatusReason", ""), flush=True)
+            except ClientError as error:
+                print("Could not read stack failure events:", error, flush=True)
+            raise
 
     def refresh(groups, watch_errors=True):
         preferences = {"MinHealthyPercentage": 100, "MaxHealthyPercentage": 150, "InstanceWarmup": 60, "SkipMatching": True}
