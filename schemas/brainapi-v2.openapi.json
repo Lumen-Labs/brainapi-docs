@@ -109,12 +109,585 @@
         "title": "AddRelationshipRequest",
         "type": "object"
       },
+      "AtlasConnection": {
+        "properties": {
+          "advanced": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Advanced",
+            "type": "object"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "details": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Details",
+            "type": "object"
+          },
+          "direction": {
+            "enum": [
+              "in",
+              "out",
+              "neutral"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "fromId": {
+            "title": "Fromid",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "toId": {
+            "title": "Toid",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "typeLabel": {
+            "title": "Typelabel",
+            "type": "string"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          }
+        },
+        "required": [
+          "description",
+          "details",
+          "updatedAt",
+          "advanced",
+          "id",
+          "fromId",
+          "toId",
+          "type",
+          "typeLabel",
+          "direction"
+        ],
+        "title": "AtlasConnection",
+        "type": "object"
+      },
+      "AtlasCoverage": {
+        "properties": {
+          "aggregated": {
+            "title": "Aggregated",
+            "type": "boolean"
+          },
+          "connections": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connections"
+          },
+          "things": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Things"
+          }
+        },
+        "required": [
+          "aggregated"
+        ],
+        "title": "AtlasCoverage",
+        "type": "object"
+      },
+      "AtlasGroup": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "parentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parentid"
+          },
+          "representatives": {
+            "items": {
+              "$ref": "#/components/schemas/AtlasRepresentative"
+            },
+            "title": "Representatives",
+            "type": "array"
+          },
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Types",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "types",
+          "parentId",
+          "count",
+          "representatives"
+        ],
+        "title": "AtlasGroup",
+        "type": "object"
+      },
+      "AtlasGroupLink": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "fromId": {
+            "title": "Fromid",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "toId": {
+            "title": "Toid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "fromId",
+          "toId",
+          "count"
+        ],
+        "title": "AtlasGroupLink",
+        "type": "object"
+      },
+      "AtlasReference": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "AtlasReference",
+        "type": "object"
+      },
+      "AtlasRepresentative": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Types",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "types"
+        ],
+        "title": "AtlasRepresentative",
+        "type": "object"
+      },
+      "AtlasResponse": {
+        "properties": {
+          "ancestors": {
+            "items": {
+              "$ref": "#/components/schemas/AtlasReference"
+            },
+            "title": "Ancestors",
+            "type": "array"
+          },
+          "builtAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Builtat"
+          },
+          "connections": {
+            "items": {
+              "$ref": "#/components/schemas/AtlasConnection"
+            },
+            "title": "Connections",
+            "type": "array"
+          },
+          "coverage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AtlasCoverage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "groupLinks": {
+            "items": {
+              "$ref": "#/components/schemas/AtlasGroupLink"
+            },
+            "title": "Grouplinks",
+            "type": "array"
+          },
+          "groupLinksTruncated": {
+            "default": false,
+            "title": "Grouplinkstruncated",
+            "type": "boolean"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/AtlasGroup"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor"
+          },
+          "snapshotId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshotid"
+          },
+          "status": {
+            "enum": [
+              "ready",
+              "building",
+              "refreshing",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "things": {
+            "items": {
+              "$ref": "#/components/schemas/AtlasThing"
+            },
+            "title": "Things",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/AtlasTotals"
+          },
+          "version": {
+            "const": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "status"
+        ],
+        "title": "AtlasResponse",
+        "type": "object"
+      },
+      "AtlasThing": {
+        "properties": {
+          "advanced": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Advanced",
+            "type": "object"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "details": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Details",
+            "type": "object"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "typeLabels": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Typelabels",
+            "type": "array"
+          },
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Types",
+            "type": "array"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          }
+        },
+        "required": [
+          "description",
+          "details",
+          "updatedAt",
+          "advanced",
+          "id",
+          "name",
+          "types",
+          "typeLabels"
+        ],
+        "title": "AtlasThing",
+        "type": "object"
+      },
+      "AtlasTotals": {
+        "properties": {
+          "connections": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connections"
+          },
+          "things": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Things"
+          }
+        },
+        "title": "AtlasTotals",
+        "type": "object"
+      },
       "Body_ingest_ingest_file_post": {
         "properties": {
           "file": {
             "contentMediaType": "application/octet-stream",
             "title": "File",
             "type": "string"
+          },
+          "group_tracking": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Tracking"
           }
         },
         "required": [
@@ -145,6 +718,95 @@
           "name_key"
         ],
         "title": "Brain",
+        "type": "object"
+      },
+      "BrainLifecycleResponse": {
+        "properties": {
+          "brain_id": {
+            "title": "Brain Id",
+            "type": "string"
+          },
+          "cleared_backends": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Cleared Backends",
+            "type": "array"
+          },
+          "existed": {
+            "title": "Existed",
+            "type": "boolean"
+          },
+          "operation": {
+            "enum": [
+              "clear",
+              "delete"
+            ],
+            "title": "Operation",
+            "type": "string"
+          },
+          "success": {
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success",
+          "brain_id",
+          "operation",
+          "existed",
+          "cleared_backends"
+        ],
+        "title": "BrainLifecycleResponse",
+        "type": "object"
+      },
+      "CancelIngestionRequest": {
+        "properties": {
+          "mode": {
+            "enum": [
+              "keep_saved",
+              "rollback"
+            ],
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "CancelIngestionRequest",
+        "type": "object"
+      },
+      "CancelIngestionResponse": {
+        "properties": {
+          "mode": {
+            "enum": [
+              "keep_saved",
+              "rollback"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "cancelling",
+              "cancelled",
+              "rollback_failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "mode",
+          "status"
+        ],
+        "title": "CancelIngestionResponse",
         "type": "object"
       },
       "ChangelogItemResponse": {
@@ -914,6 +1576,132 @@
         "title": "IdentificationParams",
         "type": "object"
       },
+      "IngestGroupMeterResponse": {
+        "properties": {
+          "completed": {
+            "title": "Completed",
+            "type": "integer"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "group_tracking": {
+            "title": "Group Tracking",
+            "type": "string"
+          },
+          "partial_failed": {
+            "title": "Partial Failed",
+            "type": "integer"
+          },
+          "source_chars": {
+            "title": "Source Chars",
+            "type": "integer"
+          },
+          "source_tokens": {
+            "title": "Source Tokens",
+            "type": "integer"
+          },
+          "stages": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/IngestGroupStageTotals"
+            },
+            "title": "Stages",
+            "type": "object"
+          },
+          "task_count": {
+            "title": "Task Count",
+            "type": "integer"
+          },
+          "task_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Task Ids",
+            "type": "array"
+          },
+          "total_cached_tokens": {
+            "default": 0,
+            "title": "Total Cached Tokens",
+            "type": "integer"
+          },
+          "total_input_tokens": {
+            "title": "Total Input Tokens",
+            "type": "integer"
+          },
+          "total_llm_tokens": {
+            "title": "Total Llm Tokens",
+            "type": "integer"
+          },
+          "total_output_tokens": {
+            "title": "Total Output Tokens",
+            "type": "integer"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "group_tracking",
+          "task_count",
+          "completed",
+          "failed",
+          "partial_failed",
+          "total_llm_tokens",
+          "total_input_tokens",
+          "total_output_tokens",
+          "source_chars",
+          "source_tokens",
+          "stages"
+        ],
+        "title": "IngestGroupMeterResponse",
+        "type": "object"
+      },
+      "IngestGroupStageTotals": {
+        "properties": {
+          "cached_tokens": {
+            "default": 0,
+            "title": "Cached Tokens",
+            "type": "integer"
+          },
+          "calls": {
+            "default": 0,
+            "title": "Calls",
+            "type": "integer"
+          },
+          "input_tokens": {
+            "default": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "latency_ms": {
+            "default": 0.0,
+            "title": "Latency Ms",
+            "type": "number"
+          },
+          "output_tokens": {
+            "default": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "total_tokens": {
+            "default": 0,
+            "title": "Total Tokens",
+            "type": "integer"
+          }
+        },
+        "title": "IngestGroupStageTotals",
+        "type": "object"
+      },
       "IngestionAcceptedResponse": {
         "properties": {
           "message": {
@@ -930,6 +1718,36 @@
           "task_id"
         ],
         "title": "IngestionAcceptedResponse",
+        "type": "object"
+      },
+      "IngestionActivityResponse": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/JsonValue"
+        },
+        "title": "IngestionActivityResponse",
+        "type": "object"
+      },
+      "IngestionCapabilitiesResponse": {
+        "properties": {
+          "concurrency": {
+            "title": "Concurrency",
+            "type": "integer"
+          },
+          "progressive": {
+            "title": "Progressive",
+            "type": "boolean"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "progressive",
+          "version",
+          "concurrency"
+        ],
+        "title": "IngestionCapabilitiesResponse",
         "type": "object"
       },
       "IngestionRequestBody": {
@@ -958,6 +1776,18 @@
               }
             ],
             "title": "Data"
+          },
+          "group_tracking": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional ingest-cost rollup key for this request (1-128 chars, [A-Za-z0-9._:-]).",
+            "title": "Group Tracking"
           },
           "identification_params": {
             "anyOf": [
@@ -1042,54 +1872,6 @@
         "title": "IngestionRequestBody",
         "type": "object"
       },
-      "IngestionUrlRequestBody": {
-        "properties": {
-          "url": {
-            "description": "Public https URL to crawl.",
-            "title": "Url",
-            "type": "string"
-          },
-          "max_pages": {
-            "default": 10,
-            "description": "Maximum pages to crawl. Each cleaned page becomes one ingest job.",
-            "maximum": 100,
-            "minimum": 1,
-            "title": "Max Pages",
-            "type": "integer"
-          },
-          "allowed_domains": {
-            "description": "Extra eTLD+1 hosts to include, max 20.",
-            "items": {
-              "type": "string"
-            },
-            "title": "Allowed Domains",
-            "type": "array"
-          },
-          "group_tracking": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Optional ingest-cost rollup key for this request (1-128 chars, [A-Za-z0-9._:-]).",
-            "title": "Group Tracking"
-          },
-          "skip_enrichment": {
-            "default": false,
-            "description": "Persist cleaned page text and embeddings only. Skip Scout/Architect.",
-            "title": "Skip Enrichment",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "url"
-        ],
-        "title": "IngestionUrlRequestBody",
-        "type": "object"
-      },
       "IngestionStructuredRequestBody": {
         "description": "Request body for the structured ingestion endpoint.",
         "properties": {
@@ -1117,6 +1899,18 @@
             },
             "title": "Data",
             "type": "array"
+          },
+          "group_tracking": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional ingest-cost rollup key for this request (1-128 chars, [A-Za-z0-9._:-]).",
+            "title": "Group Tracking"
           },
           "mode": {
             "anyOf": [
@@ -1249,6 +2043,59 @@
           "object"
         ],
         "title": "IngestionTripleSet",
+        "type": "object"
+      },
+      "IngestionUrlRequestBody": {
+        "properties": {
+          "allowed_domains": {
+            "description": "Extra eTLD+1 hosts to include, max 20.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Allowed Domains",
+            "type": "array"
+          },
+          "group_tracking": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional ingest-cost rollup key for this request (1-128 chars, [A-Za-z0-9._:-]).",
+            "title": "Group Tracking"
+          },
+          "max_pages": {
+            "default": 10,
+            "description": "Maximum pages to crawl. Each cleaned page becomes one ingest job.",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Max Pages",
+            "type": "integer"
+          },
+          "progressive": {
+            "default": false,
+            "title": "Progressive",
+            "type": "boolean"
+          },
+          "skip_enrichment": {
+            "default": false,
+            "description": "Persist cleaned page text and embeddings only. Skip Scout/Architect.",
+            "title": "Skip Enrichment",
+            "type": "boolean"
+          },
+          "url": {
+            "description": "Public https URL to crawl.",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "IngestionUrlRequestBody",
         "type": "object"
       },
       "JsonValue": {},
@@ -3539,10 +4386,10 @@
     "description": "Core BrainAPI HTTP API, including the unauthenticated health check and read-only documentation search sandbox. Official plugin routes are documented separately.",
     "license": {
       "name": "Business Source License 1.1",
-      "url": "https://github.com/Lumen-Labs/brainapi/blob/main/LICENSE"
+      "url": "https://github.com/Lumen-Labs/brainapi2/blob/main/LICENSE"
     },
     "title": "BrainAPI V2 Core API",
-    "version": "2.17.0-dev"
+    "version": "2.20.1-dev.5"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -4168,6 +5015,167 @@
         ]
       }
     },
+    "/ingest/structured/batch": {
+      "post": {
+        "description": "Ingest Structured Batch. See the BrainAPI developer documentation for request, response, authentication, and retry semantics.",
+        "operationId": "ingest_ingest_structured_batch_post",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/IngestionStructuredRequestBody"
+                },
+                "title": "Batches",
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestionAcceptedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authentication failed"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Operation forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method not allowed"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Brain not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal service error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Dependency unavailable"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "description": "Direct BrainAPI deployment (replace with your deployment URL)",
+            "url": "http://localhost:8000"
+          }
+        ],
+        "summary": "Ingest Structured Batch",
+        "tags": [
+          "ingest"
+        ]
+      }
+    },
     "/ingest/url": {
       "post": {
         "description": "Accept a public https URL for asynchronous crawl-and-ingest.",
@@ -4596,6 +5604,153 @@
           }
         ],
         "summary": "Get Entity Properties",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/meta/ingestion-capabilities": {
+      "get": {
+        "description": "Ingestion Capabilities. See the BrainAPI developer documentation for request, response, authentication, and retry semantics.",
+        "operationId": "meta_ingestion_capabilities_get",
+        "parameters": [
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestionCapabilitiesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authentication failed"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Operation forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method not allowed"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Brain not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal service error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Dependency unavailable"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "description": "Direct BrainAPI deployment (replace with your deployment URL)",
+            "url": "http://localhost:8000"
+          }
+        ],
+        "summary": "Ingestion Capabilities",
         "tags": [
           "meta"
         ]
@@ -5532,8 +6687,9 @@
             "description": "The entities to prioritize in the relationships, separated by commas.",
             "in": "query",
             "name": "preferred_entities",
-            "required": true,
+            "required": false,
             "schema": {
+              "default": "",
               "description": "The entities to prioritize in the relationships, separated by commas.",
               "title": "Preferred Entities",
               "type": "string"
@@ -7709,6 +8865,563 @@
         ]
       }
     },
+    "/retrieve/explore/v1/communities/{community_id}": {
+      "get": {
+        "description": "Community. See the BrainAPI developer documentation for request, response, authentication, and retry semantics.",
+        "operationId": "retrieve_community_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "community_id",
+            "required": true,
+            "schema": {
+              "title": "Community Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "snapshot",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "title": "Snapshot",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 2048,
+              "title": "Cursor",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "types",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 6500,
+              "title": "Types",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "connectionTypes",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 6500,
+              "title": "Connectiontypes",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AtlasResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authentication failed"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Operation forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method not allowed"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Brain not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal service error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Dependency unavailable"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "description": "Direct BrainAPI deployment (replace with your deployment URL)",
+            "url": "http://localhost:8000"
+          }
+        ],
+        "summary": "Community",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/explore/v1/neighbors/{entity_id}": {
+      "get": {
+        "description": "Neighbors. See the BrainAPI developer documentation for request, response, authentication, and retry semantics.",
+        "operationId": "retrieve_neighbors_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity_id",
+            "required": true,
+            "schema": {
+              "title": "Entity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 2048,
+              "title": "Cursor",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "types",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 6500,
+              "title": "Types",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "connectionTypes",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 6500,
+              "title": "Connectiontypes",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AtlasResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authentication failed"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Operation forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method not allowed"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Brain not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal service error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Dependency unavailable"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "description": "Direct BrainAPI deployment (replace with your deployment URL)",
+            "url": "http://localhost:8000"
+          }
+        ],
+        "summary": "Neighbors",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
+    "/retrieve/explore/v1/overview": {
+      "get": {
+        "description": "Overview. See the BrainAPI developer documentation for request, response, authentication, and retry semantics.",
+        "operationId": "retrieve_overview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "types",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 6500,
+              "title": "Types",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "connectionTypes",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 6500,
+              "title": "Connectiontypes",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AtlasResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authentication failed"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Operation forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method not allowed"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Brain not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal service error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Dependency unavailable"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "description": "Direct BrainAPI deployment (replace with your deployment URL)",
+            "url": "http://localhost:8000"
+          }
+        ],
+        "summary": "Overview",
+        "tags": [
+          "retrieve"
+        ]
+      }
+    },
     "/retrieve/hops": {
       "get": {
         "description": "Compute graph hops for the given query.\n\nParameters:\n    query (str): Search text or entity identifier to start hop traversal from.\n    degrees (int): Maximum number of hop degrees to traverse (default 2).\n    flattened (bool): If True, return a flattened list of hops; otherwise preserve nested hop structure.\n    brain_id (str): Identifier of the brain (knowledge graph) to query.\n\nReturns:\n    list: Hops (paths) connecting matching entities up to the specified degree; the exact structure varies based on `flattened`.",
@@ -8382,7 +10095,7 @@
     },
     "/retrieve/recommend": {
       "get": {
-        "description": "Ranked event-graph recommendations composing synergies, asymmetric\ncomplementary walks, multi-interest medoids, and optional attribute\npreferences (retrieval-time only; no training).",
+        "description": "Preview: ranked event-graph recommendations composing synergies, asymmetric\ncomplementary walks, multi-interest medoids, and optional attribute\npreferences (retrieval-time only; no training).",
         "operationId": "retrieve_get_recommend_get",
         "parameters": [
           {
@@ -8659,13 +10372,14 @@
             "BearerAuth": []
           }
         ],
-        "summary": "Get Recommend",
+        "summary": "Recommend entities (Preview)",
         "tags": [
           "retrieve"
-        ]
+        ],
+        "x-stability": "preview"
       },
       "post": {
-        "description": "Post Recommend. See the BrainAPI developer documentation for request, response, authentication, and retry semantics.",
+        "description": "Preview recommendation surface; request and response compatibility is kept.",
         "operationId": "retrieve_post_recommend_post",
         "parameters": [
           {
@@ -8808,10 +10522,11 @@
             "BearerAuth": []
           }
         ],
-        "summary": "Post Recommend",
+        "summary": "Recommend entities from a request body (Preview)",
         "tags": [
           "retrieve"
-        ]
+        ],
+        "x-stability": "preview"
       }
     },
     "/retrieve/relationships": {
@@ -10796,6 +12511,300 @@
         ]
       }
     },
+    "/system/brains/{brain_id}": {
+      "delete": {
+        "description": "Delete a brain's data, registry identity, PAT, and cached credentials.",
+        "operationId": "system_delete_brain_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "brain_id",
+            "required": true,
+            "schema": {
+              "title": "Brain Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrainLifecycleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authentication failed"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Operation forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method not allowed"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Brain not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal service error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Dependency unavailable"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "description": "Direct BrainAPI deployment (replace with your deployment URL)",
+            "url": "http://localhost:8000"
+          }
+        ],
+        "summary": "Delete Brain",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/system/brains/{brain_id}/clear": {
+      "post": {
+        "description": "Clear all data for a brain while preserving its identity and PAT.",
+        "operationId": "system_clear_brain_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "brain_id",
+            "required": true,
+            "schema": {
+              "title": "Brain Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrainLifecycleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authentication failed"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Operation forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method not allowed"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Brain not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal service error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Dependency unavailable"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "description": "Direct BrainAPI deployment (replace with your deployment URL)",
+            "url": "http://localhost:8000"
+          }
+        ],
+        "summary": "Clear Brain",
+        "tags": [
+          "system"
+        ]
+      }
+    },
     "/tasks/": {
       "get": {
         "description": "Get Tasks. See the BrainAPI developer documentation for request, response, authentication, and retry semantics.",
@@ -11086,6 +13095,351 @@
           "tasks"
         ]
       }
+    },
+    "/tasks/{task_id}/activity": {
+      "get": {
+        "description": "Get Activity. See the BrainAPI developer documentation for request, response, authentication, and retry semantics.",
+        "operationId": "tasks_get_activity_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestionActivityResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authentication failed"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Operation forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method not allowed"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Brain not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal service error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Dependency unavailable"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "description": "Direct BrainAPI deployment (replace with your deployment URL)",
+            "url": "http://localhost:8000"
+          }
+        ],
+        "summary": "Get Activity",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/cancel": {
+      "post": {
+        "description": "Cancel Ingestion. See the BrainAPI developer documentation for request, response, authentication, and retry semantics.",
+        "operationId": "tasks_cancel_ingestion_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+            "in": "header",
+            "name": "X-Brain-ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelIngestionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelIngestionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authentication failed"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Operation forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method not allowed"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Brain not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal service error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Dependency unavailable"
+          }
+        },
+        "security": [
+          {
+            "BrainPAT": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "description": "Direct BrainAPI deployment (replace with your deployment URL)",
+            "url": "http://localhost:8000"
+          }
+        ],
+        "summary": "Cancel Ingestion",
+        "tags": [
+          "tasks"
+        ]
+      }
     }
   },
   "servers": [
@@ -11124,7 +13478,7 @@
       "name": "meta"
     },
     {
-      "description": "Inspect asynchronous task status and results.",
+      "description": "Inspect asynchronous task status and cancel supported ingestion runs.",
       "name": "tasks"
     },
     {

@@ -15,7 +15,7 @@ URL ingest is for public websites. BrainAPI does not fetch the seed URL itself. 
 </AgentNote>
 
 <Callout type="info">
-  Each cleaned page becomes one text ingest job. Set `skip_enrichment=true` to store
+  Standard URL ingestion processes each cleaned page as a unit. Hosted progressive ingestion can split pages into sections. Set `skip_enrichment=true` to store
   passages without Scout/Architect. Optional `allowed_domains` adds extra eTLD+1 hosts
   (max 20). `group_tracking` rolls up ingest cost the same way as text and file ingest.
 </Callout>
@@ -38,7 +38,6 @@ URL ingest is for public websites. BrainAPI does not fetch the seed URL itself. 
 </Tabs>
 
 <Callout type="info">
-  After 202, poll `GET /tasks/` with the returned task id until the parent crawl
-  finishes. Child page tasks are listed on the parent as `counts.task_ids`.
+  After 202, poll `GET /tasks/{task_id}` with the returned ID. Legacy imports can expose page task IDs in `counts.task_ids`. Staged imports report publication at the root. Hosted progressive imports also expose section activity.
   See [Ingestion tasks](/v2/ingestion/tasks).
 </Callout>

@@ -12,17 +12,31 @@ _openapi:
     - depth: 2
       title: Get Brains List
       url: '#get-brains-list'
+    - depth: 2
+      title: Delete Brain
+      url: '#delete-brain'
+    - depth: 2
+      title: Clear Brain
+      url: '#clear-brain'
   structuredData:
     headings:
       - content: Create Brain
         id: create-brain
       - content: Get Brains List
         id: get-brains-list
+      - content: Delete Brain
+        id: delete-brain
+      - content: Clear Brain
+        id: clear-brain
     contents:
       - content: Create a new brain
         heading: create-brain
       - content: Get the list of brains.
         heading: get-brains-list
+      - content: Delete a brain's data, registry identity, PAT, and cached credentials.
+        heading: delete-brain
+      - content: Clear all data for a brain while preserving its identity and PAT.
+        heading: clear-brain
 ---
 
 {/* Generated from schemas\/brainapi-v2.openapi.json. Run npm run api:generate after syncing the schema. */}
@@ -34,7 +48,7 @@ export default function Layout(props) {
   return (
     <>
       {props.children}
-      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/system/brains","method":"post"},{"path":"/system/brains-list","method":"get"}]} showTitle showDescription />
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/system/brains","method":"post"},{"path":"/system/brains-list","method":"get"},{"path":"/system/brains/{brain_id}","method":"delete"},{"path":"/system/brains/{brain_id}/clear","method":"post"}]} showTitle showDescription />
     </>
   );
 }

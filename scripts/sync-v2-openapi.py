@@ -8,13 +8,26 @@ import importlib
 import json
 import os
 import sys
+import tomllib
 from pathlib import Path
 
 
 EXCLUDED_PATHS = {
+    "/meta/ingest-groups/{group_tracking}",
     "/system/brains/{brain_id}/reset",
     "/system/brains/{brain_id}/delete",
     "/system/brains/{brain_id}/create-backup",
+}
+DIRECT_ONLY_OPERATIONS = {
+    ("post", "/ingest/structured/batch"),
+    ("get", "/meta/ingestion-capabilities"),
+    ("get", "/retrieve/explore/v1/communities/{community_id}"),
+    ("get", "/retrieve/explore/v1/neighbors/{entity_id}"),
+    ("get", "/retrieve/explore/v1/overview"),
+    ("delete", "/system/brains/{brain_id}"),
+    ("post", "/system/brains/{brain_id}/clear"),
+    ("get", "/tasks/{task_id}/activity"),
+    ("post", "/tasks/{task_id}/cancel"),
 }
 CORE_TAGS = {"public", "ingest", "retrieve", "model", "meta", "tasks", "system"}
 PUBLIC_PATHS = {"/health", "/demo/search"}
@@ -41,12 +54,37 @@ def load_schema(source: Path) -> dict:
         "EMBEDDING_RELATIONSHIPS_DIMENSION",
     ):
         os.environ.setdefault(key, "768")
+    for key, value in {
+        "REDIS_HOST": "localhost",
+        "REDIS_PORT": "6379",
+        "NEO4J_HOST": "localhost",
+        "NEO4J_PORT": "7687",
+        "NEO4J_USERNAME": "neo4j",
+        "NEO4J_PASSWORD": "documentation-export",
+        "MILVUS_HOST": "localhost",
+        "MILVUS_PORT": "19530",
+        "MONGO_CONNECTION_STRING": "mongodb://localhost:27017",
+        "CELERY_WORKER_CONCURRENCY": "1",
+        "GRAPH_DB": "networkx",
+        "DATA_DB": "postgresql",
+        "VECTOR_DB": "postgresql",
+        "POSTGRES_HOST": "localhost",
+        "POSTGRES_PORT": "5432",
+        "POSTGRES_USERNAME": "postgres",
+        "POSTGRES_PASSWORD": "documentation-export",
+        "POSTGRES_DATABASE": "postgres",
+    }.items():
+        os.environ.setdefault(key, value)
     app = importlib.import_module("src.services.api.app").app
     schema = app.openapi()
+    with (source / "pyproject.toml").open("rb") as metadata:
+        version = tomllib.load(metadata)["project"]["version"]
+    base_version, separator, dev_number = version.partition(".dev")
+    release_version = f"{base_version}-dev.{dev_number}" if separator else version
     schema["info"] = {
         **schema.get("info", {}),
         "title": "BrainAPI V2 Core API",
-        "version": "2.17.0-dev",
+        "version": release_version,
         "description": (
             "Core BrainAPI HTTP API, including the unauthenticated health check and "
             "read-only documentation search sandbox. Official plugin routes are documented separately."
@@ -58,7 +96,7 @@ def load_schema(source: Path) -> dict:
         },
         "license": {
             "name": "Business Source License 1.1",
-            "url": "https://github.com/Lumen-Labs/brainapi/blob/main/LICENSE",
+            "url": "https://github.com/Lumen-Labs/brainapi2/blob/main/LICENSE",
         },
     }
     schema["servers"] = [
@@ -72,7 +110,7 @@ def load_schema(source: Path) -> dict:
         "retrieve": "Search and retrieve passages, graph data, observations, and recommendations.",
         "model": "Create and update typed entities and relationships.",
         "meta": "Inspect authentication scope and graph metadata.",
-        "tasks": "Inspect asynchronous task status and results.",
+        "tasks": "Inspect asynchronous task status and cancel supported ingestion runs.",
         "system": "Administer brains with a system personal access token.",
     }
     schema["tags"] = [
@@ -88,6 +126,8 @@ def load_schema(source: Path) -> dict:
         for method, operation in path_item.items():
             if not isinstance(operation, dict):
                 continue
+            if "explore" in operation.get("tags", []):
+                operation["tags"] = ["retrieve"]
             if not CORE_TAGS.intersection(operation.get("tags", [])):
                 continue
             if route in PUBLIC_PATHS:
@@ -104,6 +144,11 @@ def load_schema(source: Path) -> dict:
                         "schema": {"type": "string"},
                         "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
                     })
+            if (method, route) in DIRECT_ONLY_OPERATIONS:
+                operation["servers"] = [{
+                    "url": "http://localhost:8000",
+                    "description": "Direct BrainAPI deployment (replace with your deployment URL)",
+                }]
             operations[method] = operation
         if operations:
             filtered[route] = operations

@@ -13,6 +13,9 @@ _openapi:
       title: Get Entity Properties
       url: '#get-entity-properties'
     - depth: 2
+      title: Ingestion Capabilities
+      url: '#ingestion-capabilities'
+    - depth: 2
       title: Get Login Info
       url: '#get-login-info'
     - depth: 2
@@ -24,6 +27,8 @@ _openapi:
         id: get-entities-labels
       - content: Get Entity Properties
         id: get-entity-properties
+      - content: Ingestion Capabilities
+        id: ingestion-capabilities
       - content: Get Login Info
         id: get-login-info
       - content: Get Relationships Properties
@@ -50,6 +55,9 @@ _openapi:
           Returns:
               list[str]: A list of property key names present on entities in the graph.
         heading: get-entity-properties
+      - content: Ingestion Capabilities. See the BrainAPI developer documentation for
+          request, response, authentication, and retry semantics.
+        heading: ingestion-capabilities
       - content: Resolve whether a BrainPAT is the system token or scoped to a single
           brain.
         heading: get-login-info
@@ -75,7 +83,7 @@ export default function Layout(props) {
   return (
     <>
       {props.children}
-      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/meta/entity-labels","method":"get"},{"path":"/meta/entity-properties","method":"get"},{"path":"/meta/login-info","method":"get"},{"path":"/meta/relationships-properties","method":"get"}]} showTitle showDescription />
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/meta/entity-labels","method":"get"},{"path":"/meta/entity-properties","method":"get"},{"path":"/meta/ingestion-capabilities","method":"get"},{"path":"/meta/login-info","method":"get"},{"path":"/meta/relationships-properties","method":"get"}]} showTitle showDescription />
     </>
   );
 }

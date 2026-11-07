@@ -13,30 +13,38 @@ _openapi:
       title: Ingest File
       url: '#ingest-file'
     - depth: 2
-      title: Ingest Url
-      url: '#ingest-url'
-    - depth: 2
       title: Ingest Structured Data
       url: '#ingest-structured-data'
+    - depth: 2
+      title: Ingest Structured Batch
+      url: '#ingest-structured-batch'
+    - depth: 2
+      title: Ingest Url
+      url: '#ingest-url'
   structuredData:
     headings:
       - content: Ingest Data
         id: ingest-data
       - content: Ingest File
         id: ingest-file
-      - content: Ingest Url
-        id: ingest-url
       - content: Ingest Structured Data
         id: ingest-structured-data
+      - content: Ingest Structured Batch
+        id: ingest-structured-batch
+      - content: Ingest Url
+        id: ingest-url
     contents:
       - content: Accept data for asynchronous ingestion.
         heading: ingest-data
       - content: Ingest a file into the processing pipeline and save to the memory.
         heading: ingest-file
-      - content: Accept a public https URL for asynchronous crawl-and-ingest.
-        heading: ingest-url
       - content: Accept structured data for asynchronous ingestion.
         heading: ingest-structured-data
+      - content: Ingest Structured Batch. See the BrainAPI developer documentation for
+          request, response, authentication, and retry semantics.
+        heading: ingest-structured-batch
+      - content: Accept a public https URL for asynchronous crawl-and-ingest.
+        heading: ingest-url
 ---
 
 {/* Generated from schemas\/brainapi-v2.openapi.json. Run npm run api:generate after syncing the schema. */}
@@ -48,7 +56,7 @@ export default function Layout(props) {
   return (
     <>
       {props.children}
-      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/ingest/","method":"post"},{"path":"/ingest/file","method":"post"},{"path":"/ingest/url","method":"post"},{"path":"/ingest/structured","method":"post"}]} showTitle showDescription />
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/ingest/","method":"post"},{"path":"/ingest/file","method":"post"},{"path":"/ingest/structured","method":"post"},{"path":"/ingest/structured/batch","method":"post"},{"path":"/ingest/url","method":"post"}]} showTitle showDescription />
     </>
   );
 }

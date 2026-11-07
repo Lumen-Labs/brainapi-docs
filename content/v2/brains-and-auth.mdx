@@ -3,7 +3,7 @@ title: BrainAPI Authentication and Brains
 description: Authenticate requests and keep every BrainAPI operation in the intended brain
 ---
 
-Every core request needs a valid PAT. Most data requests also need a brain identifier. Treat the token as authorization and the brain as the data boundary; do not infer either from user-provided content.
+Protected core requests need a valid PAT. Most data requests also need a brain identifier. Treat the token as authorization and the brain as the data boundary; do not infer either from user-provided content.
 
 ## Token types
 
@@ -67,10 +67,10 @@ curl http://localhost:8000/meta/login-info \
 
 ## Rotate a brain access key
 
-Replace a brain's PAT with the system token. The old PAT stops working immediately and the new PAT is returned once.
+Replace a brain's PAT with the system token. On success the old PAT is invalidated and the response includes the new PAT.
 
 ```bash
-curl -X POST http://localhost:8000/system/brains/support-docs/rotate-pat \
+curl -X POST http://localhost:8000/system/brains/supportkb/rotate-pat \
   -H "BrainPAT: $BRAINPAT_TOKEN"
 ```
 
@@ -85,6 +85,17 @@ curl -X POST http://localhost:8000/system/brains/support-docs/rotate-pat \
 A `503` with `BRAIN_PAT_CACHE_INVALIDATION_FAILED` means the new PAT is already saved. Do not assume the old PAT is rejected everywhere until the cache is cleared.
 
 The BrainAPI dashboard calls this endpoint when you choose **Replace access key** on a brain's Connect page. The dashboard only offers it when the brain's software version supports it.
+
+## Clear or delete a brain
+
+Use the system PAT for these destructive operations. Stop active imports and take a backup first if you need to retain the data.
+
+| Request | Effect |
+| --- | --- |
+| `POST /system/brains/{brain_id}/clear` | Removes the brain's data and keeps its ID and PAT. |
+| `DELETE /system/brains/{brain_id}` | Removes the data, registered brain identity, PAT, and cached credentials. |
+
+A **409** means another lifecycle operation is running. A **503** with `BRAIN_CLEANUP_FAILED` lists the failed backends. Check their health, then retry the same operation. Clearing an unknown brain returns **404**.
 
 ## Failure behavior
 

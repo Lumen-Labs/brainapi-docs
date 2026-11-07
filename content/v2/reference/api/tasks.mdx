@@ -1,6 +1,6 @@
 ---
 title: BrainAPI Tasks API
-description: Inspect asynchronous task status and results.
+description: Inspect asynchronous task status and cancel supported ingestion runs.
 full: true
 _openapi:
   preload:
@@ -12,18 +12,34 @@ _openapi:
     - depth: 2
       title: Get Task
       url: '#get-task'
+    - depth: 2
+      title: Get Activity
+      url: '#get-activity'
+    - depth: 2
+      title: Cancel Ingestion
+      url: '#cancel-ingestion'
   structuredData:
     headings:
       - content: Get Tasks
         id: get-tasks
       - content: Get Task
         id: get-task
+      - content: Get Activity
+        id: get-activity
+      - content: Cancel Ingestion
+        id: cancel-ingestion
     contents:
       - content: Get Tasks. See the BrainAPI developer documentation for request,
           response, authentication, and retry semantics.
         heading: get-tasks
       - content: Get the result of a task by its ID.
         heading: get-task
+      - content: Get Activity. See the BrainAPI developer documentation for request,
+          response, authentication, and retry semantics.
+        heading: get-activity
+      - content: Cancel Ingestion. See the BrainAPI developer documentation for request,
+          response, authentication, and retry semantics.
+        heading: cancel-ingestion
 ---
 
 {/* Generated from schemas\/brainapi-v2.openapi.json. Run npm run api:generate after syncing the schema. */}
@@ -35,7 +51,7 @@ export default function Layout(props) {
   return (
     <>
       {props.children}
-      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/tasks/","method":"get"},{"path":"/tasks/{task_id}","method":"get"}]} showTitle showDescription />
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/tasks/","method":"get"},{"path":"/tasks/{task_id}","method":"get"},{"path":"/tasks/{task_id}/activity","method":"get"},{"path":"/tasks/{task_id}/cancel","method":"post"}]} showTitle showDescription />
     </>
   );
 }

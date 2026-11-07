@@ -11,10 +11,12 @@ function examplePath(template) {
 
 for (const [path, item] of Object.entries(schema.paths)) {
   for (const method of Object.keys(item).filter((key) => methods.has(key))) {
+    const servers = item[method].servers ?? item.servers ?? schema.servers;
+    const usesGateway = servers.some(({ url }) => url === "https://brain-api.dev/api");
     assert.equal(
       isAllowedApiRoute(method.toUpperCase(), examplePath(path)),
-      true,
-      `Gateway blocks documented operation ${method.toUpperCase()} ${path}`,
+      usesGateway,
+      `Gateway availability differs from the OpenAPI servers for ${method.toUpperCase()} ${path}`,
     );
   }
 }
@@ -22,6 +24,7 @@ for (const [path, item] of Object.entries(schema.paths)) {
 for (const [method, path] of [
   ["POST", "/demo/search"],
   ["POST", "/demo/ingest"],
+  ["GET", "/meta/ingest-groups/example-id"],
   ["DELETE", "/system/brains/example-id/delete"],
   ["POST", "/system/brains/example-id/reset"],
   ["GET", "/not-documented"],
