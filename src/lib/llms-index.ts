@@ -29,7 +29,7 @@ export function buildRootLlmsTxt(): string {
 - [Quickstart](${markdownDocsUrl("/v2/quickstart")}): Install, select a brain, ingest text, poll the task, and retrieve it
 - [Ingest text](${markdownDocsUrl("/v2/ingestion/text")}): POST /ingest/ → 202 + task_id
 - [Choose an ingestion path](${markdownDocsUrl("/v2/ingestion")}): Text, file, structured, deterministic, hybrid, or enrich
-- [Poll tasks](${markdownDocsUrl("/v2/ingestion/tasks")}): GET /tasks/{id}; 404 ≠ pending
+- [Poll tasks](${markdownDocsUrl("/v2/ingestion/tasks")}): GET /tasks/{id}; cancel supported runs with POST /tasks/{id}/cancel
 - [Choose a retrieval surface](${markdownDocsUrl("/v2/retrieval")}): Context, Search, Recommendations, graph APIs, or MCP
 - [Troubleshoot BrainAPI](${markdownDocsUrl("/v2/troubleshooting")}): Startup, auth, databases, tasks, Search, plugins, and MCP
 

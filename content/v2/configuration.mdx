@@ -57,6 +57,12 @@ Configure only credentials relevant to the chosen backends: `POSTGRES_*`, `MONGO
 
 The remaining `INGEST_ARCHITECT_*` controls tune unit splitting, escalation, prior context, and scratchpad size. Keep defaults until an ingestion evaluation identifies a concrete failure.
 
+## Staged ingestion
+
+Set `STAGED_INGESTION_ENABLED=1` on the API and worker to stage text and URL requests that skip enrichment. Enable `STAGED_ENRICHMENT_ENABLED=1` as well for enriched text and URLs, structured data, and files. Both flags default to off.
+
+The supplied Compose profiles share a publication lock volume between services. For a custom deployment, set `INGEST_PUBLICATION_LOCK_DIR` to a shared writable directory that supports file locking. Check the root task's `cancellation_modes` before offering cancellation. [Deployment profiles](https://github.com/Lumen-Labs/brainapi2/tree/main/deploy) · [Ingestion tasks](/v2/ingestion/tasks)
+
 ## Search and Context
 
 | Variable | Default | Constraint |

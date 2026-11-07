@@ -29,6 +29,16 @@ Search starts from query text. Recommendations start from a target such as a use
 
 Use graph APIs when your application knows the entity or traversal it wants. Escalate to MCP when the question requires repeated tool selection, comparison, or follow-up based on intermediate results. Do not pay orchestration cost for a question one API call already answers.
 
+## Explore a large graph
+
+On the NetworkX PostgreSQL graph backend, use the [Explore API](/v2/reference/api/retrieve) to start with relationship communities and drill into a bounded view.
+
+1. Call `GET /retrieve/explore/v1/overview` for the snapshot, top-level communities, and build status.
+2. Call `GET /retrieve/explore/v1/communities/{community_id}` with the snapshot ID to open a community. Use the returned cursor to page through a leaf community.
+3. Call `GET /retrieve/explore/v1/neighbors/{entity_id}` to browse live incident relationships and their endpoints.
+
+Use `types` and `connectionTypes` for comma-separated filters. Keep the scope and filters fixed when reusing a cursor. Refresh the overview if a community request returns HTTP 409 for an expired snapshot. Other graph backends return HTTP 501.
+
 ## Worked paths
 
 - [Context request and response](/v2/retrieval/context)

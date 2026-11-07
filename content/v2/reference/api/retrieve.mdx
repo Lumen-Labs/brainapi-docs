@@ -46,6 +46,15 @@ _openapi:
       title: Get Entity Synergies
       url: '#get-entity-synergies'
     - depth: 2
+      title: Community
+      url: '#community'
+    - depth: 2
+      title: Neighbors
+      url: '#neighbors'
+    - depth: 2
+      title: Overview
+      url: '#overview'
+    - depth: 2
       title: Get Hops
       url: '#get-hops'
     - depth: 2
@@ -58,11 +67,11 @@ _openapi:
       title: Get Observation By Id
       url: '#get-observation-by-id'
     - depth: 2
-      title: Get Recommend
-      url: '#get-recommend'
+      title: Recommend entities (Preview)
+      url: '#recommend-entities-preview'
     - depth: 2
-      title: Post Recommend
-      url: '#post-recommend'
+      title: Recommend entities from a request body (Preview)
+      url: '#recommend-entities-from-a-request-body-preview'
     - depth: 2
       title: Get Relationships
       url: '#get-relationships'
@@ -118,6 +127,12 @@ _openapi:
         id: get-entity-status
       - content: Get Entity Synergies
         id: get-entity-synergies
+      - content: Community
+        id: community
+      - content: Neighbors
+        id: neighbors
+      - content: Overview
+        id: overview
       - content: Get Hops
         id: get-hops
       - content: Get Observations List
@@ -126,10 +141,10 @@ _openapi:
         id: get-observation-labels
       - content: Get Observation By Id
         id: get-observation-by-id
-      - content: Get Recommend
-        id: get-recommend
-      - content: Post Recommend
-        id: post-recommend
+      - content: Recommend entities (Preview)
+        id: recommend-entities-preview
+      - content: Recommend entities from a request body (Preview)
+        id: recommend-entities-from-a-request-body-preview
       - content: Get Relationships
         id: get-relationships
       - content: Get Search
@@ -277,6 +292,15 @@ _openapi:
           Returns:
               Synergy records for the target entity matching the requested polarity.
         heading: get-entity-synergies
+      - content: Community. See the BrainAPI developer documentation for request,
+          response, authentication, and retry semantics.
+        heading: community
+      - content: Neighbors. See the BrainAPI developer documentation for request,
+          response, authentication, and retry semantics.
+        heading: neighbors
+      - content: Overview. See the BrainAPI developer documentation for request,
+          response, authentication, and retry semantics.
+        heading: overview
       - content: >-
           Compute graph hops for the given query.
 
@@ -309,14 +333,17 @@ _openapi:
         heading: get-observation-labels
       - content: Get observation by ID.
         heading: get-observation-by-id
-      - content: |-
-          Ranked event-graph recommendations composing synergies, asymmetric
+      - content: >-
+          Preview: ranked event-graph recommendations composing synergies,
+          asymmetric
+
           complementary walks, multi-interest medoids, and optional attribute
+
           preferences (retrieval-time only; no training).
-        heading: get-recommend
-      - content: Post Recommend. See the BrainAPI developer documentation for request,
-          response, authentication, and retry semantics.
-        heading: post-recommend
+        heading: recommend-entities-preview
+      - content: Preview recommendation surface; request and response compatibility is
+          kept.
+        heading: recommend-entities-from-a-request-body-preview
       - content: >-
           Retrieve relationships filtered by types, node labels, and query
           criteria.
@@ -364,7 +391,7 @@ export default function Layout(props) {
   return (
     <>
       {props.children}
-      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/retrieve/","method":"get"},{"path":"/retrieve/changelogs","method":"get"},{"path":"/retrieve/changelogs/types","method":"get"},{"path":"/retrieve/changelogs/{id}","method":"get"},{"path":"/retrieve/context","method":"post"},{"path":"/retrieve/entities","method":"get"},{"path":"/retrieve/entities/neighbors","method":"get"},{"path":"/retrieve/entities/neighbors","method":"post"},{"path":"/retrieve/entities/neighbors/ai-mode","method":"post"},{"path":"/retrieve/entity/context","method":"get"},{"path":"/retrieve/entity/info","method":"get"},{"path":"/retrieve/entity/status","method":"get"},{"path":"/retrieve/entity/synergies","method":"get"},{"path":"/retrieve/hops","method":"get"},{"path":"/retrieve/observations","method":"get"},{"path":"/retrieve/observations/labels","method":"get"},{"path":"/retrieve/observations/{id}","method":"get"},{"path":"/retrieve/recommend","method":"get"},{"path":"/retrieve/recommend","method":"post"},{"path":"/retrieve/relationships","method":"get"},{"path":"/retrieve/search","method":"get"},{"path":"/retrieve/search","method":"post"},{"path":"/retrieve/structured-data","method":"get"},{"path":"/retrieve/structured-data/types","method":"get"},{"path":"/retrieve/structured-data/{id}","method":"get"},{"path":"/retrieve/text-chunks","method":"get"},{"path":"/retrieve/vectors/stores","method":"get"},{"path":"/retrieve/vectors/{store}","method":"get"}]} showTitle showDescription />
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/retrieve/","method":"get"},{"path":"/retrieve/changelogs","method":"get"},{"path":"/retrieve/changelogs/types","method":"get"},{"path":"/retrieve/changelogs/{id}","method":"get"},{"path":"/retrieve/context","method":"post"},{"path":"/retrieve/entities","method":"get"},{"path":"/retrieve/entities/neighbors","method":"get"},{"path":"/retrieve/entities/neighbors","method":"post"},{"path":"/retrieve/entities/neighbors/ai-mode","method":"post"},{"path":"/retrieve/entity/context","method":"get"},{"path":"/retrieve/entity/info","method":"get"},{"path":"/retrieve/entity/status","method":"get"},{"path":"/retrieve/entity/synergies","method":"get"},{"path":"/retrieve/explore/v1/communities/{community_id}","method":"get"},{"path":"/retrieve/explore/v1/neighbors/{entity_id}","method":"get"},{"path":"/retrieve/explore/v1/overview","method":"get"},{"path":"/retrieve/hops","method":"get"},{"path":"/retrieve/observations","method":"get"},{"path":"/retrieve/observations/labels","method":"get"},{"path":"/retrieve/observations/{id}","method":"get"},{"path":"/retrieve/recommend","method":"get"},{"path":"/retrieve/recommend","method":"post"},{"path":"/retrieve/relationships","method":"get"},{"path":"/retrieve/search","method":"get"},{"path":"/retrieve/search","method":"post"},{"path":"/retrieve/structured-data","method":"get"},{"path":"/retrieve/structured-data/types","method":"get"},{"path":"/retrieve/structured-data/{id}","method":"get"},{"path":"/retrieve/text-chunks","method":"get"},{"path":"/retrieve/vectors/stores","method":"get"},{"path":"/retrieve/vectors/{store}","method":"get"}]} showTitle showDescription />
     </>
   );
 }

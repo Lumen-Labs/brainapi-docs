@@ -457,6 +457,10 @@ Must include either `uuid`, **or** both `name` and `type`. Plain strings are rej
   }}
 />
 
+## Submit a staged batch
+
+When staged enrichment is enabled, `POST /ingest/structured/batch` accepts a JSON array of 1–100 structured ingestion requests with a combined body limit of 12 MiB. The response is HTTP 202 with one root task ID. Use that ID to poll or cancel the entire batch. A deployment without staged enrichment returns HTTP 404 for this endpoint. [Batch API reference](/v2/reference/api/ingest)
+
 ## Related
 
 - [How to poll ingestion tasks](/v2/ingestion/tasks)

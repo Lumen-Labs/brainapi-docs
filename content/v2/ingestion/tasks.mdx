@@ -1,21 +1,21 @@
 ---
 title: Ingestion tasks
-description: Poll async ingest jobs and handle 202 / 404 correctly
+description: Track asynchronous ingestion, publication, and cancellation
 ---
 
-Text, file, URL, and structured ingest endpoints accept work asynchronously. They return **202 Accepted** with a `task_id`. Use the tasks API to wait until the graph write finishes.
+Text, file, URL, and structured ingest endpoints accept work asynchronously. They return **202 Accepted** with a `task_id`. Use the tasks API to wait for the import to finish.
 
 <AgentNote>
 - After ingest: read `task_id` from **202** body
-- Poll `GET /tasks/{task_id}` with `BrainPAT` (+ brain headers) until terminal `status` (`completed` / `failed`)
+- Poll `GET /tasks/{task_id}` with `BrainPAT` (+ brain headers) until a terminal `status`
 - **404** = task unknown — do not treat as "still running"
-- Optional on text ingest: `Task-Identifier` header to pin Celery id
+- Optional on text ingest: `Task-Identifier` header to choose the text ingestion task identifier
 </AgentNote>
 
 ## How to poll a task
 
 1. Submit an ingest request and read `task_id` from the 202 body.
-2. Poll `GET /tasks/{task_id}` until `status` is a terminal value (for example `completed` or `failed`).
+2. Poll `GET /tasks/{task_id}` until `status` is `completed`, `failed`, `partial_failed`, `cancelled`, or `rollback_failed`.
 3. Treat **404** as "task unknown" — not "still pending".
 
 ```bash
@@ -39,7 +39,7 @@ curl -s "<DEPLOYMENT_URL>/tasks/$TASK_ID" \
 
 ### Optional stable task id (text ingest)
 
-For `POST /ingest/`, you may send a `Task-Identifier` header. The server reuses that value as the Celery `task_id` so your client can correlate retries.
+For `POST /ingest/`, you may send a `Task-Identifier` header. Use the returned identifier to correlate the request and poll its status.
 
 ```bash
 curl -X POST "<DEPLOYMENT_URL>/ingest/" \
@@ -61,8 +61,9 @@ Structured and file ingest always mint a new UUID `task_id` in the 202 body.
 | --- | --- | --- |
 | `POST /ingest/` | `Ingestion accepted` | Honors `Task-Identifier` |
 | `POST /ingest/structured` | `Structured ingestion accepted` | New UUID each call |
+| `POST /ingest/structured/batch` | `Structured ingestion accepted` | One root task for a staged batch |
 | `POST /ingest/file` | `File ingestion accepted` | New UUID each call |
-| `POST /ingest/url` | `URL ingestion accepted` | New UUID each call; parent fans out one child task per cleaned page |
+| `POST /ingest/url` | `URL ingestion accepted` | New UUID each call; poll the returned root task |
 
 Queue unavailable → **503** `Task queue unavailable`.
 
@@ -70,7 +71,7 @@ Queue unavailable → **503** `Task queue unavailable`.
 
 ### `GET /tasks/{task_id}`
 
-Returns the cached task payload plus `task_id` and `status`.
+Returns the task ID and status, plus progress or cancellation metadata when available. Staged runs can be polled from durable state even when a cache entry is missing.
 
 | HTTP | Meaning |
 | --- | --- |
@@ -85,6 +86,31 @@ Returns the cached task payload plus `task_id` and `status`.
 ### `GET /tasks/`
 
 Lists known tasks for the brain (from the task key index). Useful for the console and ops dashboards.
+
+## Cancel an ingestion
+
+In the hosted Data page, choose **Cancel ingestion** on an active import. The dialog offers the modes supported by that run. For direct engine requests, check the root task's `cancellation_modes` before submitting a cancellation. Use your deployment's engine URL for cancellation and activity requests.
+
+| Mode | Result |
+| --- | --- |
+| `keep_saved` | Stop remaining work. Keep previously saved data and publish completed staged units when the run uses staging. |
+| `rollback` | Stop remaining work and discard this run's staged data. Earlier imports remain intact. |
+
+```bash
+curl --fail-with-body -X POST "<DEPLOYMENT_URL>/tasks/$TASK_ID/cancel" \
+  -H "BrainPAT: YOUR_BRAIN_PAT" \
+  -H "X-Brain-ID: example01" \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"rollback"}'
+```
+
+HTTP **202** returns `task_id`, `mode`, and the current cancellation status. Repeat the same mode to read the current state. A different accepted mode or a run past its publication cutoff returns **409**. An unknown or out-of-scope task returns **404**.
+
+Keep polling through `cancelling` until the task reports `cancelled` or `rollback_failed`. A run can return `rollback_failed` when cleanup retries are exhausted. Staged data stays private until publication, which can briefly return **503** with `Retry-After` on other brain operations. Honor that header.
+
+## Progressive URL activity
+
+For hosted progressive URL imports, `GET /tasks/{task_id}/activity?offset=0&limit=50` reports pages, sections, progress, and cancellation state once discovery has produced activity. Follow `next_offset` for more sections. Use the root task endpoint to poll the overall outcome.
 
 ## Troubleshooting
 
