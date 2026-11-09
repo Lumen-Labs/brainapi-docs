@@ -2055,6 +2055,16 @@
             "title": "Allowed Domains",
             "type": "array"
           },
+          "allowed_path_prefixes": {
+            "description": "Case-sensitive pathname prefixes. The seed must match a prefix when provided.",
+            "items": {
+              "maxLength": 2048,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Allowed Path Prefixes",
+            "type": "array"
+          },
           "group_tracking": {
             "anyOf": [
               {

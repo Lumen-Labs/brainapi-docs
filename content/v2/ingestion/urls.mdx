@@ -10,6 +10,7 @@ URL ingest is for public websites. BrainAPI does not fetch the seed URL itself. 
 <AgentNote>
 - `POST /ingest/url` with JSON `{ "url": "https://…" }`, auth with `BrainPAT`
 - `url` must be public `https`; `max_pages` defaults to 10 and caps at 100
+- Optional `allowed_path_prefixes` limits the crawl to matching paths and must include the seed path
 - Requires `LUMEN_CRAWLER_KEY`; missing config is **503**
 - **202** + `task_id` → poll `GET /tasks/{id}`; **404** ≠ pending
 </AgentNote>
@@ -19,6 +20,14 @@ URL ingest is for public websites. BrainAPI does not fetch the seed URL itself. 
   passages without Scout/Architect. Optional `allowed_domains` adds extra eTLD+1 hosts
   (max 20). `group_tracking` rolls up ingest cost the same way as text and file ingest.
 </Callout>
+
+## Path scope
+
+In the console, open **Link → Advanced → Allowed path prefixes** and enter one path per line. For API requests, send `allowed_path_prefixes` as an array of up to 20 paths. Start each prefix with `/` and leave out the host, query, and fragment.
+
+Prefixes apply across all allowed domains and subdomains. Matching is case-sensitive and uses whole path segments. For example, `/docs` matches `/docs` and `/docs/install`. It excludes `/docsite` and `/Docs`. Trailing slashes on prefixes and queries or fragments on page URLs are ignored.
+
+The seed URL must match at least one prefix. Leave the setting blank to use domain scope alone. See [Lumen Crawler’s path matching rules](https://crawler-docs.lumen-labs.ai/docs/v2/doors#path-scope).
 
 ## Usage
 
@@ -31,7 +40,7 @@ URL ingest is for public websites. BrainAPI does not fetch the seed URL itself. 
       -H "Content-Type: application/json" \\
       -H "X-Brain-ID: mybrain123" \\
       -H "BrainPAT: YOUR_BRAIN_PAT" \\
-      -d '{"url":"https://example.com","max_pages":10}'
+      -d '{"url":"https://example.com/docs","max_pages":10,"allowed_path_prefixes":["/docs","/guides"]}'
 # → {"message":"URL ingestion accepted","task_id":"…"}`}
     />
   </Tab>
