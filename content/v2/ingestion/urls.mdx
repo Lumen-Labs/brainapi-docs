@@ -9,7 +9,7 @@ URL ingest is for public websites. BrainAPI does not fetch the seed URL itself. 
 
 <AgentNote>
 - `POST /ingest/url` with JSON `{ "url": "https://…" }`, auth with `BrainPAT`
-- `url` must be public `https`; `max_pages` defaults to 10 and caps at 100
+- `url` must be public `https`; `max_pages` defaults to 10 and caps at 999
 - Optional `allowed_path_prefixes` limits the crawl to matching paths and must include the seed path
 - Requires `LUMEN_CRAWLER_KEY`; missing config is **503**
 - **202** + `task_id` → poll `GET /tasks/{id}`; **404** ≠ pending

@@ -2080,7 +2080,7 @@
           "max_pages": {
             "default": 10,
             "description": "Maximum pages to crawl. Each cleaned page becomes one ingest job.",
-            "maximum": 100.0,
+            "maximum": 999.0,
             "minimum": 1.0,
             "title": "Max Pages",
             "type": "integer"
