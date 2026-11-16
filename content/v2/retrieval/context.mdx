@@ -257,19 +257,13 @@ Per-triple provenance:
 
 ## History-aware retrieve
 
-There is **no** request flag for history mode. Query phrasing decides whether superseded / invalidated edges are included.
+`POST /retrieve/context` accepts an optional `include_history` boolean.
 
-- Phrases that sound like **timeline, contradiction, or prior state** (e.g. "previously", "originally", "contradict", "walk me through the order") turn **history mode on**.
-- Phrases that ask for **current truth** (e.g. "now", "currently", "latest", "after the update") keep history mode **off**, even if a history-looking word also appears.
+- `true` returns prior copies. Superseded source text is labeled `[superseded]`, including older copies that search did not rank, up to `historical_limit`.
+- `false` returns only the current copy.
+- Omit the field to decide automatically. The query embedding is compared with example questions in several languages. History is included only when the query is closer to the prior-version examples than to the current-value examples. If the embedding is unavailable, retrieve stays on the current copy.
 
-Examples:
-
-| Query | Typical mode |
-| --- | --- |
-| "What is Alice's current title?" | Current truth |
-| "What did Alice previously work on before the promotion?" | History |
-| "Walk me through the order of the deadline changes" | History |
-| "What is the latest average response time?" | Current truth |
+There is no word list for this decision. The same question can be asked in another language.
 
 ## Event GraphRAG surfaces
 

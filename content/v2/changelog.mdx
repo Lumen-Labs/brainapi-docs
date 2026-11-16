@@ -5,6 +5,19 @@ description: Track documented BrainAPI V2 behavior and documentation changes
 
 This page records changes verified in the current source tree. It is not a promise that unreleased behavior is available on every deployed instance.
 
+## 2.20.1-dev.9
+
+### Retrieval
+
+- `POST /retrieve/context` accepts optional `include_history`. When the field is omitted, history is chosen by embedding similarity to example questions in several languages. A missing embedding stays on the current copy.
+- History loads superseded source copies for the sources already in the result and labels them `[superseded]`.
+
+### MCP
+
+- `list_changelogs` and `get_changelog` read graph changelog entries.
+- `list_source_versions` reads the current copy and previous copies of a source.
+- `traverse_graph` still returns the full walk and also lists superseded relationships in `invalidated`.
+
 ## Documented through 2.20.1-dev.5
 
 - Covered staged [ingestion cancellation](/v2/ingestion/tasks), worker and publisher recovery, and callback rejection after cancellation.

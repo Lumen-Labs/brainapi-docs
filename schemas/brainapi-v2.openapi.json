@@ -1048,6 +1048,18 @@
             "title": "Historical Limit",
             "type": "integer"
           },
+          "include_history": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Include History"
+          },
           "max_facts": {
             "default": 40,
             "minimum": 0.0,

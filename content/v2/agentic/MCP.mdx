@@ -62,3 +62,11 @@ Replace the example URL and PAT locally. Never commit the resulting configuratio
 ### 3. Restart and verify
 
 Save the file and restart Claude Desktop. The configured `brainapi` server should appear in the MCP tools list. If it does not, verify that the bridge command runs in a terminal, the URL ends in `/mcp`, and the PAT can access the intended BrainAPI instance.
+
+## Graph, changelog, and versions
+
+These reads are on the product MCP, alongside semantic search and `search_memory`.
+
+- `traverse_graph` walks the live graph from a start node. The response keeps every hop and also lists superseded relationships in `invalidated` when a relationship property includes `invalid_at` or `deprecated`.
+- `list_changelogs` lists graph changelog entries, newest first. Filter with `query_text` or a changelog type. `get_changelog` reads one entry by id.
+- `list_source_versions` returns the current copy and previous copies of a source. Pass `source_key`, or a query when the key is unknown. The query is used only to find the source. If embedding fails, the tool returns an error and no versions.
