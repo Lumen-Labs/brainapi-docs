@@ -52,7 +52,7 @@ Only test services selected by your deployment profile.
 | Symptom | Likely cause | Diagnostic | Fix |
 | --- | --- | --- | --- |
 | `/retrieve/search` returns `404` | Search disabled (`SEARCH_ENABLED` defaults to `false`; hosted production leaves it off). | Check `SEARCH_ENABLED`. | Use [Context](/v2/retrieval/context), or enable Search with PostgreSQL on a deployment that opts in. |
-| `/model/facts` or `/retrieve/conflicts` returns `404` | Hosted engine is older than 2.21.0. | `GET /health` returns `{"status":"healthy"}` and does not include a version field. Treat a live 404 on these routes as a lagging host. | Use a 2.21.0 engine, or wait for hosted rollout. Do not treat this 404 as the 2.21.0 contract. |
+| `/model/facts` or `/retrieve/conflicts` returns `404` | The request may be on the wrong host or path, or the hosted engine may be older than 2.21.0. | Confirm the REST base is a regional host or your own API, and that the path matches. `GET /health` returns `{"status":"healthy"}` and does not include a version field. | Correct the host or path first. If the host has not rolled 2.21.0, use a 2.21.0 engine or wait for hosted rollout. Do not treat a lagging-host 404 as the 2.21.0 contract. |
 | As-of result missing undated facts | Fail-closed `as_of`. | Read `validity_unknown_count`. | Set `include_validity_unknown=true` to inspect them separately. |
 | Conflict scan `truncated` | Hit `CONFLICT_DETECT_MAX_RELATIONSHIPS`. | Read the scan task. | Raise the env cap (or `0` unlimited) and scan again; REST cannot override the cap. |
 | Startup rejects Search | Wrong data backend or both retrievers disabled. | Check `DATA_DB`, `SEARCH_USE_DENSE`, and `SEARCH_USE_BM25`. | Use PostgreSQL and enable at least one first stage. |
