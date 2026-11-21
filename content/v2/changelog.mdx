@@ -5,11 +5,13 @@ description: Track documented BrainAPI V2 behavior and documentation changes
 
 This page records changes verified in the current source tree. It is not a promise that unreleased behavior is available on every deployed instance.
 
+Public regional hosts may lag this documentation. Compare `GET /health` `version` with the heading below. Hosts still on `2.20.1.dev9` return **404** for `/model/facts` and `/retrieve/conflicts` because those routes are not on that build. That 404 is not the 2.21.0 contract. See [Regional API hosts](/v2/reference/regional-hosts).
+
 ## 2.21.0
 
 Knowledge-graph memory: expert verification, cross-source conflict detection, fail-closed as-of retrieve, validity changelogs, staged-ingest rollback, and Cypher hardening. Defaults are unchanged: raw Cypher is read-only, `CONFLICT_DETECT_ON_INGEST` and `CONFLICT_DETECT_LLM` are off, as-of lookups fail closed, and ingest staging is not required for a normal import.
 
-Deferred in this tag: agent-first MCP remember/recall/correct/check, Celery Redis reconnect, and hosted ChatGPT MCP OAuth.
+Deferred in this tag: agent-first MCP remember/recall/correct/check, Celery Redis reconnect, and hosted MCP OAuth.
 
 ### Verification
 

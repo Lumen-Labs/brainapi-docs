@@ -20,7 +20,7 @@ export function buildRootLlmsTxt(): string {
 - [BrainAPI Developer Portal](${markdownDocsUrl("/v2/developers")}): Authentication, sandbox, quickstarts, API contracts, MCP, CLI, and support
 - [BrainAPI API documentation](${markdownDocsUrl("/v2/reference")}): Authored guidance and generated operation reference
 - [BrainAPI OpenAPI 3.1 specification](${DOCS_BASE}/openapi.json): Machine-readable REST contract for tools and function calling
-- [Regional API hosts](${markdownDocsUrl("/v2/reference/regional-hosts")}): Managed REST bases such as https://system.us-east1.brainapi.lumen-labs.ai
+- [Regional API hosts](${markdownDocsUrl("/v2/reference/regional-hosts")}): Managed REST at https://system.us-east1.brainapi.lumen-labs.ai and https://system.europe-central2.brainapi.lumen-labs.ai. Compare GET /health version; public hosts may lag 2.21.0.
 - [BrainAPI authentication documentation](${markdownDocsUrl("/v2/brains-and-auth")}): BrainPAT, Bearer authentication, and brain selection
 - [BrainAPI CLI](${markdownDocsUrl("/v2/tui")}): Install the official brainapi-tui npm package and brainapi binary
 

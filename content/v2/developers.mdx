@@ -15,18 +15,18 @@ BrainAPI gives applications and agents durable, brain-scoped memory through type
 
 ## Regional API hosts
 
-Managed REST is served per region at `https://system.<region>.brainapi.lumen-labs.ai`. Live hosts today:
+Managed REST is served at:
 
 - `https://system.us-east1.brainapi.lumen-labs.ai`
 - `https://system.europe-central2.brainapi.lumen-labs.ai`
 
-Configured regions also include `us-west1`, `europe-southwest1`, `europe-north1`, and `asia-southeast1`. Self-hosted API is `http://localhost:8000`. See [Regional API hosts](/v2/reference/regional-hosts).
+Self-hosted API is `http://localhost:8000`. See [Regional API hosts](/v2/reference/regional-hosts). Do not call `api.brain-api.dev`; that hostname does not resolve.
 
-Do not call `api.brain-api.dev` or `brain-api.dev/api` as the product API.
+Public hosts may lag this documentation. Compare `GET /health` `version` with the [changelog](/v2/changelog). Observed hosted `2.20.1.dev9` returns **404** on `/model/facts` and `/retrieve/conflicts` because those routes are not on that build — that is not the 2.21.0 contract.
 
 ## Try the anonymous sandbox
 
-The sandbox is read-only and searches a seeded brain containing public BrainAPI V2 documentation. It never accepts a caller-selected brain and has no ingest, model, task-mutation, graph-mutation, or system route. It is served by the documentation gateway, not a regional product host.
+The sandbox is read-only and searches a seeded brain containing public BrainAPI V2 documentation. It never accepts a caller-selected brain and has no ingest, model, task-mutation, graph-mutation, or system route. It is not a regional product host.
 
 ```bash
 curl --fail-with-body --get https://brain-api.dev/api/demo/search \

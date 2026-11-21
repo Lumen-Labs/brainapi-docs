@@ -5,6 +5,8 @@ description: Mark facts verified or rejected, hide rejected facts from retrieve,
 
 Facts in a brain carry an expert verification state: `unverified`, `verified`, or `rejected`. Retrieve, search, and graph walks hide rejected facts unless the caller sets `include_rejected=true`. Verified facts receive a ranking boost (`VERIFIED_FACT_RANK_BOOST`, default `0.15`).
 
+This is the **2.21.0** contract. Public hosts that still report `2.20.1.dev9` on `GET /health` return **404** on `/model/facts` because the route is not deployed there. That live 404 is not this contract. See [Regional API hosts](/v2/reference/regional-hosts).
+
 Writes require the `verification` token scope. That scope is **not** granted by default.
 
 ## REST
