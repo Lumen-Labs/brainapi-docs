@@ -17,7 +17,7 @@ export function buildRootLlmsTxt(): string {
 
 ## Start here
 
-- [BrainAPI Developer Portal](${markdownDocsUrl("/v2/developers")}): Authentication, sandbox, quickstarts, API contracts, MCP, CLI, and support
+- [BrainAPI Developer Portal](${markdownDocsUrl("/v2/developers")}): Authentication, sandbox, quickstarts, API contracts, MCP, CLI, pricing (Ask $29, Build $99, Team $299, Studio $899; overage $0.000003/char), and support
 - [BrainAPI API documentation](${markdownDocsUrl("/v2/reference")}): Authored guidance and generated operation reference
 - [BrainAPI OpenAPI 3.1 specification](${DOCS_BASE}/openapi.json): Machine-readable REST contract for tools and function calling
 - [Regional API hosts](${markdownDocsUrl("/v2/reference/regional-hosts")}): Managed REST at https://system.us-east1.brainapi.lumen-labs.ai and https://system.europe-central2.brainapi.lumen-labs.ai. Compare GET /health version; public hosts may lag 2.21.0.
