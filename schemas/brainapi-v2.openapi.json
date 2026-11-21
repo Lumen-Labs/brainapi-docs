@@ -2362,26 +2362,14 @@
       },
       "HealthResponse": {
         "properties": {
-          "service": {
-            "description": "Service name.",
-            "title": "Service",
-            "type": "string"
-          },
           "status": {
             "description": "Service health status.",
             "title": "Status",
             "type": "string"
-          },
-          "version": {
-            "description": "Running BrainAPI version.",
-            "title": "Version",
-            "type": "string"
           }
         },
         "required": [
-          "status",
-          "service",
-          "version"
+          "status"
         ],
         "title": "HealthResponse",
         "type": "object"
@@ -5771,11 +5759,11 @@
   },
   "info": {
     "contact": {
-      "email": "info@lumen-labs.ai",
+      "email": "hello@lumen-labs.ai",
       "name": "BrainAPI Support",
       "url": "https://brainapi.lumen-labs.ai/docs/v2/developers"
     },
-    "description": "Core BrainAPI HTTP API, including the unauthenticated health check and read-only documentation search sandbox. Official plugin routes are documented separately.",
+    "description": "Core BrainAPI HTTP API, including the unauthenticated health check. Official plugin routes are documented separately.",
     "license": {
       "name": "Business Source License 1.1",
       "url": "https://github.com/Lumen-Labs/brainapi2/blob/main/LICENSE"
@@ -5785,125 +5773,9 @@
   },
   "openapi": "3.1.0",
   "paths": {
-    "/demo/search": {
-      "get": {
-        "description": "Search the fixed public demo brain using passages-only BM25 retrieval.\n\nThis endpoint never accepts a caller-selected brain and exposes no write path.\nProduction applies an additional per-client rate limit at the edge.",
-        "operationId": "public_demo_search_get",
-        "parameters": [
-          {
-            "description": "Search query over the public BrainAPI documentation corpus.",
-            "in": "query",
-            "name": "query",
-            "required": true,
-            "schema": {
-              "description": "Search query over the public BrainAPI documentation corpus.",
-              "maxLength": 500,
-              "minLength": 1,
-              "title": "Query",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Number of public documentation passages to return (maximum 10).",
-            "in": "query",
-            "name": "k",
-            "required": false,
-            "schema": {
-              "default": 10,
-              "description": "Number of public documentation passages to return (maximum 10).",
-              "maximum": 10,
-              "minimum": 1,
-              "title": "K",
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SearchResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Public demo is disabled"
-          },
-          "405": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Method not allowed"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Public demo rate limit exceeded"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Internal service error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Demo search is unavailable"
-          }
-        },
-        "security": [],
-        "summary": "Demo Search",
-        "tags": [
-          "public"
-        ],
-        "x-rate-limit": {
-          "requests": 30,
-          "window": "60 seconds"
-        }
-      }
-    },
     "/health": {
       "get": {
-        "description": "Return public liveness metadata without accessing customer data.",
+        "description": "Return public liveness status without accessing customer data.",
         "operationId": "public_health_get",
         "responses": {
           "200": {
@@ -12081,7 +11953,7 @@
     },
     "/retrieve/entity/synergies": {
       "get": {
-        "description": "Retrieve synergies for a specified entity.\n\nParameters:\n    target: Identifier or name of the target entity.\n    polarity: \"same\" for matching node polarity; \"opposite\" for positive↔negative.\n    do: If True, only direct synergies are returned.\n    pa: If True, potential anchors are returned.\n    ppa: If True, seed anchors are returned.\n    top_k: Maximum synergies to return (default 50).\n    labels: Optional candidate label filter.\n    brain_id: Identifier of the knowledge brain to query.\n\nReturns:\n    Synergy records for the target entity matching the requested polarity.",
+        "description": "Retrieve synergies for a specified entity.\n\nParameters:\n    target: Identifier or name of the target entity.\n    polarity: \"same\" for matching node polarity; \"opposite\" for positive\u2194negative.\n    do: If True, only direct synergies are returned.\n    pa: If True, potential anchors are returned.\n    ppa: If True, seed anchors are returned.\n    top_k: Maximum synergies to return (default 50).\n    labels: Optional candidate label filter.\n    brain_id: Identifier of the knowledge brain to query.\n\nReturns:\n    Synergy records for the target entity matching the requested polarity.",
         "operationId": "retrieve_get_entity_synergies_get",
         "parameters": [
           {
@@ -17126,7 +16998,7 @@
   ],
   "tags": [
     {
-      "description": "Unauthenticated service health and the guarded read-only documentation search sandbox.",
+      "description": "Unauthenticated service health.",
       "name": "public"
     },
     {

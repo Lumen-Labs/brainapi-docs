@@ -133,7 +133,7 @@ if (JSON.stringify(schema.servers?.map((server) => server.url)) !== JSON.stringi
 
 const operationIds = new Set();
 const operationMethods = new Set(["get", "put", "post", "delete", "patch", "head", "options", "trace"]);
-const publicPaths = new Set(["/health", "/demo/search"]);
+const publicPaths = new Set(["/health"]);
 
 function isEmptySchema(value) {
   return value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0;
@@ -191,11 +191,24 @@ for (const requiredPath of publicPaths) {
   if (!schema.paths?.[requiredPath]) errors.push(`OpenAPI is missing public path ${requiredPath}`);
 }
 for (const hiddenPath of [
+  "/demo/search",
   "/system/brains/{brain_id}/reset",
   "/system/brains/{brain_id}/delete",
   "/system/brains/{brain_id}/create-backup",
 ]) {
   if (schema.paths?.[hiddenPath]) errors.push(`Unimplemented operation must not be published: ${hiddenPath}`);
+}
+
+if (schema.info?.contact?.email !== "hello@lumen-labs.ai") {
+  errors.push("OpenAPI contact email must be hello@lumen-labs.ai");
+}
+const healthSchema = schema.components?.schemas?.HealthResponse;
+if (
+  JSON.stringify(healthSchema?.required) !== JSON.stringify(["status"])
+  || healthSchema?.properties?.version
+  || healthSchema?.properties?.service
+) {
+  errors.push('HealthResponse must match the live {"status":"healthy"} body');
 }
 
 const llmsSource = await readFile(path.join(root, "src", "lib", "llms-index.ts"), "utf8");
@@ -233,6 +246,26 @@ if (mcpDiscovery.url !== "https://brainapi.lumen-labs.ai/docs/mcp" || mcpDiscove
 }
 if (mcpDiscovery.authentication?.required !== false || mcpDiscovery.capabilities?.tools !== true) {
   errors.push("Docs MCP discovery must declare unauthenticated tool capability");
+}
+
+const staleSnippets = [
+  { name: "retired demo search URL", pattern: "brain-api.dev/api/demo/search" },
+  { name: "retired sandbox CTA", pattern: "Try the anonymous sandbox" },
+  { name: "retired contact address", pattern: "info@lumen-labs.ai" },
+];
+const staleScanRoots = [
+  path.join(root, "content"),
+  path.join(root, "src"),
+  path.join(root, "schemas"),
+];
+for (const directory of staleScanRoots) {
+  for (const file of await walk(directory)) {
+    if (!/\.(mdx?|ts|tsx|js|mjs|json)$/.test(file)) continue;
+    const body = await readFile(file, "utf8");
+    for (const { name, pattern } of staleSnippets) {
+      if (body.includes(pattern)) errors.push(`${path.relative(root, file)}: ${name}`);
+    }
+  }
 }
 
 const deployWorkflow = await readFile(

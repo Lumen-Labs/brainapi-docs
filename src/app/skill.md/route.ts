@@ -21,15 +21,15 @@ Use BrainAPI for durable, brain-scoped memory; asynchronous ingestion; passage o
 
 ## When not to use BrainAPI
 
-Do not use BrainAPI as general web search, as a transactional source of truth, or for context that should disappear with the current model turn. The anonymous demo searches only public BrainAPI documentation and has no mutation tools.
+Do not use BrainAPI as general web search, as a transactional source of truth, or for context that should disappear with the current model turn.
 
 ## Calling guidance
 
 1. Prefer **V2** docs unless the user is on a V1 deployment.
 2. Discover pages via \`${DOCS_BASE}/llms.txt\` or MCP \`search_docs\` / \`list_sections\`.
 3. Fetch markdown with MCP \`get_page\` or by appending \`.md\` to a docs URL. Inspect \`${DOCS_BASE}/openapi.json\` before generating REST tools.
-4. Evaluate retrieval with \`GET https://brain-api.dev/api/demo/search\`; it is read-only, documentation-only, capped at 500 query characters and 10 results, and limited to 30 requests per minute per client. Product REST is \`https://system.us-east1.brainapi.lumen-labs.ai\` or \`https://system.europe-central2.brainapi.lumen-labs.ai\`. Ping \`GET /health\` and read \`version\`; \`GET /\` requires the system PAT. Do not call \`api.brain-api.dev\`.
-5. Authenticate customer API calls with \`BrainPAT\` or Bearer auth and prefer \`X-Brain-ID\` for the alphanumeric Brain ID from dashboard Settings (not the display name). Never send a customer token to the anonymous demo. Hosted \`/retrieve/search\` is off unless \`SEARCH_ENABLED=true\`; prefer \`POST /retrieve/context\`. A 404 on \`/model/facts\` or \`/retrieve/conflicts\` on a host whose \`/health\` version is older than 2.21.0 is a lagging deploy, not the 2.21.0 contract.
+4. Start with \`${DOCS_BASE}/v2/quickstart\`. Product REST is \`https://system.us-east1.brainapi.lumen-labs.ai\` or \`https://system.europe-central2.brainapi.lumen-labs.ai\`. Ping \`GET /health\`; the live body is \`{"status":"healthy"}\`. \`GET /\` requires the system PAT. Do not call \`api.brain-api.dev\`.
+5. Authenticate customer API calls with \`BrainPAT\` or Bearer auth and prefer \`X-Brain-ID\` for the alphanumeric Brain ID from dashboard Settings (not the display name). Hosted \`/retrieve/search\` is off unless \`SEARCH_ENABLED=true\`; prefer \`POST /retrieve/context\`. A 404 on \`/model/facts\` or \`/retrieve/conflicts\` on a host that has not rolled 2.21.0 is a lagging deploy, not the 2.21.0 contract.
 6. Ingest APIs return **202** + \`task_id\`. Poll \`GET /tasks/{id}\`. **404** means the task is unknown — not still pending.
 7. On failure, read \`error.code\`, \`error.resolution\`, and \`error.request_id\`; retain \`detail\` compatibility and report the matching \`X-Request-ID\` when escalating.
 8. Structured ingest uses event-centric \`IngestionTripleSet\` (not the old \`json_data\` element schema).

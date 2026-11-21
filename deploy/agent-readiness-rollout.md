@@ -12,7 +12,7 @@ must be applied in this dependency order.
 3. Keep `BRAINPAT_TOKEN` private and do not create any anonymous write token.
 4. Run `python scripts/seed_public_demo.py --api-url http://localhost:8000`
    inside the API container.
-5. Confirm `/health` and `/demo/search` locally before changing DNS.
+5. Confirm `/health` locally before changing DNS. The public demo search route is not published.
 
 ## 2. Deploy the documentation
 
@@ -61,7 +61,7 @@ only semantic tags and linked metadata:
 {
   "@type": "ContactPoint",
   "contactType": "customer support",
-  "email": "info@lumen-labs.ai",
+  "email": "hello@lumen-labs.ai",
   "telephone": "+1-408-479-1979",
   "availableLanguage": ["English"]
 }

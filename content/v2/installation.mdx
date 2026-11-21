@@ -41,6 +41,12 @@ Verify the API is up. `GET /health` is public:
 curl --fail http://localhost:8000/health
 ```
 
+Expected response:
+
+```json
+{"status":"healthy"}
+```
+
 `GET /` requires the system PAT and is not a ping. If startup or health fails, run `brainapi doctor`; it checks the managed Python environment, Docker, model providers, credentials, and configured services.
 
 ```bash
