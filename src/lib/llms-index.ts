@@ -9,18 +9,19 @@ export function buildRootLlmsTxt(): string {
 
 **When to use BrainAPI:** Use it when an application or agent needs durable, brain-scoped memory; asynchronous ingestion of text, files, or structured events; hybrid passage search; graph context; entity relationships; or recommendations grounded in stored knowledge.
 
-**When not to use BrainAPI:** Do not use it as a general web search engine, a transactional system of record, or a replacement for short-lived prompt context. The anonymous sandbox contains public BrainAPI documentation only and cannot ingest or mutate data.
+**When not to use BrainAPI:** Do not use it as a general web search engine, a transactional system of record, or a replacement for short-lived prompt context.
 
-**Preferred call pattern:** For REST, inspect the OpenAPI document, call the anonymous demo for evaluation, then use BrainPAT or Bearer authentication and an X-Brain-ID header for customer data. For agent-native graph work, use the Product MCP. For documentation lookup, use the unauthenticated Docs MCP.
+**Preferred call pattern:** For REST, follow the Quickstart, inspect the OpenAPI document, then use BrainPAT or Bearer authentication and an X-Brain-ID header for customer data. For agent-native graph work, use the Product MCP. For documentation lookup, use the unauthenticated Docs MCP.
 
-**Tasks and recovery:** Ingest operations return HTTP 202 with a task_id; poll the task endpoint until a terminal state. Treat non-2xx responses as JSON and use error.code, error.resolution, and X-Request-ID to recover. The public demo is limited to 30 requests per minute per client, queries up to 500 characters, and at most 10 results.
+**Tasks and recovery:** Ingest operations return HTTP 202 with a task_id; poll the task endpoint until a terminal state. Treat non-2xx responses as JSON and use error.code, error.resolution, and X-Request-ID to recover.
 
 ## Start here
 
-- [BrainAPI Developer Portal](${markdownDocsUrl("/v2/developers")}): Authentication, sandbox, quickstarts, API contracts, MCP, CLI, pricing (Ask $29, Build $99, Team $299, Studio $899; overage $0.000003/char), and support
+- [Quickstart](${markdownDocsUrl("/v2/quickstart")}): Install, select a brain, ingest text, poll the task, and retrieve it
+- [BrainAPI Developer Portal](${markdownDocsUrl("/v2/developers")}): Authentication, quickstarts, API contracts, MCP, CLI, pricing (Ask $29, Build $99, Team $299, Studio $899; overage $0.000003/char), and support
 - [BrainAPI API documentation](${markdownDocsUrl("/v2/reference")}): Authored guidance and generated operation reference
 - [BrainAPI OpenAPI 3.1 specification](${DOCS_BASE}/openapi.json): Machine-readable REST contract for tools and function calling
-- [Regional API hosts](${markdownDocsUrl("/v2/reference/regional-hosts")}): Managed REST at https://system.us-east1.brainapi.lumen-labs.ai and https://system.europe-central2.brainapi.lumen-labs.ai. Compare GET /health version; public hosts may lag 2.21.0.
+- [Regional API hosts](${markdownDocsUrl("/v2/reference/regional-hosts")}): Managed REST at https://system.us-east1.brainapi.lumen-labs.ai and https://system.europe-central2.brainapi.lumen-labs.ai. Public hosts may lag 2.21.0.
 - [BrainAPI authentication documentation](${markdownDocsUrl("/v2/brains-and-auth")}): BrainPAT, Bearer authentication, and brain selection
 - [BrainAPI CLI](${markdownDocsUrl("/v2/tui")}): Install the official brainapi-tui npm package and brainapi binary
 
@@ -39,7 +40,6 @@ export function buildRootLlmsTxt(): string {
 
 ## Agent interfaces
 
-- [Anonymous Search sandbox](https://brain-api.dev/api/demo/search?query=How%20does%20BrainAPI%20ingest%20text%3F&k=5): Read-only BM25 search over public V2 documentation
 - [Product MCP](${markdownDocsUrl("/v2/agentic/MCP")}): Authenticated tools for working with BrainAPI knowledge graphs
 - [Docs MCP](${DOCS_BASE}/mcp): Unauthenticated Streamable HTTP MCP for searching and reading documentation
 - [Docs MCP discovery](${DOCS_BASE}/.well-known/mcp.json): Machine-readable Docs MCP endpoint metadata

@@ -13,6 +13,7 @@ from pathlib import Path
 
 
 EXCLUDED_PATHS = {
+    "/demo/search",
     "/meta/ingest-groups/{group_tracking}",
     "/system/brains/{brain_id}/reset",
     "/system/brains/{brain_id}/delete",
@@ -31,7 +32,7 @@ DIRECT_ONLY_OPERATIONS = {
     ("post", "/tasks/{task_id}/purge"),
 }
 CORE_TAGS = {"public", "ingest", "retrieve", "model", "meta", "tasks", "system"}
-PUBLIC_PATHS = {"/health", "/demo/search"}
+PUBLIC_PATHS = {"/health"}
 
 
 def load_schema(source: Path) -> dict:
@@ -87,12 +88,12 @@ def load_schema(source: Path) -> dict:
         "title": "BrainAPI V2 Core API",
         "version": release_version,
         "description": (
-            "Core BrainAPI HTTP API, including the unauthenticated health check and "
-            "read-only documentation search sandbox. Official plugin routes are documented separately."
+            "Core BrainAPI HTTP API, including the unauthenticated health check. "
+            "Official plugin routes are documented separately."
         ),
         "contact": {
             "name": "BrainAPI Support",
-            "email": "info@lumen-labs.ai",
+            "email": "hello@lumen-labs.ai",
             "url": "https://brainapi.lumen-labs.ai/docs/v2/developers",
         },
         "license": {
@@ -106,7 +107,7 @@ def load_schema(source: Path) -> dict:
         {"url": "http://localhost:8000", "description": "Local BrainAPI"},
     ]
     tag_descriptions = {
-        "public": "Unauthenticated service health and the guarded read-only documentation search sandbox.",
+        "public": "Unauthenticated service health.",
         "ingest": "Submit content for asynchronous ingestion into a brain.",
         "retrieve": "Search and retrieve passages, graph data, observations, and recommendations.",
         "model": "Create and update typed entities and relationships.",
@@ -154,7 +155,23 @@ def load_schema(source: Path) -> dict:
         if operations:
             filtered[route] = operations
     schema["paths"] = filtered
+    if "/health" in schema["paths"] and "get" in schema["paths"]["/health"]:
+        schema["paths"]["/health"]["get"]["description"] = (
+            "Return public liveness status without accessing customer data."
+        )
     components = schema.setdefault("components", {})
+    components.setdefault("schemas", {})["HealthResponse"] = {
+        "properties": {
+            "status": {
+                "description": "Service health status.",
+                "title": "Status",
+                "type": "string",
+            }
+        },
+        "required": ["status"],
+        "title": "HealthResponse",
+        "type": "object",
+    }
     components["securitySchemes"] = {
         "BrainPAT": {
             "type": "apiKey",

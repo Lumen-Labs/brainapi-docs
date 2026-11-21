@@ -34,6 +34,12 @@ Confirm the API is up. `GET /health` is public:
 curl --fail http://localhost:8000/health
 ```
 
+Expected response:
+
+```json
+{"status":"healthy"}
+```
+
 `GET /` requires the system PAT and is not a ping. If health fails, run `brainapi doctor`. A connection error means the API is not listening yet.
 
 ## Ingest one document

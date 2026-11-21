@@ -9,7 +9,7 @@ Statuses are `open`, `resolved`, and `dismissed`. Resolution methods are `dismis
 
 On-demand scan is always available on a 2.21.0 engine. Ingest-time detection and leftover-pair judging stay **off** unless you opt in.
 
-Public hosts that still report `2.20.1.dev9` on `GET /health` return **404** on `/retrieve/conflicts` because the route is not deployed there. That live 404 is not this contract. See [Regional API hosts](/v2/reference/regional-hosts).
+Public hosts that have not rolled 2.21.0 return **404** on `/retrieve/conflicts` because the route is not deployed there. That live 404 is not this contract. See [Regional API hosts](/v2/reference/regional-hosts).
 
 ## REST
 

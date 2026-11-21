@@ -64,7 +64,7 @@ await check("homepage organization structured data", async () => {
   assert.ok(organization?.address?.["@type"] === "PostalAddress", "missing PostalAddress");
   const contacts = Array.isArray(organization?.contactPoint) ? organization.contactPoint : [organization?.contactPoint];
   const support = contacts.find((contact) => contact?.contactType === "customer support");
-  assert.equal(support?.email, "info@lumen-labs.ai");
+  assert.equal(support?.email, "hello@lumen-labs.ai");
   assert.equal(support?.telephone, "+1-408-479-1979");
   assert.ok(support?.availableLanguage?.includes("English"));
 });
@@ -131,16 +131,14 @@ await check("public health and JSON failure envelope", async () => {
   assert.equal(protectedResponse.headers.get("x-request-id"), requestId);
 });
 
-await check("public demo success and mutation denial", async () => {
-  const demo = await get("/api/demo/search?query=How%20does%20ingestion%20work%3F&k=3");
-  assert.equal(demo.status, 200);
-  const body = await demo.json();
-  assert.ok(Array.isArray(body.hits));
-  assert.ok(body.hits.length > 0, "seeded demo returned no hits");
-
-  const mutation = await get("/api/demo/search", { method: "POST", headers: { "Content-Type": "application/json" }, body: '{"query":"x"}' });
-  assert.equal(mutation.status, 405);
-  assert.equal((await mutation.json()).error.code, "METHOD_NOT_ALLOWED");
+await check("quickstart is published", async () => {
+  const response = await fetch(`${docs}/v2/quickstart`);
+  assert.equal(response.status, 200);
+  assert.ok(response.url.includes("/docs/v2/quickstart"));
+  const html = await response.text();
+  assert.match(html, /<h1\b[^>]*>[^<]*Quickstart/i);
+  assert.doesNotMatch(html, /Try the anonymous sandbox/i);
+  assert.doesNotMatch(html, /brain-api\.dev\/api\/demo\/search/);
 });
 
 await check("Docs MCP discovery and initialize", async () => {
