@@ -28,7 +28,7 @@ Deferred in this tag: agent-first MCP remember/recall/correct/check, Celery Redi
 
 ### As-of retrieve and changelogs
 
-- Retrieve/search accept `as_of`. Undated facts are omitted (fail closed) and counted in `validity_unknown_count`; `include_validity_unknown=true` returns them separately. See [As-of retrieve](/v2/retrieval/as-of).
+- Retrieve/search accept `as_of`. Undated facts are omitted (fail closed) and counted in `validity_unknown_count`; `include_validity_unknown=true` returns them separately. MCP as-of is on `search_semantically` only. See [As-of retrieve](/v2/retrieval/as-of).
 - Changelogs: `GET /retrieve/changelogs`, `GET /retrieve/changelogs/{id}`, `GET /retrieve/changelogs/types`. MCP: `list_changelogs`, `get_changelog`. `since` is inclusive; `until` is exclusive.
 
 ### History, sources, and purge
@@ -39,7 +39,7 @@ Deferred in this tag: agent-first MCP remember/recall/correct/check, Celery Redi
 
 ### Staged ingest and rollback
 
-- Settlement failures are bounded; leftover cleanup is retried. Live staged units roll back when publish settlement is exhausted.
+- Settlement failures are bounded (5); leftover cleanup is retried. Live staged units roll back when publish settlement is exhausted.
 - Graph rollback distinguishes created vs reused items and keys `rollback_done` as `{operation_id}:{kind}:{uuid}` so a later retouch cannot skip deleting the original create.
 
 ### Graph store and Cypher

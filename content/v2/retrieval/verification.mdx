@@ -11,7 +11,7 @@ Writes require the `verification` token scope. That scope is **not** granted by 
 
 | Method | Path | Scope | Effect |
 | --- | --- | --- | --- |
-| `GET` | `/model/facts` | any valid PAT | List facts. Filter with `state=unverified\|verified\|rejected`. Default listing hides rejected facts unless `include_rejected=true` or `state=rejected`. |
+| `GET` | `/model/facts` | any valid PAT | List facts. `state` is `unverified`, `verified`, or `rejected`; omit it, pass empty, or `all` for no state filter. Default listing hides rejected facts unless `include_rejected=true` or `state=rejected`. |
 | `GET` | `/model/facts/{fact_id}` | any valid PAT | Read current state, verifier fields, and append-only history. |
 | `POST` | `/model/facts/{fact_id}/verify` | `verification` | Mark verified. |
 | `POST` | `/model/facts/{fact_id}/reject` | `verification` | Mark rejected. Later retrieve/search/traverse hide it by default. |
@@ -33,7 +33,7 @@ curl --fail-with-body -X POST "http://localhost:8000/model/facts/$FACT_ID/verify
 
 The request body is optional. `verified_by` is ignored: the actor is taken from the authenticated token principal. Optional `verification_source` and `note` are stored on the fact and in the audit history.
 
-A missing `verification` scope returns **403** `VERIFICATION_PERMISSION_DENIED`.
+A missing `verification` scope returns **403** `VERIFICATION_PERMISSION_DENIED`. Successful `verify` also closes open conflicts for that fact (`method=verified_side` without rewriting fact states again).
 
 ## MCP
 
@@ -45,7 +45,7 @@ A missing `verification` scope returns **403** `VERIFICATION_PERMISSION_DENIED`.
 | `reject_fact` | `verification` | Mark rejected. |
 | `reset_fact_verification` | `verification` | Return to unverified. |
 
-MCP `verified_by` is likewise ignored.
+MCP `verified_by` is likewise ignored. MCP dumps include a `properties` object; the REST `FactVerificationRecord` does not.
 
 ## Token scope
 
@@ -53,6 +53,7 @@ Default PAT scopes are `brainapi` only. Grant `verification` explicitly:
 
 - System PAT: set `BRAINPAT_SCOPES` to include `verification` (space-separated).
 - Brain PAT: store `verification` on that brain's `pat_scopes`.
+- MCP OAuth can request `verification` only if the underlying PAT already holds it; it cannot escalate.
 
 Resolved scopes are cached for **30 seconds** (`expires_in=30`). A newly granted scope can take up to that interval to appear on an already-authenticated connection.
 

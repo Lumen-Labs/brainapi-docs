@@ -68,7 +68,8 @@ Save the file and restart Claude Desktop. The configured `brainapi` server shoul
 These reads are on the product MCP, alongside semantic search and `search_memory`.
 
 - `traverse_graph` walks the live graph from a start node. The response keeps every hop and also lists superseded relationships in `invalidated` when a relationship property includes `invalid_at` or `deprecated`.
-- `list_changelogs` lists graph changelog entries, newest first. Filter with `query_text` or a changelog type. `get_changelog` reads one entry by id.
+- `list_changelogs` lists graph changelog entries, newest first. Filter with `query_text`, a changelog type, and optional `since`/`until`. `get_changelog` reads one entry by id.
+- `search_semantically` accepts `as_of` and `include_validity_unknown`. `search_memory` and `traverse_graph` do not.
 - `list_source_versions` returns the current copy and previous copies of a source. Pass `source_key`, or a query when the key is unknown. The query is used only to find the source. If embedding fails, the tool returns an error and no versions.
 
 ## Verification and conflicts
@@ -77,6 +78,6 @@ These tools sit on the product MCP alongside the graph reads above.
 
 - `list_facts_by_verification` and `get_fact_verification` read expert verification state. Default listing hides rejected facts unless `include_rejected` is true or `state` is `rejected`.
 - `verify_fact`, `reject_fact`, and `reset_fact_verification` require the `verification` token scope. Actor identity comes from the authenticated token; `verified_by` is ignored.
-- `list_conflicts`, `get_conflict`, `resolve_conflict`, `dismiss_conflict`, and `conflict_report` manage cross-source conflicts. `method=verified_side` also requires the `verification` scope.
+- `list_conflicts`, `get_conflict`, `resolve_conflict`, `dismiss_conflict`, and `conflict_report` manage cross-source conflicts. `method=verified_side` also requires the `verification` scope. Start a scan with REST `POST /retrieve/conflicts/scan`; there is no MCP scan tool.
 
 See [Fact verification](/v2/retrieval/verification) and [Conflicts](/v2/retrieval/conflicts). Raw Cypher through MCP stays read-only unless `GRAPH_RAW_WRITE_ENABLED=true`.

@@ -30,7 +30,7 @@ curl --fail-with-body -X POST http://localhost:8000/retrieve/context \
 | `validity_unknown_count` | response | Count of facts omitted because they have no valid-time start. |
 | `validity_unknown` | response | Payload of those facts when `include_validity_unknown=true`. |
 
-Invalid `as_of` values fail the request. Compact stamps such as `2024-01-01T930` can parse as `09:03` instead of being rejected; prefer a full ISO-8601 datetime with offset. See [Known issues](/v2/changelog#known-issues).
+Invalid `as_of` values fail the request. Compact stamps such as `2024-01-01T930` can parse instead of being rejected; prefer a full ISO-8601 datetime with offset. See [Known issues](/v2/changelog#known-issues).
 
 ## Changelogs
 
@@ -46,11 +46,11 @@ curl --fail-with-body "http://localhost:8000/retrieve/changelogs?since=2024-03-0
   -H "X-Brain-ID: $BRAIN_ID"
 ```
 
-Types include `relationship_created`, `relationship_deprecated`, `node_properties_updated`, and `relationship_properties_updated`. Window filters run in the graph query. Neo4j creates per-type range indexes on validity timestamps. Index setup is cached per database and retried after writes that add relationship types; failed types back off.
+Types include `relationship_created`, `relationship_deprecated`, `node_properties_updated`, and `relationship_properties_updated`. Window filters run in the graph query. Neo4j creates per-type range indexes on seven validity timestamp properties. Index setup is cached per database (TTL 60 seconds) and retried after writes that add relationship types; failed types back off from 30 seconds to 10 minutes.
 
 ## MCP
 
-`list_changelogs` accepts `query_text`, `types`, `since`, and `until`. `get_changelog` reads one entry by id. `search_memory` / context-style tools honor the same as-of contract when those fields are passed.
+`list_changelogs` accepts `query_text`, `types`, `since`, and `until`. `get_changelog` reads one entry by id. Product MCP as-of retrieve is **`search_semantically` only** (`as_of`, `include_validity_unknown`). `search_memory` and `traverse_graph` do not take those fields.
 
 ## Related
 

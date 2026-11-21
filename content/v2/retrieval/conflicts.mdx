@@ -15,8 +15,8 @@ On-demand scan is always available. Ingest-time detection and LLM leftover-pair 
 | --- | --- | --- |
 | `GET` | `/retrieve/conflicts` | List conflicts. Filter with `status`, `source` (source_key), `subject`, `since`, `until`. Page with `limit` and `skip`. |
 | `GET` | `/retrieve/conflicts/{id}` | Read one conflict. |
-| `GET` | `/retrieve/conflicts/report` | Summary plus conflicts. `format=json` or `markdown`. |
-| `POST` | `/retrieve/conflicts/scan` | Queue a scan. Returns **202** with `task_id`. Body may set `use_llm` only. |
+| `GET` | `/retrieve/conflicts/report` | `format=json` (default) returns summary plus conflicts. `format=markdown` returns `text/markdown` only. Invalid `format` or `status` is **400**. |
+| `POST` | `/retrieve/conflicts/scan` | Queue a scan. Returns **202** `{message, task_id}` only. Body may set `use_llm` only. There is no MCP scan tool. |
 | `POST` | `/retrieve/conflicts/{id}/resolve` | Resolve. Body: `winning_fact_id`, `notes`, `method` (`manual` or `verified_side`). |
 | `POST` | `/retrieve/conflicts/{id}/dismiss` | Dismiss without choosing a winner. Body: optional `notes`. |
 
@@ -32,7 +32,7 @@ curl --fail-with-body "http://localhost:8000/retrieve/conflicts?status=open" \
   -H "X-Brain-ID: $BRAIN_ID"
 ```
 
-Poll the scan with `GET /tasks/{task_id}` in the same brain. Hitting the relationship cap sets `truncated` on the task. The REST scan body cannot override the cap.
+Poll the scan with `GET /tasks/{task_id}` in the same brain. `truncated`, `scanned_relationships`, `stale_resolved`, and related counts land on the **task** result, not the 202 body. The REST scan body cannot override the cap.
 
 ## Resolve methods
 
@@ -61,13 +61,13 @@ Ingest-time scan (when enabled) is incremental over touched subjects and can pag
 
 | Tool | Purpose |
 | --- | --- |
-| `list_conflicts` | List with the same filters as REST. |
+| `list_conflicts` | List with the same filters as REST. `limit` is clamped to 1–50. |
 | `get_conflict` | Read one conflict. |
 | `resolve_conflict` | Resolve (`method` `manual` or `verified_side`). |
 | `dismiss_conflict` | Dismiss. |
-| `conflict_report` | JSON or markdown report. |
+| `conflict_report` | JSON or markdown report. `limit` is clamped to 1–200; there is no `skip`. |
 
-`verified_side` on MCP also requires the `verification` scope.
+There is no MCP tool to start a scan. `verified_side` on MCP also requires the `verification` scope.
 
 ## Defaults
 
