@@ -9,11 +9,13 @@ Start with the failing boundary instead of changing several settings at once. Ru
 
 ```bash
 brainapi doctor
-curl --fail http://localhost:8000/ -H "BrainPAT: $BRAINPAT_TOKEN"
+curl --fail http://localhost:8000/health
 curl --fail http://localhost:8001/
 curl --fail http://localhost:9091/healthz
 curl --fail http://localhost:9000/minio/health/live
 ```
+
+`GET /health` is public. `GET /` requires the system PAT and is not a liveness probe.
 
 Only test services selected by your deployment profile.
 
@@ -30,10 +32,11 @@ Only test services selected by your deployment profile.
 
 | Symptom | Likely cause | Diagnostic | Fix |
 | --- | --- | --- | --- |
-| `400 Brain ID is required` | No brain resolved. | Inspect `X-Brain-ID`, query, or body. | Send `X-Brain-ID` or deliberately enable default fallback. |
-| `401 Invalid or missing BrainPAT` | Missing/wrong token or brain-PAT mismatch. | Call `/meta/login-info` with the token. | Use the system PAT or the PAT belonging to the selected brain. |
-| `406 Brain not found` | Brain is absent and creation/fallback is disabled. | List/create brains with the system PAT. | Create it explicitly or change the intended setting. |
-| `503 Database unavailable` | MongoDB lookup failed. | Test Mongo connection and credentials. | Correct `MONGO_*`/connection string and restart. |
+| `400 BRAIN_ID_INVALID` | ID is not alphanumeric (hyphen, space, display name). | Compare with the dashboard Brain ID. | Use letters and digits only. |
+| `401 Invalid or missing BrainPAT` | Missing/wrong token. A request with no PAT is `401`, not `400`. | Call `/meta/login-info` with the token. | Use the system PAT or the PAT belonging to the selected brain. |
+| `403 VERIFICATION_PERMISSION_DENIED` | PAT lacks `verification`. | Inspect `BRAINPAT_SCOPES` or brain `pat_scopes`. | Grant the scope; wait up to 30 seconds for cache expiry. |
+| `406 Brain not found` | No brain resolved, or the named brain is absent and creation/fallback is off. Omitting `X-Brain-ID` with fallback off is `406`. | List/create brains with the system PAT. | Send a valid Brain ID or create it explicitly. |
+| `503 Database unavailable` | Data-store lookup failed. | Test the configured data backend. | Correct connection settings and restart. |
 
 ## Ingestion and tasks
 
@@ -48,7 +51,10 @@ Only test services selected by your deployment profile.
 
 | Symptom | Likely cause | Diagnostic | Fix |
 | --- | --- | --- | --- |
-| `/retrieve/search` returns `404` | Search disabled. | Check `SEARCH_ENABLED`. | Use Context or enable Search with PostgreSQL. |
+| `/retrieve/search` returns `404` | Search disabled (`SEARCH_ENABLED` defaults to `false`; hosted production leaves it off). | Check `SEARCH_ENABLED`. | Use [Context](/v2/retrieval/context), or enable Search with PostgreSQL on a deployment that opts in. |
+| `/model/facts` or `/retrieve/conflicts` returns `404` | Hosted engine is older than 2.21.0 (observed `2.20.1.dev9`). | Read `version` from `GET /health`. | Use a 2.21.0 engine, or wait for hosted rollout. Do not treat this 404 as the 2.21.0 contract. |
+| As-of result missing undated facts | Fail-closed `as_of`. | Read `validity_unknown_count`. | Set `include_validity_unknown=true` to inspect them separately. |
+| Conflict scan `truncated` | Hit `CONFLICT_DETECT_MAX_RELATIONSHIPS`. | Read the scan task. | Raise the env cap (or `0` unlimited) and scan again; REST cannot override the cap. |
 | Startup rejects Search | Wrong data backend or both retrievers disabled. | Check `DATA_DB`, `SEARCH_USE_DENSE`, and `SEARCH_USE_BM25`. | Use PostgreSQL and enable at least one first stage. |
 | Plugin channel/reranker returns `400` | Plugin missing, failed, or name wrong. | Inspect loader banner and plugin health. | Install/restart/fix the plugin and use its registered lowercase name. |
 | Filtered Search returns fewer than `k` | `extras` is hard-AND filtering after ranking. | Remove filters one at a time and inspect facets. | Broaden the filters or ingest missing metadata. |

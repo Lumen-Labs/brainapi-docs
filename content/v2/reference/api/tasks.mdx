@@ -18,6 +18,9 @@ _openapi:
     - depth: 2
       title: Cancel Ingestion
       url: '#cancel-ingestion'
+    - depth: 2
+      title: Purge Ingestion
+      url: '#purge-ingestion'
   structuredData:
     headings:
       - content: Get Tasks
@@ -28,6 +31,8 @@ _openapi:
         id: get-activity
       - content: Cancel Ingestion
         id: cancel-ingestion
+      - content: Purge Ingestion
+        id: purge-ingestion
     contents:
       - content: Get Tasks. See the BrainAPI developer documentation for request,
           response, authentication, and retry semantics.
@@ -40,6 +45,9 @@ _openapi:
       - content: Cancel Ingestion. See the BrainAPI developer documentation for request,
           response, authentication, and retry semantics.
         heading: cancel-ingestion
+      - content: Remove graph data owned by one import. Send digest from a previous
+          preview, or source_key.
+        heading: purge-ingestion
 ---
 
 {/* Generated from schemas\/brainapi-v2.openapi.json. Run npm run api:generate after syncing the schema. */}
@@ -51,7 +59,7 @@ export default function Layout(props) {
   return (
     <>
       {props.children}
-      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/tasks/","method":"get"},{"path":"/tasks/{task_id}","method":"get"},{"path":"/tasks/{task_id}/activity","method":"get"},{"path":"/tasks/{task_id}/cancel","method":"post"}]} showTitle showDescription />
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/tasks/","method":"get"},{"path":"/tasks/{task_id}","method":"get"},{"path":"/tasks/{task_id}/activity","method":"get"},{"path":"/tasks/{task_id}/cancel","method":"post"},{"path":"/tasks/{task_id}/purge","method":"post"}]} showTitle showDescription />
     </>
   );
 }

@@ -3,7 +3,7 @@ title: BrainAPI API Documentation
 description: Understand BrainAPI core routes, authentication, brain scope, generated contracts, and plugin boundaries
 ---
 
-The core REST API is available through `https://brain-api.dev/api`, directly at `https://api.brain-api.dev`, or locally at `http://localhost:8000`. Download the machine-readable [BrainAPI OpenAPI 3.1 specification](https://brain-api.dev/openapi.json). The specification records the engine version and lists the supported servers for each operation. The reference is generated from the engine's routes and Pydantic models, with annotations for authentication and brain scoping.
+The core REST API is available on `https://system.us-east1.brainapi.lumen-labs.ai` and `https://system.europe-central2.brainapi.lumen-labs.ai`, or locally at `http://localhost:8000`. See [Regional API hosts](/v2/reference/regional-hosts). Public hosts may lag this documentation; compare `GET /health` `version`. Download the machine-readable [BrainAPI OpenAPI 3.1 specification](https://brainapi.lumen-labs.ai/docs/openapi.json). The specification records the engine version and lists the supported servers for each operation. The reference is generated from the engine's routes and Pydantic models, with annotations for authentication and brain scoping.
 
 ## Common request shape
 
@@ -13,7 +13,7 @@ curl --fail-with-body http://localhost:8000/<path> \
   -H "X-Brain-ID: $BRAIN_ID"
 ```
 
-`Authorization: Bearer <token>` is also supported. System routes require the system PAT. Most other routes require a brain selected by header, query, body, or multipart field; prefer the header.
+`Authorization: Bearer <token>` is also supported. System routes require the system PAT. Most other routes require a brain selected by header, query, body, or multipart field; prefer the header. `X-Brain-ID` is the alphanumeric Brain ID from dashboard Settings, not the display name. `GET /health` is public; `GET /` requires the system PAT.
 
 ## Core API groups
 
@@ -21,8 +21,8 @@ curl --fail-with-body http://localhost:8000/<path> \
 | --- | --- |
 | [Public](/v2/reference/api/public) | Check service health or search the public documentation sandbox without credentials. |
 | [Ingest](/v2/reference/api/ingest) | Submit text, files, or structured data. |
-| [Retrieve](/v2/reference/api/retrieve) | Read context, search hits, graph data, chunks, observations, and recommendations. |
-| [Model](/v2/reference/api/model) | Create or update entities and relationships. |
+| [Retrieve](/v2/reference/api/retrieve) | Read context, search hits, conflicts, changelogs, graph data, chunks, observations, and recommendations. |
+| [Model](/v2/reference/api/model) | Create or update entities and relationships; list and mutate fact verification. |
 | [Metadata](/v2/reference/api/meta) | Resolve PAT scope and inspect graph labels/properties. |
 | [Tasks](/v2/reference/api/tasks) | List and inspect asynchronous task state. |
 | [System](/v2/reference/api/system) | List and create brains with the system PAT. |

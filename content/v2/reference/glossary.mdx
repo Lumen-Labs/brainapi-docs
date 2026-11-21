@@ -6,7 +6,19 @@ description: Shared terminology for BrainAPI ingestion, graph, retrieval, Search
 ## Core data
 
 **Brain**  
-An authenticated knowledge boundary used to scope every application read and write.
+An authenticated knowledge boundary used to scope every application read and write. The `X-Brain-ID` value is the alphanumeric `name_key` from dashboard Settings, not the display name.
+
+**Fact**  
+A relationship or EVENT node that can carry expert verification (`unverified`, `verified`, `rejected`) and a valid-time window.
+
+**Verification**  
+An expert mark on a fact. Writes need the `verification` token scope. Rejected facts are hidden from retrieve unless `include_rejected=true`.
+
+**Conflict**  
+Two facts that share a subject and predicate, disagree, and overlap in valid time. Same-source revisions are not conflicts.
+
+**As-of retrieve**  
+A read filtered to the knowledge state valid at an ISO-8601 instant. Undated facts fail closed and are counted in `validity_unknown_count`.
 
 **Resource**  
 An ingested source such as text, a file, or structured data.

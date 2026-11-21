@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "protocol_version": "2025-06-18",
   "transport": "streamable-http",
-  "url": "https://brain-api.dev/mcp",
+  "url": "https://brainapi.lumen-labs.ai/docs/mcp",
   "authentication": {
     "required": false
   },
@@ -15,7 +15,7 @@
   "servers": [
     {
       "name": "brainapi-docs",
-      "url": "https://brain-api.dev/mcp",
+      "url": "https://brainapi.lumen-labs.ai/docs/mcp",
       "transport": "streamable-http",
       "description": "Search and fetch BrainAPI public documentation for coding agents"
     }

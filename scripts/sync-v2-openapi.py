@@ -28,6 +28,7 @@ DIRECT_ONLY_OPERATIONS = {
     ("post", "/system/brains/{brain_id}/clear"),
     ("get", "/tasks/{task_id}/activity"),
     ("post", "/tasks/{task_id}/cancel"),
+    ("post", "/tasks/{task_id}/purge"),
 }
 CORE_TAGS = {"public", "ingest", "retrieve", "model", "meta", "tasks", "system"}
 PUBLIC_PATHS = {"/health", "/demo/search"}
@@ -92,7 +93,7 @@ def load_schema(source: Path) -> dict:
         "contact": {
             "name": "BrainAPI Support",
             "email": "info@lumen-labs.ai",
-            "url": "https://brain-api.dev/developers",
+            "url": "https://brainapi.lumen-labs.ai/docs/v2/developers",
         },
         "license": {
             "name": "Business Source License 1.1",
@@ -100,8 +101,8 @@ def load_schema(source: Path) -> dict:
         },
     }
     schema["servers"] = [
-        {"url": "https://brain-api.dev/api", "description": "Managed BrainAPI gateway"},
-        {"url": "https://api.brain-api.dev", "description": "Direct managed API"},
+        {"url": "https://system.us-east1.brainapi.lumen-labs.ai", "description": "Managed BrainAPI (us-east1)"},
+        {"url": "https://system.europe-central2.brainapi.lumen-labs.ai", "description": "Managed BrainAPI (europe-central2)"},
         {"url": "http://localhost:8000", "description": "Local BrainAPI"},
     ]
     tag_descriptions = {
@@ -142,7 +143,7 @@ def load_schema(source: Path) -> dict:
                         "in": "header",
                         "required": False,
                         "schema": {"type": "string"},
-                        "description": "Preferred brain scope. Query/body/multipart fallbacks remain supported.",
+                        "description": "Alphanumeric Brain ID from dashboard Settings (name_key), not the display name. Query/body/multipart fallbacks remain supported.",
                     })
             if (method, route) in DIRECT_ONLY_OPERATIONS:
                 operation["servers"] = [{

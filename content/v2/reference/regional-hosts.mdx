@@ -1,0 +1,57 @@
+---
+title: Regional API hosts
+description: Call managed BrainAPI on the us-east1 and europe-central2 REST hosts
+---
+
+Managed BrainAPI REST is served at:
+
+```text
+https://system.<region>.brainapi.lumen-labs.ai
+```
+
+The hosted regions are `us-east1` and `europe-central2`. Do not use `api.brain-api.dev` as the product API; that hostname does not resolve.
+
+<Callout type="info" title="Hosted engine version">
+These guides document engine **2.21.0**. Public regional hosts may still report an older `version` on `GET /health` (observed `2.20.1.dev9`). On that build, `/model/facts` and `/retrieve/conflicts` return **404** because those routes are not deployed yet. That 404 is not the 2.21.0 contract. Compare `GET /health` before treating a live 404 as documented behavior. A 404 on `/retrieve/search` is separate: Search is gated by `SEARCH_ENABLED` and stays off on hosted production.
+</Callout>
+
+## Regions
+
+| Region | REST base |
+| --- | --- |
+| `us-east1` | `https://system.us-east1.brainapi.lumen-labs.ai` |
+| `europe-central2` | `https://system.europe-central2.brainapi.lumen-labs.ai` |
+
+## Self-hosted
+
+```text
+http://localhost:8000
+```
+
+## Example
+
+```bash
+export API_BASE="https://system.us-east1.brainapi.lumen-labs.ai"
+export BRAINPAT_TOKEN="replace-with-your-token"
+export BRAIN_ID="replacewithid"
+
+curl --fail-with-body "$API_BASE/health"
+
+curl --fail-with-body "$API_BASE/retrieve/context" \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: $BRAIN_ID" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"What is in this brain?"}'
+```
+
+`GET /health` is public and is the liveness probe. Its JSON includes `version`. `GET /` requires the system PAT and is not a ping.
+
+`X-Brain-ID` is the alphanumeric Brain ID from the dashboard Settings page, not the display name. Letters and digits only.
+
+Hosted Search (`/retrieve/search`) is gated by `SEARCH_ENABLED` and is off in production. Use [`POST /retrieve/context`](/v2/retrieval/context) unless your deployment has Search enabled.
+
+## Related
+
+- [Developer portal](/v2/developers)
+- [Authentication and brains](/v2/brains-and-auth)
+- [API overview](/v2/reference)

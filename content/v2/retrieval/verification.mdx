@@ -1,0 +1,76 @@
+---
+title: Fact verification
+description: Mark facts verified or rejected, hide rejected facts from retrieve, and grant the verification token scope
+---
+
+Facts in a brain carry an expert verification state: `unverified`, `verified`, or `rejected`. Retrieve, search, and graph walks hide rejected facts unless the caller sets `include_rejected=true`. Verified facts receive a ranking boost (`VERIFIED_FACT_RANK_BOOST`, default `0.15`).
+
+This is the **2.21.0** contract. Public hosts that still report `2.20.1.dev9` on `GET /health` return **404** on `/model/facts` because the route is not deployed there. That live 404 is not this contract. See [Regional API hosts](/v2/reference/regional-hosts).
+
+Writes require the `verification` token scope. That scope is **not** granted by default.
+
+## REST
+
+| Method | Path | Scope | Effect |
+| --- | --- | --- | --- |
+| `GET` | `/model/facts` | any valid PAT | List facts. `state` is `unverified`, `verified`, or `rejected`; omit it, pass empty, or `all` for no state filter. Default listing hides rejected facts unless `include_rejected=true` or `state=rejected`. |
+| `GET` | `/model/facts/{fact_id}` | any valid PAT | Read current state, verifier fields, and append-only history. |
+| `POST` | `/model/facts/{fact_id}/verify` | `verification` | Mark verified. |
+| `POST` | `/model/facts/{fact_id}/reject` | `verification` | Mark rejected. Later retrieve/search/traverse hide it by default. |
+| `POST` | `/model/facts/{fact_id}/reset` | `verification` | Return to `unverified`. History is retained. |
+
+`fact_id` is a relationship UUID or an EVENT node UUID.
+
+```bash
+curl --fail-with-body "http://localhost:8000/model/facts?state=unverified&limit=50" \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: $BRAIN_ID"
+
+curl --fail-with-body -X POST "http://localhost:8000/model/facts/$FACT_ID/verify" \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: $BRAIN_ID" \
+  -H "Content-Type: application/json" \
+  -d '{"verification_source":"runbook-rb17","note":"Confirmed against the published runbook."}'
+```
+
+The request body is optional. `verified_by` is ignored: the actor is taken from the authenticated token principal. Optional `verification_source` and `note` are stored on the fact and in the audit history.
+
+A missing `verification` scope returns **403** `VERIFICATION_PERMISSION_DENIED`. Successful `verify` also closes open conflicts for that fact (`method=verified_side` without rewriting fact states again).
+
+## MCP
+
+| Tool | Scope | Purpose |
+| --- | --- | --- |
+| `list_facts_by_verification` | any valid PAT | List by state; same rejected-hiding rule as REST. |
+| `get_fact_verification` | any valid PAT | Read one fact. |
+| `verify_fact` | `verification` | Mark verified. |
+| `reject_fact` | `verification` | Mark rejected. |
+| `reset_fact_verification` | `verification` | Return to unverified. |
+
+MCP `verified_by` is likewise ignored. MCP dumps include a `properties` object; the REST `FactVerificationRecord` does not.
+
+## Token scope
+
+Default PAT scopes are `brainapi` only. Grant `verification` explicitly:
+
+- System PAT: set `BRAINPAT_SCOPES` to include `verification` (space-separated).
+- Brain PAT: store `verification` on that brain's `pat_scopes`.
+- MCP OAuth can request `verification` only if the underlying PAT already holds it; it cannot escalate.
+
+Resolved scopes are cached for **30 seconds** (`expires_in=30`). A newly granted scope can take up to that interval to appear on an already-authenticated connection.
+
+## Retrieve behavior
+
+- Rejected facts are omitted from `/retrieve/context`, `/retrieve/search`, `/retrieve/`, entity/relationship lists, and MCP search/traverse unless `include_rejected=true`.
+- Context triples can include a `verification` object when the fact is present.
+- Ranking may add `VERIFIED_FACT_RANK_BOOST` (default `0.15`) to verified facts.
+
+See [Conflicts](/v2/retrieval/conflicts) for `method=verified_side`, which uses the same scope and can roll back verification properties if a reject fails.
+
+## Related
+
+- [Conflicts](/v2/retrieval/conflicts)
+- [As-of retrieve](/v2/retrieval/as-of)
+- [Authentication and brains](/v2/brains-and-auth)
+- [Configuration](/v2/configuration)
+- [Model API](/v2/reference/api/model)

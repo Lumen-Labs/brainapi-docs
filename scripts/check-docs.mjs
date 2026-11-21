@@ -123,12 +123,12 @@ const schema = JSON.parse(await readFile(path.join(root, "schemas", "brainapi-v2
 if (!String(schema.openapi).startsWith("3.1.")) errors.push(`OpenAPI version must be 3.1.x, received ${schema.openapi}`);
 
 const expectedServers = [
-  "https://brain-api.dev/api",
-  "https://api.brain-api.dev",
+  "https://system.us-east1.brainapi.lumen-labs.ai",
+  "https://system.europe-central2.brainapi.lumen-labs.ai",
   "http://localhost:8000",
 ];
 if (JSON.stringify(schema.servers?.map((server) => server.url)) !== JSON.stringify(expectedServers)) {
-  errors.push("OpenAPI servers must list the root gateway, direct API host, and localhost in canonical order");
+  errors.push("OpenAPI servers must list live regional hosts and localhost in canonical order");
 }
 
 const operationIds = new Set();
@@ -228,8 +228,8 @@ for (const label of [
 const mcpDiscovery = JSON.parse(
   await readFile(path.join(root, "public", ".well-known", "mcp.json"), "utf8"),
 );
-if (mcpDiscovery.url !== "https://brain-api.dev/mcp" || mcpDiscovery.transport !== "streamable-http") {
-  errors.push("Docs MCP discovery must identify the root Streamable HTTP alias");
+if (mcpDiscovery.url !== "https://brainapi.lumen-labs.ai/docs/mcp" || mcpDiscovery.transport !== "streamable-http") {
+  errors.push("Docs MCP discovery must identify the Streamable HTTP docs MCP");
 }
 if (mcpDiscovery.authentication?.required !== false || mcpDiscovery.capabilities?.tools !== true) {
   errors.push("Docs MCP discovery must declare unauthenticated tool capability");

@@ -5,6 +5,8 @@ description: Authenticate requests and keep every BrainAPI operation in the inte
 
 Protected core requests need a valid PAT. Most data requests also need a brain identifier. Treat the token as authorization and the brain as the data boundary; do not infer either from user-provided content.
 
+`X-Brain-ID` is the alphanumeric Brain ID from the dashboard Settings page (`name_key`), not the display name. Letters and digits only: `supportkb` is valid, `Support KB` and `support-kb` are not.
+
 ## Token types
 
 | Token | Scope | Use it for |
@@ -41,7 +43,7 @@ curl http://localhost:8000/meta/entity-labels \
   -H "X-Brain-ID: supportkb"
 ```
 
-Brain IDs must be alphanumeric in ordinary data requests. The reserved `system` brain cannot be used as application data.
+Brain IDs must be alphanumeric (`str.isalnum()`) in ordinary data requests. The reserved `system` brain cannot be used as application data. Creating a brain through `POST /system/brains` also requires the ID to start with a letter.
 
 ## Create or resolve brains
 
@@ -65,26 +67,16 @@ curl http://localhost:8000/meta/login-info \
   -H "BrainPAT: $BRAINPAT_TOKEN"
 ```
 
-## Rotate a brain access key
+## Token scopes
 
-Replace a brain's PAT with the system token. On success the old PAT is invalidated and the response includes the new PAT.
+Default PAT scopes are `brainapi`. Expert verification writes (`POST /model/facts/{id}/verify|reject|reset` and conflict `method=verified_side`) also need `verification`. That scope is **not** granted by default.
 
-```bash
-curl -X POST http://localhost:8000/system/brains/supportkb/rotate-pat \
-  -H "BrainPAT: $BRAINPAT_TOKEN"
-```
+- System PAT: space-separated `BRAINPAT_SCOPES`.
+- Brain PAT: stored `pat_scopes` on that brain.
 
-| Status | Code | Meaning | Check |
-| --- | --- | --- | --- |
-| `200` | n/a | PAT replaced. The response carries the new PAT. | Store it in your secret manager before closing the response. |
-| `400` | `BRAIN_ID_INVALID` | Brain ID is malformed. | Use letters and numbers, starting with a letter. |
-| `404` | `BRAIN_NOT_FOUND` | Brain does not exist. | List brains and use an existing ID. |
-| `409` | `BRAIN_LIFECYCLE_BUSY` | Another lifecycle operation is running on this brain. | Wait for it to finish, then retry. |
-| `503` | `BRAIN_PAT_CACHE_INVALIDATION_FAILED` | The PAT was replaced, but cached credentials could not be cleared. | Read the new PAT from `/system/brains-list`, check cache health, then rotate again. |
+Resolved scopes are cached for 30 seconds. See [Fact verification](/v2/retrieval/verification).
 
-A `503` with `BRAIN_PAT_CACHE_INVALIDATION_FAILED` means the new PAT is already saved. Do not assume the old PAT is rejected everywhere until the cache is cleared.
-
-The BrainAPI dashboard calls this endpoint when you choose **Replace access key** on a brain's Connect page. The dashboard only offers it when the brain's software version supports it.
+v2.21.0 has no `POST /system/brains/{brain_id}/rotate-pat`. The engine issues a brain PAT when the brain is created. Do not call rotate-pat against this version.
 
 ## Clear or delete a brain
 
@@ -101,10 +93,12 @@ A **409** means another lifecycle operation is running. A **503** with `BRAIN_CL
 
 | Status | Meaning | Check |
 | --- | --- | --- |
-| `400` | Brain ID is missing, malformed, or reserved. | Header spelling and ID characters. |
-| `401` | PAT is missing, malformed, or does not match the brain. | Token source and selected brain. |
-| `406` | Brain does not exist and automatic creation/fallback did not resolve it. | Brain creation settings or administrative creation. |
-| `503` | Brain lookup could not reach MongoDB. | MongoDB connection and credentials. |
+| `400` `BRAIN_ID_INVALID` | The supplied ID is not alphanumeric (hyphens, spaces, punctuation). | Use the dashboard Brain ID, letters and digits only. |
+| `400` `BRAIN_ID_RESERVED` | The reserved `system` brain was selected. | Choose an application brain. |
+| `401` | PAT is missing, malformed, or does not match the brain. A missing PAT is `401`, not `400`. | Token source and selected brain. |
+| `403` `VERIFICATION_PERMISSION_DENIED` | The PAT lacks the `verification` scope. | Grant the scope; wait up to 30 seconds for cache expiry. |
+| `406` | No brain resolved, or the named brain does not exist and automatic creation/fallback is off. Omitting `X-Brain-ID` with fallback off is `406`, not `400`. | Send a valid Brain ID or create the brain with the system PAT. |
+| `503` | Brain lookup could not reach the data store. | Connection and credentials. |
 
 ## Security guidance
 

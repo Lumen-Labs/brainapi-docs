@@ -106,7 +106,11 @@ curl --fail-with-body -X POST "<DEPLOYMENT_URL>/tasks/$TASK_ID/cancel" \
 
 HTTP **202** returns `task_id`, `mode`, and the current cancellation status. Repeat the same mode to read the current state. A different accepted mode or a run past its publication cutoff returns **409**. An unknown or out-of-scope task returns **404**.
 
-Keep polling through `cancelling` until the task reports `cancelled` or `rollback_failed`. A run can return `rollback_failed` when cleanup retries are exhausted. Staged data stays private until publication, which can briefly return **503** with `Retry-After` on other brain operations. Honor that header.
+Keep polling through `cancelling` until the task reports `cancelled` or `rollback_failed`. A run can return `rollback_failed` when cleanup retries are exhausted. Settlement and rollback each stop after 5 failures. Graph rollback distinguishes created vs reused items and keys `rollback_done` as `{operation_id}:{kind}:{uuid}` so a later retouch cannot skip deleting the original create. Staged data stays private until publication, which can briefly return **503** with `Retry-After` on other brain operations. Honor that header.
+
+## Purge one import
+
+`POST /tasks/{task_id}/purge` removes graph data owned by that import. Send a `digest` from a previous preview, or `source_key`, in the JSON body. **404** means the import has no recorded additions. **409** means the import changed since it was previewed, or the purge is unsafe. Confirm before calling it.
 
 ## Progressive URL activity
 

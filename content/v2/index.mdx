@@ -30,7 +30,7 @@ Use BrainAPI V2 for new systems. V1 documentation remains available under **Lega
 3. **Store** passages, entities, relationships, events, observations, and vectors in the configured backends.
 4. **Retrieve** the representation suited to your application: context packs, ranked hits, recommendations, graph facts, or agent tools.
 
-The brain is the isolation boundary. A request normally carries a `BrainPAT` token and an `X-Brain-ID` header; BrainAPI validates both before reading or writing data.
+The brain is the isolation boundary. A request normally carries a `BrainPAT` token and an `X-Brain-ID` header; BrainAPI validates both before reading or writing data. `X-Brain-ID` is the alphanumeric Brain ID from dashboard Settings, not the display name. Managed REST uses [regional hosts](/v2/reference/regional-hosts).
 
 ## What you can build
 
