@@ -8,9 +8,10 @@ description: Build ranked hybrid, graph-aware, plugin-assisted, and personalized
 A search hit is deliberately smaller and more explicit than an answer. It tells the caller **what matched**, **why it ranked**, and **where to retrieve or display it**. Your application decides whether to show the hit, open the source, send it to an LLM, or begin a deeper investigation.
 
 <AgentNote>
-- Search is opt-in: set `SEARCH_ENABLED=true` and use PostgreSQL
+- Search is opt-in: set `SEARCH_ENABLED=true` and use PostgreSQL. The runtime default is `false`.
+- Hosted production leaves Search off. `/retrieve/search` then returns HTTP 404. Prefer [`POST /retrieve/context`](/v2/retrieval/context).
 - Defaults: `k=10`, `channels=["passages"]`, `expand="none"`, `mode="default"`, and no plugin reranker
-- Use POST for the full contract, including `extras`, `fusion_alpha`, and `mode`
+- Use POST for the full contract, including `extras`, `fusion_alpha`, `mode`, `as_of`, and `include_validity_unknown`
 - A disabled Search endpoint returns HTTP 404; an unknown or unloaded plugin returns HTTP 400
 - The default `<200 ms` p50 target excludes `embed.query` and applies only to non-personalized, non-catalog, non-reranked Search
 </AgentNote>
@@ -268,7 +269,7 @@ Learned retrieval and reranking introduce model downloads, device requirements, 
 
 | Symptom | Likely cause | Diagnose | Fix |
 | --- | --- | --- | --- |
-| HTTP 404 on `/retrieve/search` | Search is disabled | Inspect `SEARCH_ENABLED` and startup configuration | Enable Search with PostgreSQL and restart |
+| HTTP 404 on `/retrieve/search` | Search is disabled (`SEARCH_ENABLED` defaults to `false`; hosted production leaves it off) | Inspect `SEARCH_ENABLED` | Use [Context](/v2/retrieval/context), or enable Search with PostgreSQL on a deployment that opts in |
 | HTTP 400 naming `plugin:<name>` | Plugin is missing, unloaded, or misspelled | Check its health route and loaded packages | Install, restart, and use the registered hook name |
 | HTTP 400 for `rerank="linear"` | Linear reranking is not implemented | Inspect the response detail | Use `none` or a loaded plugin reranker |
 | HTTP 422 | Invalid bounds, enum, or request type | Compare validation detail with the request table | Correct `k`, fusion, mode, expansion, or field types |

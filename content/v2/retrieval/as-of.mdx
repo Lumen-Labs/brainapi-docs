@@ -1,0 +1,61 @@
+---
+title: As-of retrieve
+description: Read the knowledge state valid at an instant, with fail-closed undated facts and changelog windows
+---
+
+Retrieve and search accept `as_of` as an ISO-8601 datetime. When it is set, BrainAPI returns the knowledge state valid at that instant.
+
+Undated facts are **omitted** (fail closed) and counted in `validity_unknown_count`. Set `include_validity_unknown=true` to return those facts separately in `validity_unknown`. They are still excluded from the primary result.
+
+## Context and search
+
+```bash
+curl --fail-with-body -X POST http://localhost:8000/retrieve/context \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: $BRAIN_ID" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "What was the on-call policy on 1 March 2024?",
+    "as_of": "2024-03-01T00:00:00Z",
+    "include_validity_unknown": false
+  }'
+```
+
+`GET /retrieve/` and `GET|POST /retrieve/search` take the same `as_of` and `include_validity_unknown` fields (query string on GET, JSON body on POST).
+
+| Field | Default | Meaning |
+| --- | --- | --- |
+| `as_of` | unset | Instant for validity filtering. Omit for current state. |
+| `include_validity_unknown` | `false` | When `as_of` is set, include undated facts in `validity_unknown` only. |
+| `validity_unknown_count` | response | Count of facts omitted because they have no valid-time start. |
+| `validity_unknown` | response | Payload of those facts when `include_validity_unknown=true`. |
+
+Invalid `as_of` values fail the request. Compact stamps such as `2024-01-01T930` can parse as `09:03` instead of being rejected; prefer a full ISO-8601 datetime with offset. See [Known issues](/v2/changelog#known-issues).
+
+## Changelogs
+
+| Method | Path | Effect |
+| --- | --- | --- |
+| `GET` | `/retrieve/changelogs` | Page changelog entries. `since` is inclusive; `until` is exclusive. Combined, they return added, superseded, and invalidated facts in that window. |
+| `GET` | `/retrieve/changelogs/{id}` | Read one entry. |
+| `GET` | `/retrieve/changelogs/types` | Distinct changelog types. |
+
+```bash
+curl --fail-with-body "http://localhost:8000/retrieve/changelogs?since=2024-03-01T00:00:00Z&until=2024-03-02T00:00:00Z" \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: $BRAIN_ID"
+```
+
+Types include `relationship_created`, `relationship_deprecated`, `node_properties_updated`, and `relationship_properties_updated`. Window filters run in the graph query. Neo4j creates per-type range indexes on validity timestamps. Index setup is cached per database and retried after writes that add relationship types; failed types back off.
+
+## MCP
+
+`list_changelogs` accepts `query_text`, `types`, `since`, and `until`. `get_changelog` reads one entry by id. `search_memory` / context-style tools honor the same as-of contract when those fields are passed.
+
+## Related
+
+- [Context](/v2/retrieval/context)
+- [Search](/v2/retrieval/search)
+- [Fact verification](/v2/retrieval/verification)
+- [Conflicts](/v2/retrieval/conflicts)
+- [Retrieve API](/v2/reference/api/retrieve)

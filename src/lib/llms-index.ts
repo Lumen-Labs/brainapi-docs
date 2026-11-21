@@ -17,9 +17,10 @@ export function buildRootLlmsTxt(): string {
 
 ## Start here
 
-- [BrainAPI Developer Portal](https://brain-api.dev/developers): Authentication, sandbox, quickstarts, API contracts, MCP, CLI, and support
+- [BrainAPI Developer Portal](${markdownDocsUrl("/v2/developers")}): Authentication, sandbox, quickstarts, API contracts, MCP, CLI, and support
 - [BrainAPI API documentation](${markdownDocsUrl("/v2/reference")}): Authored guidance and generated operation reference
-- [BrainAPI OpenAPI 3.1 specification](https://brain-api.dev/openapi.json): Machine-readable REST contract for tools and function calling
+- [BrainAPI OpenAPI 3.1 specification](${DOCS_BASE}/openapi.json): Machine-readable REST contract for tools and function calling
+- [Regional API hosts](${markdownDocsUrl("/v2/reference/regional-hosts")}): Managed REST bases such as https://system.us-east1.brainapi.lumen-labs.ai
 - [BrainAPI authentication documentation](${markdownDocsUrl("/v2/brains-and-auth")}): BrainPAT, Bearer authentication, and brain selection
 - [BrainAPI CLI](${markdownDocsUrl("/v2/tui")}): Install the official brainapi-tui npm package and brainapi binary
 
@@ -31,14 +32,17 @@ export function buildRootLlmsTxt(): string {
 - [Choose an ingestion path](${markdownDocsUrl("/v2/ingestion")}): Text, file, structured, deterministic, hybrid, or enrich
 - [Poll tasks](${markdownDocsUrl("/v2/ingestion/tasks")}): GET /tasks/{id}; cancel supported runs with POST /tasks/{id}/cancel
 - [Choose a retrieval surface](${markdownDocsUrl("/v2/retrieval")}): Context, Search, Recommendations, graph APIs, or MCP
+- [Fact verification](${markdownDocsUrl("/v2/retrieval/verification")}): Verify or reject facts; verification scope is not default
+- [Conflicts](${markdownDocsUrl("/v2/retrieval/conflicts")}): Scan and resolve cross-source contradictions
+- [As-of retrieve](${markdownDocsUrl("/v2/retrieval/as-of")}): Fail-closed valid-time reads and changelog windows
 - [Troubleshoot BrainAPI](${markdownDocsUrl("/v2/troubleshooting")}): Startup, auth, databases, tasks, Search, plugins, and MCP
 
 ## Agent interfaces
 
 - [Anonymous Search sandbox](https://brain-api.dev/api/demo/search?query=How%20does%20BrainAPI%20ingest%20text%3F&k=5): Read-only BM25 search over public V2 documentation
 - [Product MCP](${markdownDocsUrl("/v2/agentic/MCP")}): Authenticated tools for working with BrainAPI knowledge graphs
-- [Docs MCP](https://brain-api.dev/mcp): Unauthenticated Streamable HTTP MCP for searching and reading documentation
-- [Docs MCP discovery](https://brain-api.dev/.well-known/mcp.json): Machine-readable Docs MCP endpoint metadata
+- [Docs MCP](${DOCS_BASE}/mcp): Unauthenticated Streamable HTTP MCP for searching and reading documentation
+- [Docs MCP discovery](${DOCS_BASE}/.well-known/mcp.json): Machine-readable Docs MCP endpoint metadata
 - [Structured error handling](${markdownDocsUrl("/v2/developers")}#error-handling): Stable error codes, resolution hints, and request IDs
 
 ## Area indexes

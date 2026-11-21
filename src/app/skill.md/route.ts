@@ -27,9 +27,9 @@ Do not use BrainAPI as general web search, as a transactional source of truth, o
 
 1. Prefer **V2** docs unless the user is on a V1 deployment.
 2. Discover pages via \`${DOCS_BASE}/llms.txt\` or MCP \`search_docs\` / \`list_sections\`.
-3. Fetch markdown with MCP \`get_page\` or by appending \`.md\` to a docs URL. Inspect \`https://brain-api.dev/openapi.json\` before generating REST tools.
-4. Evaluate retrieval with \`GET https://brain-api.dev/api/demo/search\`; it is read-only, documentation-only, capped at 500 query characters and 10 results, and limited to 30 requests per minute per client.
-5. Authenticate customer API calls with \`BrainPAT\` or Bearer auth and prefer \`X-Brain-ID\` for brain scope. Never send a customer token to the anonymous demo.
+3. Fetch markdown with MCP \`get_page\` or by appending \`.md\` to a docs URL. Inspect \`${DOCS_BASE}/openapi.json\` before generating REST tools.
+4. Evaluate retrieval with \`GET https://brain-api.dev/api/demo/search\`; it is read-only, documentation-only, capped at 500 query characters and 10 results, and limited to 30 requests per minute per client. Product REST is regional: \`https://system.<region>.brainapi.lumen-labs.ai\`. Ping \`GET /health\`; \`GET /\` requires the system PAT.
+5. Authenticate customer API calls with \`BrainPAT\` or Bearer auth and prefer \`X-Brain-ID\` for the alphanumeric Brain ID from dashboard Settings (not the display name). Never send a customer token to the anonymous demo. Hosted \`/retrieve/search\` is off unless \`SEARCH_ENABLED=true\`; prefer \`POST /retrieve/context\`.
 6. Ingest APIs return **202** + \`task_id\`. Poll \`GET /tasks/{id}\`. **404** means the task is unknown — not still pending.
 7. On failure, read \`error.code\`, \`error.resolution\`, and \`error.request_id\`; retain \`detail\` compatibility and report the matching \`X-Request-ID\` when escalating.
 8. Structured ingest uses event-centric \`IngestionTripleSet\` (not the old \`json_data\` element schema).

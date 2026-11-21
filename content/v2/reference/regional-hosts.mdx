@@ -1,0 +1,57 @@
+---
+title: Regional API hosts
+description: Call managed BrainAPI on regional REST hosts instead of the documentation sandbox
+---
+
+Managed BrainAPI REST is served per region:
+
+```text
+https://system.<region>.brainapi.lumen-labs.ai
+```
+
+Do not use `api.brain-api.dev` or `brain-api.dev/api` as the product API. Those names belong to the documentation sandbox gateway (anonymous demo search, docs MCP proxy, and OpenAPI download).
+
+## Live regions
+
+| Region | REST base |
+| --- | --- |
+| `us-east1` | `https://system.us-east1.brainapi.lumen-labs.ai` |
+| `europe-central2` | `https://system.europe-central2.brainapi.lumen-labs.ai` |
+
+## Configured regions
+
+The hosted app also lists `us-west1`, `europe-southwest1`, `europe-north1`, and `asia-southeast1`. Use a live host unless your environment agreement names another region.
+
+## Self-hosted
+
+```text
+http://localhost:8000
+```
+
+## Example
+
+```bash
+export API_BASE="https://system.us-east1.brainapi.lumen-labs.ai"
+export BRAINPAT_TOKEN="replace-with-your-token"
+export BRAIN_ID="replacewithid"
+
+curl --fail-with-body "$API_BASE/health"
+
+curl --fail-with-body "$API_BASE/retrieve/context" \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: $BRAIN_ID" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"What is in this brain?"}'
+```
+
+`GET /health` is public and is the liveness probe. `GET /` requires the system PAT and is not a ping.
+
+`X-Brain-ID` is the alphanumeric Brain ID from the dashboard Settings page, not the display name. Letters and digits only.
+
+Hosted Search (`/retrieve/search`) is gated by `SEARCH_ENABLED` and is off in production. Use [`POST /retrieve/context`](/v2/retrieval/context) unless your deployment has Search enabled.
+
+## Related
+
+- [Developer portal](/v2/developers)
+- [Authentication and brains](/v2/brains-and-auth)
+- [API overview](/v2/reference)

@@ -11,10 +11,11 @@ BrainAPI normally returns JSON error bodies with a `detail` field. Pydantic vali
 | --- | --- | --- |
 | `200` | Synchronous request succeeded. | No. |
 | `202` | Asynchronous work was accepted and returned a `task_id`. | Poll the task; do not replay immediately. |
-| `400` | Missing/invalid brain, reserved brain, invalid Search plugin, or invalid control combination. | Fix the request/configuration. |
+| `400` | Invalid alphanumeric Brain ID, reserved `system` brain, invalid Search plugin, or invalid control combination. Missing `X-Brain-ID` is not `400`. | Fix the request/configuration. |
 | `401` | PAT is missing or invalid for the operation/brain. | Refresh or correct credentials. |
-| `404` | Resource/task is absent, or an opt-in route such as Search is disabled. | Diagnose before retrying. |
-| `406` | Selected brain does not exist and creation/fallback did not resolve it. | Create/select the intended brain. |
+| `403` | PAT lacks a required scope such as `verification`. | Grant the scope; wait up to 30 seconds for cache expiry. |
+| `404` | Resource/task is absent, or an opt-in route such as Search is disabled (`SEARCH_ENABLED` defaults to `false`). | Diagnose before retrying. Prefer Context when Search is off. |
+| `406` | No brain resolved, or the selected brain does not exist and creation/fallback did not resolve it. | Send a valid Brain ID or create/select the intended brain. |
 | `422` | Request failed Pydantic validation. | Correct the fields and types. |
 | `500` | Unhandled server or plugin failure. | Inspect server logs; retry only if the operation is safe/idempotent. |
 | `503` | Required database was unavailable during request routing. | Retry with backoff after service recovery. |

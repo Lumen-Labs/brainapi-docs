@@ -3,22 +3,13 @@ import { readFile } from "node:fs/promises";
 import gateway, { isAllowedApiRoute } from "../deploy/cloudflare-agent-gateway.mjs";
 
 const schema = JSON.parse(await readFile(new URL("../schemas/brainapi-v2.openapi.json", import.meta.url), "utf8"));
-const methods = new Set(["get", "put", "post", "delete", "patch", "head", "options", "trace"]);
 
-function examplePath(template) {
-  return template.replaceAll(/\{[^}]+\}/g, "example-id");
-}
-
-for (const [path, item] of Object.entries(schema.paths)) {
-  for (const method of Object.keys(item).filter((key) => methods.has(key))) {
-    const servers = item[method].servers ?? item.servers ?? schema.servers;
-    const usesGateway = servers.some(({ url }) => url === "https://brain-api.dev/api");
-    assert.equal(
-      isAllowedApiRoute(method.toUpperCase(), examplePath(path)),
-      usesGateway,
-      `Gateway availability differs from the OpenAPI servers for ${method.toUpperCase()} ${path}`,
-    );
-  }
+for (const server of schema.servers ?? []) {
+  assert.equal(
+    String(server.url).includes("brain-api.dev"),
+    false,
+    `Product OpenAPI must not list ${server.url} as an API server`,
+  );
 }
 
 for (const [method, path] of [
@@ -90,4 +81,4 @@ try {
   globalThis.fetch = originalFetch;
 }
 
-console.log(`Validated Cloudflare allowlist parity for ${Object.keys(schema.paths).length} OpenAPI paths, proxy semantics, rate limiting, and public mutation denial.`);
+console.log("Validated Cloudflare gateway proxy semantics, rate limiting, public mutation denial, and that product OpenAPI servers are not the docs sandbox.");

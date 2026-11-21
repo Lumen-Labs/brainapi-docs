@@ -1,0 +1,88 @@
+---
+title: Cross-source conflicts
+description: Scan, list, resolve, and dismiss contradictory facts that share a subject and predicate
+---
+
+A conflict links two facts that share a subject and predicate, disagree on value, amount, or polarity, and overlap in valid time. Same-source revisions (a superseded copy versus the current copy) are not conflicts.
+
+Statuses are `open`, `resolved`, and `dismissed`. Resolution methods are `dismissed`, `verified_side`, `manual`, and `stale`.
+
+On-demand scan is always available. Ingest-time detection and LLM leftover-pair judging stay **off** unless you opt in.
+
+## REST
+
+| Method | Path | Effect |
+| --- | --- | --- |
+| `GET` | `/retrieve/conflicts` | List conflicts. Filter with `status`, `source` (source_key), `subject`, `since`, `until`. Page with `limit` and `skip`. |
+| `GET` | `/retrieve/conflicts/{id}` | Read one conflict. |
+| `GET` | `/retrieve/conflicts/report` | Summary plus conflicts. `format=json` or `markdown`. |
+| `POST` | `/retrieve/conflicts/scan` | Queue a scan. Returns **202** with `task_id`. Body may set `use_llm` only. |
+| `POST` | `/retrieve/conflicts/{id}/resolve` | Resolve. Body: `winning_fact_id`, `notes`, `method` (`manual` or `verified_side`). |
+| `POST` | `/retrieve/conflicts/{id}/dismiss` | Dismiss without choosing a winner. Body: optional `notes`. |
+
+```bash
+curl --fail-with-body -X POST http://localhost:8000/retrieve/conflicts/scan \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: $BRAIN_ID" \
+  -H "Content-Type: application/json" \
+  -d '{"use_llm":false}'
+
+curl --fail-with-body "http://localhost:8000/retrieve/conflicts?status=open" \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: $BRAIN_ID"
+```
+
+Poll the scan with `GET /tasks/{task_id}` in the same brain. Hitting the relationship cap sets `truncated` on the task. The REST scan body cannot override the cap.
+
+## Resolve methods
+
+| Method | Scope | Behavior |
+| --- | --- | --- |
+| `manual` | any valid PAT | Record a winner and notes. Does not rewrite verification states. |
+| `verified_side` | `verification` | Verify the winning fact and reject the other side. Requires `winning_fact_id`. |
+| `dismissed` | any valid PAT | Close without a winner (`POST .../dismiss`). |
+| `stale` | scanner | Auto-closed when a later scan proves the contradiction no longer holds. |
+
+`verified_side` snapshots verification properties before writes. If reject fails, it restores the prior `verified_by`, `verified_at`, `verification_source`, and reason with a single history entry tagged `rollback`, and keeps the conflict open. A pre-read miss or error aborts before any write.
+
+A stale-closed conflict reopens if the same contradiction is found again. Stale auto-resolve requires a concrete reason (side removed or superseded, validity windows no longer overlap, values compatible, or an explicit LLM `contradicts=false`). LLM-detected conflicts stay open when the LLM is off, the pair budget is exhausted, or that pair got no verdict.
+
+`upsert_conflict` does not overwrite a concurrent operator resolution.
+
+## Scan cap and cursor
+
+`CONFLICT_DETECT_MAX_RELATIONSHIPS` defaults to `10000`. `0` means unlimited. REST scan cannot pass a different cap.
+
+Capped scans page by whole `(subject_uuid, normalized predicate)` groups, persist a per-brain keyset cursor `{after_subject, after_predicate}`, and wrap around so later scans continue past the previous window. Hitting the cap stale-closes only groups that scan loaded. A comparison group larger than the cap is still loaded whole so groups are never split.
+
+Ingest-time scan (when enabled) is incremental over touched subjects and can page past the default cap. Full on-demand scans honor the env cap.
+
+## MCP
+
+| Tool | Purpose |
+| --- | --- |
+| `list_conflicts` | List with the same filters as REST. |
+| `get_conflict` | Read one conflict. |
+| `resolve_conflict` | Resolve (`method` `manual` or `verified_side`). |
+| `dismiss_conflict` | Dismiss. |
+| `conflict_report` | JSON or markdown report. |
+
+`verified_side` on MCP also requires the `verification` scope.
+
+## Defaults
+
+| Flag | Default |
+| --- | --- |
+| `CONFLICT_DETECT_ON_INGEST` | `false` |
+| `CONFLICT_DETECT_LLM` | `false` |
+| `CONFLICT_DETECT_LLM_MAX_PAIRS` | `20` |
+| `CONFLICT_DETECT_MAX_RELATIONSHIPS` | `10000` (`0` unlimited) |
+
+See [Known issues](/v2/changelog#known-issues) for scan, stale-close, and LLM-verdict caveats verified in this release.
+
+## Related
+
+- [Fact verification](/v2/retrieval/verification)
+- [As-of retrieve](/v2/retrieval/as-of)
+- [Ingestion tasks](/v2/ingestion/tasks)
+- [Retrieve API](/v2/reference/api/retrieve)

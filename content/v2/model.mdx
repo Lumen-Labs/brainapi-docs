@@ -52,6 +52,20 @@ curl --fail-with-body -X POST http://localhost:8000/model/relationship \
 
 Both nodes must resolve in the same brain. Use `PUT /model/relationship` with a relationship `uuid`, `new_properties`, and `properties_to_remove` to change its properties.
 
+## Verify or reject a fact
+
+Relationships and EVENT nodes carry expert verification. List and read with any valid PAT. Writes require the `verification` scope.
+
+```bash
+curl --fail-with-body -X POST http://localhost:8000/model/facts/$FACT_ID/verify \
+  -H "BrainPAT: $BRAINPAT_TOKEN" \
+  -H "X-Brain-ID: operations" \
+  -H "Content-Type: application/json" \
+  -d '{"verification_source":"ops-review","note":"Confirmed"}'
+```
+
+See [Fact verification](/v2/retrieval/verification).
+
 ## When not to use Model
 
 - Do not call the unimplemented System reset, delete, or backup routes; they currently raise `NotImplementedError`.

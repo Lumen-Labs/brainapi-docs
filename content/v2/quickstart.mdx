@@ -28,14 +28,13 @@ export BRAINPAT_TOKEN="replace-with-your-token"
 export BRAIN_ID="default"
 ```
 
-Confirm the API accepts the system token:
+Confirm the API is up. `GET /health` is public:
 
 ```bash
-curl --fail http://localhost:8000/ \
-  -H "BrainPAT: $BRAINPAT_TOKEN"
+curl --fail http://localhost:8000/health
 ```
 
-Expected output is `ok`. If this fails, run `brainapi doctor`. A `401` means the token is missing or wrong; a connection error means the API is not listening yet.
+`GET /` requires the system PAT and is not a ping. If health fails, run `brainapi doctor`. A connection error means the API is not listening yet.
 
 ## Ingest one document
 
@@ -63,7 +62,7 @@ Expected response:
 
 Save `task_id`. A `202` response means the work is queued, not finished.
 
-If you receive `400`, verify `X-Brain-ID`; `401` means the PAT was rejected; `406` means the selected brain was not created and automatic creation/fallback is off. See [Authentication and brains](/v2/brains-and-auth) before retrying.
+If you receive `401`, the PAT is missing or rejected. `400 BRAIN_ID_INVALID` means the Brain ID is not alphanumeric (use the dashboard ID, not the display name). `406` means no brain resolved, or the selected brain was not created and automatic creation/fallback is off. See [Authentication and brains](/v2/brains-and-auth) before retrying.
 
 ## Wait for completion
 

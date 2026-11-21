@@ -19,6 +19,24 @@ _openapi:
       title: Get Changelog By Id
       url: '#get-changelog-by-id'
     - depth: 2
+      title: List Conflicts
+      url: '#list-conflicts'
+    - depth: 2
+      title: Conflict Report
+      url: '#conflict-report'
+    - depth: 2
+      title: Scan Conflicts
+      url: '#scan-conflicts'
+    - depth: 2
+      title: Get Conflict
+      url: '#get-conflict'
+    - depth: 2
+      title: Dismiss Conflict
+      url: '#dismiss-conflict'
+    - depth: 2
+      title: Resolve Conflict
+      url: '#resolve-conflict'
+    - depth: 2
       title: Get Context
       url: '#get-context'
     - depth: 2
@@ -109,6 +127,18 @@ _openapi:
         id: get-changelog-types
       - content: Get Changelog By Id
         id: get-changelog-by-id
+      - content: List Conflicts
+        id: list-conflicts
+      - content: Conflict Report
+        id: conflict-report
+      - content: Scan Conflicts
+        id: scan-conflicts
+      - content: Get Conflict
+        id: get-conflict
+      - content: Dismiss Conflict
+        id: dismiss-conflict
+      - content: Resolve Conflict
+        id: resolve-conflict
       - content: Get Context
         id: get-context
       - content: Get Entities
@@ -197,6 +227,22 @@ _openapi:
           Returns:
               The changelog entry corresponding to the specified identifier.
         heading: get-changelog-by-id
+      - content: List cross-source fact conflicts. Filter by status, source_key,
+          subject, and detected_at window.
+        heading: list-conflicts
+      - content: Build a JSON or markdown report of conflicts for a brain.
+        heading: conflict-report
+      - content: Queue a conflict scan. Returns 202 with task_id. The body may set
+          use_llm only; it cannot override CONFLICT_DETECT_MAX_RELATIONSHIPS.
+        heading: scan-conflicts
+      - content: Read one conflict by id.
+        heading: get-conflict
+      - content: Dismiss a conflict without choosing a winning fact.
+        heading: dismiss-conflict
+      - content: Resolve a conflict. method=manual records a winner.
+          method=verified_side verifies the winner and rejects the other side
+          and requires the verification token scope.
+        heading: resolve-conflict
       - content: |-
           Handle an HTTP request to retrieve an entity's contextual information.
 
@@ -391,7 +437,7 @@ export default function Layout(props) {
   return (
     <>
       {props.children}
-      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/retrieve/","method":"get"},{"path":"/retrieve/changelogs","method":"get"},{"path":"/retrieve/changelogs/types","method":"get"},{"path":"/retrieve/changelogs/{id}","method":"get"},{"path":"/retrieve/context","method":"post"},{"path":"/retrieve/entities","method":"get"},{"path":"/retrieve/entities/neighbors","method":"get"},{"path":"/retrieve/entities/neighbors","method":"post"},{"path":"/retrieve/entities/neighbors/ai-mode","method":"post"},{"path":"/retrieve/entity/context","method":"get"},{"path":"/retrieve/entity/info","method":"get"},{"path":"/retrieve/entity/status","method":"get"},{"path":"/retrieve/entity/synergies","method":"get"},{"path":"/retrieve/explore/v1/communities/{community_id}","method":"get"},{"path":"/retrieve/explore/v1/neighbors/{entity_id}","method":"get"},{"path":"/retrieve/explore/v1/overview","method":"get"},{"path":"/retrieve/hops","method":"get"},{"path":"/retrieve/observations","method":"get"},{"path":"/retrieve/observations/labels","method":"get"},{"path":"/retrieve/observations/{id}","method":"get"},{"path":"/retrieve/recommend","method":"get"},{"path":"/retrieve/recommend","method":"post"},{"path":"/retrieve/relationships","method":"get"},{"path":"/retrieve/search","method":"get"},{"path":"/retrieve/search","method":"post"},{"path":"/retrieve/structured-data","method":"get"},{"path":"/retrieve/structured-data/types","method":"get"},{"path":"/retrieve/structured-data/{id}","method":"get"},{"path":"/retrieve/text-chunks","method":"get"},{"path":"/retrieve/vectors/stores","method":"get"},{"path":"/retrieve/vectors/{store}","method":"get"}]} showTitle showDescription />
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/retrieve/","method":"get"},{"path":"/retrieve/changelogs","method":"get"},{"path":"/retrieve/changelogs/types","method":"get"},{"path":"/retrieve/changelogs/{id}","method":"get"},{"path":"/retrieve/conflicts","method":"get"},{"path":"/retrieve/conflicts/report","method":"get"},{"path":"/retrieve/conflicts/scan","method":"post"},{"path":"/retrieve/conflicts/{id}","method":"get"},{"path":"/retrieve/conflicts/{id}/dismiss","method":"post"},{"path":"/retrieve/conflicts/{id}/resolve","method":"post"},{"path":"/retrieve/context","method":"post"},{"path":"/retrieve/entities","method":"get"},{"path":"/retrieve/entities/neighbors","method":"get"},{"path":"/retrieve/entities/neighbors","method":"post"},{"path":"/retrieve/entities/neighbors/ai-mode","method":"post"},{"path":"/retrieve/entity/context","method":"get"},{"path":"/retrieve/entity/info","method":"get"},{"path":"/retrieve/entity/status","method":"get"},{"path":"/retrieve/entity/synergies","method":"get"},{"path":"/retrieve/explore/v1/communities/{community_id}","method":"get"},{"path":"/retrieve/explore/v1/neighbors/{entity_id}","method":"get"},{"path":"/retrieve/explore/v1/overview","method":"get"},{"path":"/retrieve/hops","method":"get"},{"path":"/retrieve/observations","method":"get"},{"path":"/retrieve/observations/labels","method":"get"},{"path":"/retrieve/observations/{id}","method":"get"},{"path":"/retrieve/recommend","method":"get"},{"path":"/retrieve/recommend","method":"post"},{"path":"/retrieve/relationships","method":"get"},{"path":"/retrieve/search","method":"get"},{"path":"/retrieve/search","method":"post"},{"path":"/retrieve/structured-data","method":"get"},{"path":"/retrieve/structured-data/types","method":"get"},{"path":"/retrieve/structured-data/{id}","method":"get"},{"path":"/retrieve/text-chunks","method":"get"},{"path":"/retrieve/vectors/stores","method":"get"},{"path":"/retrieve/vectors/{store}","method":"get"}]} showTitle showDescription />
     </>
   );
 }

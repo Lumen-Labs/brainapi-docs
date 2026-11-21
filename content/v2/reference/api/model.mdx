@@ -13,6 +13,21 @@ _openapi:
       title: Update Entity
       url: '#update-entity'
     - depth: 2
+      title: List Facts
+      url: '#list-facts'
+    - depth: 2
+      title: Get Fact
+      url: '#get-fact'
+    - depth: 2
+      title: Reject Fact
+      url: '#reject-fact'
+    - depth: 2
+      title: Reset Fact Verification
+      url: '#reset-fact-verification'
+    - depth: 2
+      title: Verify Fact
+      url: '#verify-fact'
+    - depth: 2
       title: Add Relationship
       url: '#add-relationship'
     - depth: 2
@@ -24,6 +39,16 @@ _openapi:
         id: add-entity
       - content: Update Entity
         id: update-entity
+      - content: List Facts
+        id: list-facts
+      - content: Get Fact
+        id: get-fact
+      - content: Reject Fact
+        id: reject-fact
+      - content: Reset Fact Verification
+        id: reset-fact-verification
+      - content: Verify Fact
+        id: verify-fact
       - content: Add Relationship
         id: add-relationship
       - content: Update Relationship
@@ -42,6 +67,22 @@ _openapi:
           @returns The controller's response containing the updated node
           representation or an operation result.
         heading: update-entity
+      - content: 'List facts in a brain filtered by verification state: unverified,
+          verified, or rejected. Default listing hides rejected facts unless
+          include_rejected is true or state is rejected.'
+        heading: list-facts
+      - content: Get the current verification state, verifier info, and append-only
+          audit history for a fact.
+        heading: get-fact
+      - content: Mark a fact as rejected so retrieve/search/traverse hide it by default.
+          Requires the verification token scope.
+        heading: reject-fact
+      - content: Reset a fact back to unverified. Append-only audit history is retained.
+          Requires the verification token scope.
+        heading: reset-fact-verification
+      - content: Mark a fact (relationship UUID or EVENT node UUID) as verified.
+          Requires the verification token scope.
+        heading: verify-fact
       - content: |-
           Create a relationship linking two nodes in the graph.
 
@@ -71,7 +112,7 @@ export default function Layout(props) {
   return (
     <>
       {props.children}
-      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/model/entity","method":"post"},{"path":"/model/entity","method":"put"},{"path":"/model/relationship","method":"post"},{"path":"/model/relationship","method":"put"}]} showTitle showDescription />
+      <Comp document="schemas/brainapi-v2.openapi.json" webhooks={[]} operations={[{"path":"/model/entity","method":"post"},{"path":"/model/entity","method":"put"},{"path":"/model/facts","method":"get"},{"path":"/model/facts/{fact_id}","method":"get"},{"path":"/model/facts/{fact_id}/reject","method":"post"},{"path":"/model/facts/{fact_id}/reset","method":"post"},{"path":"/model/facts/{fact_id}/verify","method":"post"},{"path":"/model/relationship","method":"post"},{"path":"/model/relationship","method":"put"}]} showTitle showDescription />
     </>
   );
 }
