@@ -55,6 +55,7 @@ Configure only credentials relevant to the chosen backends: `POSTGRES_*`, `MONGO
 | `JANITOR_BATCH_SIZE` | `20` | Relationships per Janitor batch. |
 | `INGEST_JANITOR_MAX_LLM_CALLS` | `2` | Janitor LLM-call ceiling per session. |
 | `INGEST_ARCHITECT_MODE` | `batch` | `batch`, `schema`, or `tooler`. |
+| `SPREADSHEET_EXPERIMENT_BRAINS` | empty (off) | **Experimental.** Comma-separated brain IDs, or `*`. PostgreSQL only. See [Ingestion](/v2/concepts/ingestion#spreadsheets-experimental-opt-in). |
 
 The remaining `INGEST_ARCHITECT_*` controls tune unit splitting, escalation, prior context, and scratchpad size. Keep defaults until an ingestion evaluation identifies a concrete failure.
 
@@ -62,7 +63,7 @@ Graph rollback for staged publish failure keys `rollback_done` as `{operation_id
 
 ## Staged ingestion
 
-Set `STAGED_INGESTION_ENABLED=1` on the API and worker to stage text and URL requests that skip enrichment. Enable `STAGED_ENRICHMENT_ENABLED=1` as well for enriched text and URLs, structured data, and files. Both flags default to off.
+Set `STAGED_INGESTION_ENABLED=1` on the API and worker to stage text and URL requests that skip enrichment. Enable `STAGED_ENRICHMENT_ENABLED=1` as well for enriched text and URLs, structured data, and files. Both flags default to off. `INGESTION_CANCELLATION_ENABLED=1` turns on task control (the `cancellation_modes` field) without requiring staging. Rollback still needs a staged run.
 
 The supplied Compose profiles share a publication lock volume between services. For a custom deployment, set `INGEST_PUBLICATION_LOCK_DIR` to a shared writable directory that supports file locking. Check the root task's `cancellation_modes` before offering cancellation. [Deployment profiles](https://github.com/Lumen-Labs/brainapi2/tree/main/deploy) · [Ingestion tasks](/v2/ingestion/tasks)
 
@@ -101,7 +102,9 @@ See [Fact verification](/v2/retrieval/verification), [Conflicts](/v2/retrieval/c
 
 ## Plugins and MCP
 
-`PLUGINS_DIR` defaults to `plugins`; `PLUGIN_REGISTRY_URL` defaults to `https://registry.brain-api.dev`. Publisher credentials are required only for registry mutation. MCP OAuth deployments use `MCP_OAUTH_ISSUER_URL` and `MCP_RESOURCE_SERVER_URL`.
+`PLUGINS_DIR` defaults to `plugins`; `PLUGIN_REGISTRY_URL` defaults to `https://registry.brain-api.dev`. Publisher credentials are required only for registry mutation.
+
+MCP OAuth (optional, 2.21.1 hosted sign-in) uses `MCP_OAUTH_ISSUER_URL` or `MCP_HOSTED_OAUTH_ISSUER_URL`, plus `MCP_RESOURCE_SERVER_URL`. `MCP_OAUTH_CHATGPT_ONLY=true` or a set hosted issuer restricts client registration to the hosted connector callback. Refresh tokens have no TTL unless `MCP_OAUTH_REFRESH_TOKEN_TTL` is set. Changing `BRAINPAT_TOKEN` or the issuer makes stored MCP PATs undecryptable. See [MCP and OAuth](/v2/concepts/mcp).
 
 ## Observability
 
