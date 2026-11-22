@@ -1,0 +1,18 @@
+{
+  "title": "Concepts",
+  "defaultOpen": true,
+  "pages": [
+    "[What BrainAPI is for](/v2/concepts)",
+    "[Brains and isolation](/v2/concepts/brains)",
+    "[Ingestion](/v2/concepts/ingestion)",
+    "[Knowledge graph](/v2/concepts/knowledge-graph)",
+    "[Retrieval, chat, and Explore](/v2/concepts/retrieval)",
+    "[History and as-of queries](/v2/concepts/history)",
+    "[Conflicts and provenance](/v2/concepts/conflicts)",
+    "[Verified and rejected facts](/v2/concepts/verification)",
+    "[Source revisions and dedupe](/v2/concepts/sources)",
+    "[Tasks, cancel, and rollback](/v2/concepts/tasks)",
+    "[MCP and OAuth](/v2/concepts/mcp)",
+    "[SDKs, PATs, and billing](/v2/concepts/sdks-and-billing)"
+  ]
+}

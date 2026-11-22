@@ -7,6 +7,14 @@ This page records changes verified in the current source tree. It is not a promi
 
 Public regional hosts may lag this documentation. Hosts that have not rolled 2.21.0 return **404** for `/model/facts` and `/retrieve/conflicts` because those routes are not on that build. That 404 is not the 2.21.0 contract. See [Regional API hosts](/v2/reference/regional-hosts).
 
+## 2.21.1
+
+Spreadsheet import/query (off by default), Explore overview-link snapshots, and hosted MCP OAuth sign-in. Verified against [brainapi2 2.21.1](https://github.com/Lumen-Labs/brainapi2). Plain-language feature pages live under [Concepts](/v2/concepts).
+
+- `.xlsx` / `.csv` import as workbooks when `SPREADSHEET_EXPERIMENT_BRAINS` includes the brain (or `*`). Empty disables every brain. PostgreSQL only. Direct upload: `POST /ingest/spreadsheets`. See [Ingestion](/v2/concepts/ingestion#spreadsheets-experimental-opt-in).
+- Explore overview snapshots store capped `overviewLinks` (4000) plus `overviewLinksTruncated`. See [Retrieval](/v2/concepts/retrieval).
+- Hosted MCP OAuth: consent `request_id`, encrypted brain PATs, 303 redirect. System PAT cannot grant OAuth. See [MCP and OAuth](/v2/concepts/mcp).
+
 ## 2.21.0
 
 Knowledge-graph memory: expert verification, cross-source conflict detection, fail-closed as-of retrieve, validity changelogs, staged-ingest rollback, and Cypher hardening. Defaults are unchanged: raw Cypher is read-only, `CONFLICT_DETECT_ON_INGEST` and `CONFLICT_DETECT_LLM` are off, as-of lookups fail closed, and ingest staging is not required for a normal import.
