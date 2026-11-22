@@ -15,7 +15,7 @@ Everyday example: a librarian uploads a scanned yearbook. The UI shows "processi
 
 **Always poll** after ingest. **Cancel** when the operator picked the wrong file or the run is stuck in a way you choose to stop. **Rollback** when staging is on and you want this run's unpublished work discarded. **Purge** when a completed import should be removed.
 
-**Do not** treat **404** as "still pending." **Do not** offer rollback in the UI unless the task lists that mode in `cancellation_modes`. **Do not** assume staging is on; `STAGED_INGESTION_ENABLED` and `STAGED_ENRICHMENT_ENABLED` default to off. **Do not** cancel with a different brain ID than you used to ingest.
+**Do not** treat **404** as "still pending." **Do not** offer cancel or rollback in the UI unless the task lists `cancellation_modes`. That field is absent unless task control is on (`INGESTION_CANCELLATION_ENABLED=1` or `STAGED_INGESTION_ENABLED=1`). **Do not** assume staging is on; both staged flags default to off. **Do not** cancel with a different brain ID than you used to ingest.
 
 ## How it works
 
@@ -49,11 +49,11 @@ Settlement and rollback each stop after 5 failures. Graph rollback distinguishes
 
 ### keep_saved versus rollback
 
-**What.** `keep_saved` stops remaining work and keeps what already landed (and publishes completed staged units). `rollback` stops remaining work and discards this run's staged data. Earlier imports stay intact.
+**What.** `keep_saved` and `rollback` need task control: `INGESTION_CANCELLATION_ENABLED=1` or `STAGED_INGESTION_ENABLED=1`. Without either, the task has no `cancellation_modes`. `keep_saved` stops remaining work and keeps what already landed (and publishes completed staged units). `rollback` stops remaining work and discards this run's staged data. Earlier imports stay intact.
 
 **Why.** Sometimes you want the pages that already processed. Sometimes you want the run to vanish.
 
-**When.** Read `cancellation_modes` first. Staging must be enabled for rollback to be offered. Keep polling through `cancelling`. `rollback_failed` means cleanup retries were exhausted.
+**When.** Read `cancellation_modes` first. Rollback is listed only while the run is staged. Keep polling through `cancelling`. `rollback_failed` means cleanup retries were exhausted.
 
 ### Staged ingestion (opt-in)
 

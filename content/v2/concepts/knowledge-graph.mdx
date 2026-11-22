@@ -75,7 +75,7 @@ The **lightweight** pipeline extracts fewer entities and skips heavier validatio
 
 ### Model API
 
-**What.** `POST /model/entity` and `POST /model/relationship` create or update graph objects you already know.
+**What.** `POST /model/entity` and `POST /model/relationship` create graph objects you already know. Updates use `PUT /model/entity` and `PUT /model/relationship` and identify the existing object by `uuid`.
 
 **Why.** Ingestion is for language and bulk facts. The Model API is for one known node or edge.
 

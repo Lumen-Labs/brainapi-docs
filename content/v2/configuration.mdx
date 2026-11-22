@@ -63,7 +63,7 @@ Graph rollback for staged publish failure keys `rollback_done` as `{operation_id
 
 ## Staged ingestion
 
-Set `STAGED_INGESTION_ENABLED=1` on the API and worker to stage text and URL requests that skip enrichment. Enable `STAGED_ENRICHMENT_ENABLED=1` as well for enriched text and URLs, structured data, and files. Both flags default to off.
+Set `STAGED_INGESTION_ENABLED=1` on the API and worker to stage text and URL requests that skip enrichment. Enable `STAGED_ENRICHMENT_ENABLED=1` as well for enriched text and URLs, structured data, and files. Both flags default to off. `INGESTION_CANCELLATION_ENABLED=1` turns on task control (the `cancellation_modes` field) without requiring staging. Rollback still needs a staged run.
 
 The supplied Compose profiles share a publication lock volume between services. For a custom deployment, set `INGEST_PUBLICATION_LOCK_DIR` to a shared writable directory that supports file locking. Check the root task's `cancellation_modes` before offering cancellation. [Deployment profiles](https://github.com/Lumen-Labs/brainapi2/tree/main/deploy) · [Ingestion tasks](/v2/ingestion/tasks)
 

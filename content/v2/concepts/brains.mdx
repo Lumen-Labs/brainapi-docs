@@ -28,7 +28,7 @@ flowchart TD
 ```
 
 1. Your app sends a PAT (`BrainPAT` header, or `Authorization: Bearer …`) and a brain ID (`X-Brain-ID` is the preferred place).
-2. BrainAPI decides which brain the request means: header, then query, then JSON body, then a multipart field for file uploads.
+2. BrainAPI decides which brain the request means: header, then query, then JSON body for `POST`, `PUT`, or `PATCH`, then a multipart field for file uploads.
 3. If the token is a **brain PAT**, it may only touch that one stored brain. If it is the **system PAT**, it may administer brains and call `/system/*`.
 4. On success, every ingest, retrieve, task, and graph call stays inside that room.
 
@@ -46,7 +46,7 @@ flowchart TD
 
 ### How a brain is selected
 
-**What.** BrainAPI looks at `X-Brain-ID`, then `brain_id` on the query string, then a top-level JSON `brain_id`, then a multipart `brain_id`.
+**What.** BrainAPI looks at `X-Brain-ID`, then `brain_id` on the query string, then a top-level JSON `brain_id` for `POST`, `PUT`, or `PATCH`, then a multipart `brain_id`.
 
 **Why.** Different clients (JSON, file upload, GET) need one rule.
 

@@ -3,7 +3,7 @@ title: Ingestion
 description: How BrainAPI accepts text, files, OCR, URLs, structured facts, and experimental spreadsheets
 ---
 
-**Ingestion** is how knowledge gets into a brain. You send text, a file, a public URL, or facts you already know. BrainAPI accepts the work with HTTP **202** and a `task_id`, then processes it in the background. When the task completes, passages and graph facts in that brain become available to retrieve.
+**Ingestion** is how knowledge gets into a brain. You send text, a file, a public URL, or facts you already know. Most ingest routes accept the work with HTTP **202** and a `task_id`, then process it in the background. When that task completes, passages and graph facts in that brain become available to retrieve. The spreadsheet experiment is the exception: it finishes in the request.
 
 ## Why it exists
 
@@ -13,7 +13,7 @@ Everyday example: a facilities team drops last month's incident PDF into the bra
 
 ## When to use it
 
-**Use ingestion when** the knowledge lives in language, documents, pages, or events you want remembered. Poll the task before you query; a 202 only means "accepted," not "ready."
+**Use ingestion when** the knowledge lives in language, documents, pages, or events you want remembered. For asynchronous routes, poll the task before you query; a 202 only means "accepted," not "ready."
 
 **Do not** ingest if a normal table already answers the question. **Do not** treat a 202 as success of the import. **Do not** send secrets, credentials, or private screenshots. **Do not** assume Search indexes exist unless Search is enabled on that deployment.
 
@@ -30,9 +30,9 @@ flowchart TD
 ```
 
 1. You POST to an ingest route with a PAT and brain ID.
-2. BrainAPI queues a task and returns `task_id`.
+2. Text, file, URL, and structured routes queue a task and return `task_id`. Direct spreadsheet upload does not.
 3. A worker extracts text (from a file or page if needed), optionally builds graph facts, and stores passages.
-4. You poll `GET /tasks/{task_id}` in the **same** brain until a terminal status. A **404** means the task is unknown, not "still running."
+4. For those asynchronous routes, poll `GET /tasks/{task_id}` in the **same** brain until a terminal status. A **404** means the task is unknown, not "still running."
 
 ## Going deeper
 
@@ -70,7 +70,7 @@ flowchart TD
 
 ### Spreadsheets (experimental, opt-in)
 
-**What.** In 2.21.1, `.xlsx` and `.csv` can import as workbooks instead of the text pipeline. Gate: `SPREADSHEET_EXPERIMENT_BRAINS` (comma-separated brain IDs, or `*` for all). Empty or unset disables every brain. Direct upload: `POST /ingest/spreadsheets`. List/query: `GET /retrieve/spreadsheets`, `POST /retrieve/spreadsheets/query`. **PostgreSQL brains only.** Disabled brains fall through to normal file ingest; retrieve routes return **404**.
+**What.** In 2.21.1, `.xlsx` and `.csv` can import as workbooks instead of the text pipeline. Gate: `SPREADSHEET_EXPERIMENT_BRAINS` (comma-separated brain IDs, or `*` for all). Empty or unset disables every brain. Direct upload `POST /ingest/spreadsheets` completes in the request and returns **201** with workbook metadata — no `task_id`. List/query: `GET /retrieve/spreadsheets`, `POST /retrieve/spreadsheets/query`. **PostgreSQL brains only.** Disabled brains fall through to normal file ingest; retrieve routes return **404**.
 
 **Why.** Some knowledge is a table you want to filter, not a story you want to graph.
 

@@ -43,7 +43,7 @@ flowchart LR
 | [Conflicts and provenance](/v2/concepts/conflicts) | Two sources that disagree are flagged, with a path back to each source. | "Where did this come from?" |
 | [Verified and rejected facts](/v2/concepts/verification) | An expert can mark a fact trusted or hidden from ordinary answers. | Human review |
 | [Source revisions and dedupe](/v2/concepts/sources) | Re-importing a document keeps older copies; similar entities are merged when possible. | Living documents |
-| [Tasks, cancel, and rollback](/v2/concepts/tasks) | Every import is a job you can watch, stop, or undo. | Long imports |
+| [Tasks, cancel, and rollback](/v2/concepts/tasks) | Every import is a job you can watch. Stop when the run lists `cancellation_modes`. Rollback needs staging. | Long imports |
 | [MCP and OAuth](/v2/concepts/mcp) | Assistants call BrainAPI tools without you pasting REST details into a prompt. | Agent memory |
 | [SDKs, PATs, and billing](/v2/concepts/sdks-and-billing) | Tokens, client libraries, and managed plan prices. | Getting access |
 
@@ -72,7 +72,7 @@ BrainAPI ships with safe defaults. Turn a capability on only when you need it:
 | Conflict scan on ingest | Off | On-demand scan is always available on a 2.21.0+ engine. |
 | Extra leftover-pair judging | Off | Optional; leave it off unless you have a review workflow. |
 | Fact verification writes | Off (no `verification` scope) | Any valid token can *read* states. |
-| Staged ingest cancel / rollback | Off | Enable staging only when you need stop-and-undo during a run. |
+| Task cancel / rollback | Off | `INGESTION_CANCELLATION_ENABLED` or staging. Rollback is offered only while a run is staged. |
 | Explore | PostgreSQL graph driver only | Other drivers return **501**. |
 | Chat against the brain | Optional plugin | Not part of the core API. |
 | Hosted MCP sign-in | Off until OAuth issuer URLs are set | 2.21.1 encrypts stored access keys for that flow. |
