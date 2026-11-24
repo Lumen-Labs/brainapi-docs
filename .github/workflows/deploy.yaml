@@ -52,7 +52,7 @@ jobs:
         run: npm run build
 
       - name: Authenticate to the production fleet
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::515310961483:role/brainapi-maas-production-deploy
           aws-region: eu-central-1
