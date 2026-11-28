@@ -1,0 +1,98 @@
+---
+title: Self-host the dashboard
+description: Run the BrainAPI dashboard next to a light or heavy Compose engine
+icon: LayoutDashboard
+---
+
+Run the product dashboard next to a customer-operated BrainAPI engine from [`Lumen-Labs/brainapi2`](https://github.com/Lumen-Labs/brainapi2). Hosted Lumen Labs behaviour is unchanged when `SELF_HOST` is unset.
+
+Bring the engine up first with the [light or heavy Compose profile](/v2/installation#production-stack-overview). BrainAPI is licensed under Business Source License 1.1; production self-hosting requires a commercial license from Lumen Platforms Inc. Contact [hello@lumen-labs.ai](mailto:hello@lumen-labs.ai).
+
+## Build RAM
+
+Building the dashboard image runs `next build` and needs about **8 GB of free RAM**. On a host with 8 GB or less, stop the engine stack before `docker compose … up --build`, then start the engine again after the image exists. Building while the engine is running can OOM-kill the build.
+
+## Generate secrets
+
+Create a `.env` file **next to** `docker-compose.self-host.yml` (Compose only auto-loads `.env` from that directory). Generate the three dashboard secrets before the first start:
+
+```bash
+openssl rand -base64 32   # BRAIN_KEY_ENCRYPTION_KEY — base64 of 32 random bytes
+openssl rand -hex 32      # JWT_SECRET
+openssl rand -hex 32      # USAGE_CONTEXT_SECRET
+```
+
+`BRAIN_KEY_ENCRYPTION_KEY` must be the base64 encoding of 32 random bytes (`openssl rand -base64 32`). Empty `JWT_SECRET` or `BRAIN_KEY_ENCRYPTION_KEY` still lets the container report healthy; sign-up then fails with a misleading 500.
+
+Copy `USAGE_CONTEXT_SECRET` into the engine env file (`/etc/brainapi/light.env` or `heavy.env`) as well. The dashboard and the engine must use the **same** value. Recreate the engine containers after changing it.
+
+## Reach the engine
+
+The engine profiles do **not** publish port `8000`. `SELF_HOST_ENGINE_URL=http://host.docker.internal:8000` is refused. The service name is `brainapi`, not `engine`.
+
+Join the engine Compose network. With the project name `deploy` used in [Installation](/v2/installation), that network is `deploy_appnet`:
+
+```bash
+export SELF_HOST_ENGINE_NETWORK=deploy_appnet
+export SELF_HOST_ENGINE_URL=http://brainapi:8000
+```
+
+If you started the engine with a different `-p` value, the network is `<project>_appnet` instead.
+
+```bash
+docker compose -f docker-compose.self-host.yml \
+  -f docker-compose.self-host.engine-net.yml up --build
+```
+
+The overlay attaches the dashboard to `SELF_HOST_ENGINE_NETWORK` and keeps Mongo on the internal compose network. Do not publish Mongo. Do not set the overlay default `brainapi2_default` or `http://engine:8000`; those names are not created by the current engine profiles.
+
+## Required environment variables
+
+| Variable | Purpose |
+| --- | --- |
+| `SELF_HOST` | Set to `1`. |
+| `SELF_HOST_ENGINE_URL` | Engine base URL with no trailing slash. On the engine network: `http://brainapi:8000`. |
+| `SELF_HOST_ENGINE_SYSTEM_PAT` | Engine system PAT (`BRAINPAT_TOKEN`) used to create and delete brains. |
+| `SELF_HOST_ENGINE_NETWORK` | Docker network name for the overlay. Use `deploy_appnet` with the documented engine project. |
+| `MONGODB_URI` | Dashboard MongoDB URI. The compose file uses `mongodb://mongo:27017/brainapi`. |
+| `JWT_SECRET` | Session signing secret. |
+| `BRAIN_KEY_ENCRYPTION_KEY` | Base64 of 32 random bytes. |
+| `USAGE_CONTEXT_SECRET` | Must equal the engine `USAGE_CONTEXT_SECRET`. |
+| `NEXT_PUBLIC_APP_URL` | Public URL of the dashboard, for example `http://localhost:3000`. |
+
+## Run
+
+```bash
+docker compose -f docker-compose.self-host.yml \
+  -f docker-compose.self-host.engine-net.yml up --build
+```
+
+Without the overlay, the dashboard cannot reach the engine on the documented profiles.
+
+Check health:
+
+```bash
+curl --fail http://localhost:3000/api/health
+```
+
+A successful self-host response includes `"ok": true` and `"mode": "self-host"`. `engineConfigured` can be true even when the engine URL is unreachable, so also confirm `curl --fail http://localhost/health` on the engine nginx port.
+
+The dashboard listens on `http://localhost:3000`. The first account becomes the workspace admin; later open registration is closed unless you set an invite, `SELF_HOST_ALLOWED_EMAIL_DOMAINS`, or `SELF_HOST_OPEN_SIGNUP=1`.
+
+Engine API calls from your laptop still go through nginx (`http://localhost`), not `http://brainapi:8000`. The Connect dialog currently shows the internal engine URL. Use `http://localhost` (or your public nginx URL) in clients. Send either `BrainPAT` or `Authorization: Bearer` with `X-Brain-ID`.
+
+## Optional variables
+
+- `SELF_HOST_OPEN_SIGNUP`
+- `SELF_HOST_ALLOWED_EMAIL_DOMAINS`
+- `PLATFORM_V2_DEFAULT` — defaults to `on` in self-host
+- `SELF_HOST_BILLING`, `SELF_HOST_REGIONS`, `SELF_HOST_ANALYTICS`
+- Mail, Google sign-in, Crisp, PostHog, Sentry, and DocParser variables stay off unless set
+
+Self-host uses the current dashboard UI (Home plus brain tabs Chat, Data, Explore, Review, Conflicts, and Settings). Stripe billing, shared-brain marketplace, and hosted private-server pages stay off unless the matching optional variables are set.
+
+## Related
+
+- [Installation](/v2/installation)
+- [Authentication and brains](/v2/brains-and-auth)
+- [Configuration](/v2/configuration)

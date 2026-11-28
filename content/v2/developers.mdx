@@ -20,7 +20,7 @@ Managed REST is served at:
 - `https://system.us-east1.brainapi.lumen-labs.ai`
 - `https://system.europe-central2.brainapi.lumen-labs.ai`
 
-Self-hosted API is `http://localhost:8000`. See [Regional API hosts](/v2/reference/regional-hosts). Do not call `api.brain-api.dev`; that hostname does not resolve.
+Self-hosted TUI API is `http://localhost:8000`. Compose profiles are reached at `http://localhost` through nginx. See [Regional API hosts](/v2/reference/regional-hosts) and [Installation](/v2/installation). Do not call `api.brain-api.dev`; that hostname does not resolve.
 
 Public hosts may lag this documentation. Hosts that have not rolled 2.21.0 return **404** on `/model/facts` and `/retrieve/conflicts` because those routes are not on that build — that is not the 2.21.0 contract. See the [changelog](/v2/changelog).
 

@@ -24,9 +24,13 @@ These guides document engine **2.21.0**. Public regional hosts may lag this docu
 
 ## Self-hosted
 
+The TUI and a source checkout serve the API on port `8000`:
+
 ```text
 http://localhost:8000
 ```
+
+The light and heavy Compose profiles publish only nginx on ports `80` and `443`. Use `http://localhost` (or your TLS hostname), not `:8000`. See [Installation](/v2/installation#production-stack-overview).
 
 ## Example
 
