@@ -15743,7 +15743,7 @@
     },
     "/system/brains-list": {
       "get": {
-        "description": "Get the list of brains.",
+        "description": "Get the list of brains. Requires the system PAT. Brain keys are omitted unless include_pats=true.",
         "operationId": "system_get_brains_list_get",
         "responses": {
           "200": {

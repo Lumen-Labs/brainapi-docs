@@ -53,7 +53,7 @@ MCP `verified_by` is likewise ignored. MCP dumps include a `properties` object; 
 
 Default PAT scopes are `brainapi` only. Grant `verification` explicitly:
 
-- System PAT: set `BRAINPAT_SCOPES` to include `verification` (space-separated).
+- System PAT: set `BRAINPAT_SCOPES` to include `verification` (space-separated). Self-host Compose templates set `BRAINPAT_SCOPES="brainapi verification"`.
 - Brain PAT: store `verification` on that brain's `pat_scopes`.
 - MCP OAuth can request `verification` only if the underlying PAT already holds it; it cannot escalate.
 

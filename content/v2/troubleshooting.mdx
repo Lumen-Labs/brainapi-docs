@@ -22,7 +22,7 @@ curl --fail http://localhost/health
 
 Expected Compose body includes `"status":"ok"`. Managed hosts and the TUI API still return `"status":"healthy"`. `GET /health` is public. `GET /` requires the system PAT and is not a liveness probe.
 
-After upgrading Compose application containers, restart nginx if `/health` returns 502. See [Upgrade](/v2/installation#upgrade).
+Current compose nginx re-resolves API and MCP upstreams, so a post-upgrade nginx restart is not required. Restart nginx only if you are still on the previous static-upstream config and `/health` returns 502. See [Upgrade](/v2/installation#upgrade).
 
 ## Startup and configuration
 
@@ -39,7 +39,8 @@ After upgrading Compose application containers, restart nginx if `/health` retur
 | --- | --- | --- | --- |
 | `400 BRAIN_ID_INVALID` | ID is not alphanumeric (hyphen, space, display name). | Compare with the dashboard Brain ID. | Use letters and digits only. |
 | `401 Invalid or missing BrainPAT` | Missing/wrong token. A request with no PAT is `401`, not `400`. | Call `/meta/login-info` with the token. | Use the system PAT or the PAT belonging to the selected brain. |
-| `403 VERIFICATION_PERMISSION_DENIED` | PAT lacks `verification`. | Inspect `BRAINPAT_SCOPES` or brain `pat_scopes`. | Grant the scope; wait up to 30 seconds for cache expiry. |
+| `403 VERIFICATION_PERMISSION_DENIED` | PAT lacks `verification`. | Inspect `BRAINPAT_SCOPES` or brain `pat_scopes`. Self-host templates set `BRAINPAT_SCOPES="brainapi verification"`. | Grant the scope; wait up to 30 seconds for cache expiry. Existing brains with empty `pat_scopes` stay `brainapi`-only. |
+| `GET /system/brains-list` 401 | A brain PAT or missing system PAT. | Confirm `BRAINPAT_TOKEN`. | This route is system-PAT-only. Pass `?include_pats=true` when the caller needs brain keys. |
 | `406 Brain not found` | No brain resolved, or the named brain is absent and creation/fallback is off. Omitting `X-Brain-ID` with fallback off is `406`. | List/create brains with the system PAT. | Send a valid Brain ID or create it explicitly. |
 | `503 Database unavailable` | Data-store lookup failed. | Test the configured data backend. | Correct connection settings and restart. |
 

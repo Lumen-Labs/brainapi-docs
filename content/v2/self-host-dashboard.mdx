@@ -24,20 +24,22 @@ openssl rand -hex 32      # USAGE_CONTEXT_SECRET
 
 `BRAIN_KEY_ENCRYPTION_KEY` must be the base64 encoding of 32 random bytes (`openssl rand -base64 32`). Empty `JWT_SECRET` or `BRAIN_KEY_ENCRYPTION_KEY` still lets the container report healthy; sign-up then fails with a misleading 500.
 
-Copy `USAGE_CONTEXT_SECRET` into the engine env file (`/etc/brainapi/light.env` or `heavy.env`) as well. The dashboard and the engine must use the **same** value. Recreate the engine containers after changing it.
+Copy `USAGE_CONTEXT_SECRET` into the engine env file (`/etc/brainapi/light.env` or `heavy.env`) as well. The dashboard, the engine, and any proxy that signs `X-Usage-Context` must use the **same** value. Recreate the engine containers after changing it.
+
+The engine self-host templates set `BRAINPAT_SCOPES="brainapi verification"` so the system PAT can verify and reject facts. The dashboard sends `pat_scopes: ["brainapi", "verification"]` when creating brains. `GET /system/brains-list` is system-PAT-only; pass `?include_pats=true` if a caller needs brain keys.
 
 ## Reach the engine
 
 The engine profiles do **not** publish port `8000`. `SELF_HOST_ENGINE_URL=http://host.docker.internal:8000` is refused. The service name is `brainapi`, not `engine`.
 
-Join the engine Compose network. With the project name `deploy` used in [Installation](/v2/installation), that network is `deploy_appnet`:
+Join the engine Compose network. Light compose `name: brainapi` creates `brainapi_appnet`. Heavy `name: brainapi-heavy` creates `brainapi-heavy_appnet`:
 
 ```bash
-export SELF_HOST_ENGINE_NETWORK=deploy_appnet
+export SELF_HOST_ENGINE_NETWORK=brainapi_appnet
 export SELF_HOST_ENGINE_URL=http://brainapi:8000
 ```
 
-If you started the engine with a different `-p` value, the network is `<project>_appnet` instead.
+For heavy, set `SELF_HOST_ENGINE_NETWORK=brainapi-heavy_appnet`. If you started the engine with a different `-p` value, the network is `<project>_appnet` instead.
 
 ```bash
 docker compose -f docker-compose.self-host.yml \
@@ -53,7 +55,7 @@ The overlay attaches the dashboard to `SELF_HOST_ENGINE_NETWORK` and keeps Mongo
 | `SELF_HOST` | Set to `1`. |
 | `SELF_HOST_ENGINE_URL` | Engine base URL with no trailing slash. On the engine network: `http://brainapi:8000`. |
 | `SELF_HOST_ENGINE_SYSTEM_PAT` | Engine system PAT (`BRAINPAT_TOKEN`) used to create and delete brains. |
-| `SELF_HOST_ENGINE_NETWORK` | Docker network name for the overlay. Use `deploy_appnet` with the documented engine project. |
+| `SELF_HOST_ENGINE_NETWORK` | Docker network name for the overlay. Use `brainapi_appnet` (light) or `brainapi-heavy_appnet` (heavy). |
 | `MONGODB_URI` | Dashboard MongoDB URI. The compose file uses `mongodb://mongo:27017/brainapi`. |
 | `JWT_SECRET` | Session signing secret. |
 | `BRAIN_KEY_ENCRYPTION_KEY` | Base64 of 32 random bytes. |

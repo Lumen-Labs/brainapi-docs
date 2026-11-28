@@ -37,7 +37,7 @@ export function buildRootLlmsTxt(): string {
 - [Conflicts](${markdownDocsUrl("/v2/retrieval/conflicts")}): Scan and resolve cross-source contradictions
 - [As-of retrieve](${markdownDocsUrl("/v2/retrieval/as-of")}): Fail-closed valid-time reads and changelog windows
 - [Install BrainAPI](${markdownDocsUrl("/v2/installation")}): TUI, source checkout, or light/heavy Compose self-host (license, upgrade, backup)
-- [Self-host the dashboard](${markdownDocsUrl("/v2/self-host-dashboard")}): Join deploy_appnet, point at http://brainapi:8000, and share USAGE_CONTEXT_SECRET
+- [Self-host the dashboard](${markdownDocsUrl("/v2/self-host-dashboard")}): Join brainapi_appnet, point at http://brainapi:8000, and share USAGE_CONTEXT_SECRET
 - [Troubleshoot BrainAPI](${markdownDocsUrl("/v2/troubleshooting")}): Startup, auth, databases, tasks, Search, plugins, and MCP
 
 ## Agent interfaces

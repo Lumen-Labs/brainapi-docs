@@ -37,7 +37,7 @@ flowchart LR
 
 ### PAT shapes
 
-**What.** System PAT: env `BRAINPAT_TOKEN`, all brains plus `/system/*`. Brain PAT: one stored brain. Either header form is accepted. Default scope is `brainapi`; add `verification` only for review writes.
+**What.** System PAT: env `BRAINPAT_TOKEN`, all brains plus `/system/*` including `GET /system/brains-list`. Brain PAT: one stored brain. Either header form is accepted. Default scope is `brainapi`; add `verification` for review writes. Self-host Compose templates set `BRAINPAT_SCOPES="brainapi verification"`.
 
 **Why.** Least privilege is a brain-sized key.
 
