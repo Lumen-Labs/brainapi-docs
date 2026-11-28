@@ -13,7 +13,7 @@ BrainAPI reads configuration from the project `.env`. Start from `.env.example`,
 | `BRAIN_CREATION_ALLOWED` | `false` in runtime when unset | Create a missing selected brain automatically. The example file opts into `true`. |
 | `DEFAULT_BRAIN_FALLBACK` | `false` in runtime when unset | Resolve a missing selection to `default`. The example file opts into `true`. |
 | `CONSOLE_ENABLED` | `true` | Serve the web console from the API process. |
-| `BRAINPAT_SCOPES` | `brainapi` | Space-separated scopes for the system PAT. Add `verification` only when that process should verify or reject facts. |
+| `BRAINPAT_SCOPES` | `brainapi` | Space-separated scopes for the system PAT. Self-host Compose templates set `brainapi verification` so the system PAT can verify or reject facts. |
 
 Use explicit brain creation and selection in production. See [Authentication and brains](/v2/brains-and-auth). Brain-scoped PATs read extra scopes from stored `pat_scopes`. Resolved scopes are cached for 30 seconds.
 
@@ -48,7 +48,7 @@ Configure only credentials relevant to the chosen backends: `POSTGRES_*`, `MONGO
 | Variable | Runtime default | Meaning |
 | --- | --- | --- |
 | `PIPELINE_MODE` | `accurate` | `accurate` or `lightweight`. |
-| `OCR_MODE` | `docling` | `docparser` or local `docling`; `.env.example` opts into `docparser`. |
+| `OCR_MODE` | `docling` | Local `docling` or remote `docparser`. Self-host defaults to local `docling` and does not call the hosted parser ([brainapi2#174](https://github.com/Lumen-Labs/brainapi2/pull/174) in progress). |
 | `AGENTIC_ARCHITECTURE` | `custom` | `custom` or `langchain`. |
 | `RUN_GRAPH_CONSOLIDATOR` | `false` | Enable LLM graph consolidation. |
 | `RUN_OBSERVATIONS` | `false` | Generate observation notes. |

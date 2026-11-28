@@ -7,17 +7,22 @@ Start with the failing boundary instead of changing several settings at once. Ru
 
 ## Health checklist
 
+TUI and source API (port `8000`):
+
 ```bash
 brainapi doctor
 curl --fail http://localhost:8000/health
-curl --fail http://localhost:8001/
-curl --fail http://localhost:9091/healthz
-curl --fail http://localhost:9000/minio/health/live
 ```
 
-`GET /health` is public. `GET /` requires the system PAT and is not a liveness probe.
+Compose light/heavy profiles publish only nginx `80` / `443`. Redis, Postgres, MongoDB, Neo4j, MinIO, and Milvus are not on the host:
 
-Only test services selected by your deployment profile.
+```bash
+curl --fail http://localhost/health
+```
+
+Expected Compose body includes `"status":"ok"`. Managed hosts and the TUI API still return `"status":"healthy"`. `GET /health` is public. `GET /` requires the system PAT and is not a liveness probe.
+
+Current compose nginx re-resolves API and MCP upstreams, so a post-upgrade nginx restart is not required. Restart nginx only if you are still on the previous static-upstream config and `/health` returns 502. See [Upgrade](/v2/installation#upgrade).
 
 ## Startup and configuration
 
@@ -34,7 +39,8 @@ Only test services selected by your deployment profile.
 | --- | --- | --- | --- |
 | `400 BRAIN_ID_INVALID` | ID is not alphanumeric (hyphen, space, display name). | Compare with the dashboard Brain ID. | Use letters and digits only. |
 | `401 Invalid or missing BrainPAT` | Missing/wrong token. A request with no PAT is `401`, not `400`. | Call `/meta/login-info` with the token. | Use the system PAT or the PAT belonging to the selected brain. |
-| `403 VERIFICATION_PERMISSION_DENIED` | PAT lacks `verification`. | Inspect `BRAINPAT_SCOPES` or brain `pat_scopes`. | Grant the scope; wait up to 30 seconds for cache expiry. |
+| `403 VERIFICATION_PERMISSION_DENIED` | PAT lacks `verification`. | Inspect `BRAINPAT_SCOPES` or brain `pat_scopes`. Self-host templates set `BRAINPAT_SCOPES="brainapi verification"`. | Grant the scope; wait up to 30 seconds for cache expiry. Existing brains with empty `pat_scopes` stay `brainapi`-only. |
+| `GET /system/brains-list` 401 | A brain PAT or missing system PAT. | Confirm `BRAINPAT_TOKEN`. | This route is system-PAT-only. Pass `?include_pats=true` when the caller needs brain keys. |
 | `406 Brain not found` | No brain resolved, or the named brain is absent and creation/fallback is off. Omitting `X-Brain-ID` with fallback off is `406`. | List/create brains with the system PAT. | Send a valid Brain ID or create it explicitly. |
 | `503 Database unavailable` | Data-store lookup failed. | Test the configured data backend. | Correct connection settings and restart. |
 
@@ -52,7 +58,7 @@ Only test services selected by your deployment profile.
 | Symptom | Likely cause | Diagnostic | Fix |
 | --- | --- | --- | --- |
 | `/retrieve/search` returns `404` | Search disabled (`SEARCH_ENABLED` defaults to `false`; hosted production leaves it off). | Check `SEARCH_ENABLED`. | Use [Context](/v2/retrieval/context), or enable Search with PostgreSQL on a deployment that opts in. |
-| `/model/facts` or `/retrieve/conflicts` returns `404` | The request may be on the wrong host or path, or the hosted engine may be older than 2.21.0. | Confirm the REST base is a regional host or your own API, and that the path matches. `GET /health` returns `{"status":"healthy"}` and does not include a version field. | Correct the host or path first. If the host has not rolled 2.21.0, use a 2.21.0 engine or wait for hosted rollout. Do not treat a lagging-host 404 as the 2.21.0 contract. |
+| `/model/facts` or `/retrieve/conflicts` returns `404` | The request may be on the wrong host or path, or the hosted engine may be older than 2.21.0. | Confirm the REST base is a regional host or your own API, and that the path matches. Managed `GET /health` returns `{"status":"healthy"}` without a version field. Compose profiles return `"status":"ok"` plus `service`, `version`, and `build`. | Correct the host or path first. If the host has not rolled 2.21.0, use a 2.21.0 engine or wait for hosted rollout. Do not treat a lagging-host 404 as the 2.21.0 contract. |
 | As-of result missing undated facts | Fail-closed `as_of`. | Read `validity_unknown_count`. | Set `include_validity_unknown=true` to inspect them separately. |
 | Conflict scan `truncated` | Hit `CONFLICT_DETECT_MAX_RELATIONSHIPS`. | Read the scan task. | Raise the env cap (or `0` unlimited) and scan again; REST cannot override the cap. |
 | Startup rejects Search | Wrong data backend or both retrievers disabled. | Check `DATA_DB`, `SEARCH_USE_DENSE`, and `SEARCH_USE_BM25`. | Use PostgreSQL and enable at least one first stage. |
@@ -66,7 +72,7 @@ Only test services selected by your deployment profile.
 | --- | --- | --- | --- |
 | Plugin marked failed | Manifest, dependency, import, or registration error. | Read the loader error before later service logs. | Correct that first failure and restart the relevant process. |
 | SPLADE/ColBERT returns no candidates after restart | Plugin-local in-memory index is empty. | Inspect plugin health/index size. | Rebuild the index as part of startup or deployment. |
-| MCP client cannot connect | URL, transport, auth, or MCP process mismatch. | Curl the MCP health endpoint and inspect client logs. | Correct the client URL/transport and OAuth or PAT setup. |
+| MCP client cannot connect | URL, transport, auth, or MCP process mismatch. | Curl the MCP health endpoint and inspect client logs. Compose MCP is `http://localhost/mcp`, not port `8001`. | Correct the client URL/transport and OAuth or PAT setup. Send `BrainPAT` or `Authorization: Bearer`. |
 | Docs MCP finds a hidden page | Stale deployment or publication predicate drift. | Compare `/llms/v2.txt`, search, and `list_sections`. | Rebuild/deploy all machine surfaces from the shared predicate. |
 
 ## Ask for help

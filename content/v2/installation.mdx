@@ -8,12 +8,13 @@ icon: Package
 - Recommended: `npm install -g brainapi-tui@0.4.0` → `brainapi init` → `brainapi start`
 - The TUI manages source, a Python venv, `.env`, services, API, worker, MCP, and optional plugins
 - Contributors can instead clone `Lumen-Labs/brainapi2`, copy `.env.example` → `.env`, and run from source
-- Dev: `./bin/brainapi <command>` · Prod: `docker compose -f example-docker-compose.yaml up -d`
-- API default `:8000`; product MCP often `:8001`; docs MCP is separate at `/docs/mcp`
+- Production self-host: `deploy/docker-compose.light.yaml` or `deploy/docker-compose.heavy.yaml` with an absolute `BRAINAPI_ENV_FILE` under `/etc/brainapi`
+- TUI API default `:8000`; product MCP often `:8001`; Compose profiles publish only nginx `:80` / `:443`
+- Docs MCP is separate at `/docs/mcp`
 - After plugin install, restart API (and worker/MCP when those surfaces change)
 </AgentNote>
 
-BrainAPI v2 supports three installation paths. Use the TUI for a local evaluation or application-development environment, clone the repository when contributing to BrainAPI itself, and use an explicit Compose deployment for a controlled self-hosted environment.
+BrainAPI v2 supports three installation paths. Use the TUI for a local evaluation or application-development environment, clone the repository when contributing to BrainAPI itself, and use the light or heavy Compose profile for a controlled self-hosted environment.
 
 <Tabs items={["TUI (recommended)", "Development", "Production (Docker Compose)"]}>
   <Tab value="TUI (recommended)">
@@ -69,119 +70,297 @@ chmod +x bin/brainapi.sh
 Fill the values in `.env` before running API, worker, MCP, or plugin workflows.
   </Tab>
   <Tab value="Production (Docker Compose)">
-  Use this flow for self-hosted environments. The `example-docker-compose.yaml` file starts the full stack used by BrainAPI v2.
-  Compose file: [https://github.com/Lumen-Labs/brainapi2/blob/main/example-docker-compose.yaml](https://github.com/Lumen-Labs/brainapi2/blob/main/example-docker-compose.yaml)
+  Use the light or heavy profile in [`Lumen-Labs/brainapi2`](https://github.com/Lumen-Labs/brainapi2). Do not use `example-docker-compose.yaml`: it pins an old image, reads `/root/.env`, and publishes database ports.
+
+| | Light | Heavy |
+| --- | --- | --- |
+| Compose | [`deploy/docker-compose.light.yaml`](https://github.com/Lumen-Labs/brainapi2/blob/main/deploy/docker-compose.light.yaml) | [`deploy/docker-compose.heavy.yaml`](https://github.com/Lumen-Labs/brainapi2/blob/main/deploy/docker-compose.heavy.yaml) |
+| Env template | [`deploy/env.light.example`](https://github.com/Lumen-Labs/brainapi2/blob/main/deploy/env.light.example) | [`deploy/env.heavy.example`](https://github.com/Lumen-Labs/brainapi2/blob/main/deploy/env.heavy.example) |
+| Data / graph / vectors | PostgreSQL + pgvector + NetworkX | MongoDB + Neo4j + Milvus |
+| Suggested footprint | ~2 GB RAM | 8–16 GB RAM |
+
+Only nginx publishes host ports (`80` and `443`). Redis, Postgres, MongoDB, Neo4j, MinIO, etcd, and Milvus stay on the internal `appnet` network.
+
+```bash
+git clone https://github.com/Lumen-Labs/brainapi2.git
+cd brainapi2
+
+sudo install -d -m 755 /etc/brainapi
+sudo install -m 600 -o "$USER" deploy/env.light.example /etc/brainapi/light.env
+```
+
+In `/etc/brainapi/light.env`, set `BRAINAPI_ENV_FILE` to that **absolute** path and `BRAINAPI_IMAGE` to the image you will run. Then:
+
+```bash
+docker compose --env-file /etc/brainapi/light.env \
+  -f deploy/docker-compose.light.yaml config -q
+docker compose --env-file /etc/brainapi/light.env \
+  -f deploy/docker-compose.light.yaml up -d --wait
+curl --fail http://localhost/health
+```
+
+The light compose file sets `name: brainapi` (Docker network `brainapi_appnet`). Heavy is the same with `deploy/env.heavy.example`, `/etc/brainapi/heavy.env`, and `deploy/docker-compose.heavy.yaml`; that file sets `name: brainapi-heavy` (network `brainapi-heavy_appnet`). Backup, restore, upgrade, and the dashboard overlay must use the same project name. Do not mix profiles under one project.
   </Tab>
 </Tabs>
 
+## License
+
+BrainAPI is licensed under the [Business Source License 1.1](https://github.com/Lumen-Labs/brainapi2/blob/main/LICENSE). The licensor is Lumen Platforms Inc. The Licensed Work is BrainAPI, (c) 2026 Lumen Platforms Inc. BUSL-1.1 is not an open-source license; the Licensed Work is later made available under an open-source Change License.
+
+The license grants the right to copy, modify, create derivative works, redistribute, and make **non-production use** of BrainAPI. The Additional Use Grant is **None**, so the license does not add limited production use. Free self-hosting is that non-production grant, not production use of the light or heavy Compose profiles.
+
+If your use does not comply with the license currently in effect — including production use — you must purchase a commercial license from Lumen Platforms Inc., its affiliated entities, or authorized resellers, or refrain from using BrainAPI. For alternative licensing arrangements, contact [hello@lumen-labs.ai](mailto:hello@lumen-labs.ai).
+
+The Change Date is **2030-08-13**. Effective on that date, or the fourth anniversary of the first publicly available distribution of a specific version under this license, whichever comes first, that version is available under the Apache License, Version 2.0, and the BUSL rights above terminate. The Change Date may vary for each version.
+
+The product dashboard is a separate Licensed Work (**BrainAPI Dashboard**) under the same Business Source License 1.1 parameters: Additional Use Grant **None**, Change Date **2030-08-13**, Change License Apache License 2.0, commercial contact [hello@lumen-labs.ai](mailto:hello@lumen-labs.ai). Those terms are kept; they are not pending.
+
+The heavy profile uses Neo4j Enterprise (`neo4j:5.26.16-enterprise`) because each brain is a Neo4j database. Set `NEO4J_ACCEPT_LICENSE_AGREEMENT` to `yes` or `eval` only if you hold a Neo4j licence; Compose refuses to start when it is unset. Community is not a drop-in replacement for this profile. Neo4j's licence is separate from BrainAPI's BUSL-1.1.
+
 ## Production stack overview
 
-The provided `version: "3.8"` compose stack includes:
+Both profiles run the same application services:
 
-- `nginx` as reverse proxy and TLS termination
-- `redis` for cache and task queue backend
-- `mongo` for document storage
-- `neo4j` for graph relationships
-- `etcd` and `minio` as Milvus dependencies
-- `milvus` as vector database
-- `brainapi` as API gateway (`:8000`)
-- `brainapi-worker` as Celery worker
-- `brainapi-mcp` as MCP server (`:8001`)
+- `nginx` reverse proxy (the only published host ports: `80` / `443`)
+- `redis` for cache and the task queue
+- `brainapi` API and embedded Console
+- `brainapi-worker` Celery worker
+- `brainapi-beat` scheduler
+- `brainapi-mcp` MCP server
+
+Light also runs `postgres` (pgvector). Heavy also runs `mongo`, `neo4j`, `etcd`, `minio`, and `milvus`.
+
+Reach the stack through nginx:
+
+| Surface | URL |
+| --- | --- |
+| REST API | `http://localhost/` |
+| Health | `http://localhost/health` |
+| Console | `http://localhost/console/` |
+| Product MCP | `http://localhost/mcp` |
+
+The API process still listens on container port `8000`, and MCP on `8001`, but those ports are not published to the host.
 
 <Callout type="info">
-  The API, worker, and MCP containers share the same image and rely on the same
-  environment variables and plugin volume. Keep these values aligned across all
-  three services.
+  The API, worker, beat, and MCP containers share the same image and the same
+  environment file. Keep these values aligned across all four services,
+  including `USAGE_CONTEXT_SECRET` when you run the dashboard next to the engine.
 </Callout>
 
 ## Production setup
 
-### 1) Prepare host paths referenced by compose
+### 1) Create `/etc/brainapi` and copy a profile template
+
+Do this from a clone of `brainapi2`. `install` does not create parent directories:
 
 ```bash
-mkdir -p /srv/nginx/conf/conf.d
-mkdir -p /srv/nginx/logs
-mkdir -p /root
+sudo install -d -m 755 /etc/brainapi
+sudo install -m 600 -o "$USER" deploy/env.light.example /etc/brainapi/light.env
 ```
 
-The compose file expects these host mounts:
+The env file must remain readable by the user who runs `docker compose`. Do not leave it owned by `root` unless you always run Compose with `sudo`.
 
-- `/srv/nginx/conf/nginx.conf`
-- `/srv/nginx/conf/conf.d`
-- `/etc/letsencrypt`
-- `/srv/nginx/logs`
-- `/root/.env`
-- `/root/gcp_credentials.json`
+### 2) Set Compose interpolation values
 
-### 2) Configure environment variables
+Edit `/etc/brainapi/light.env` (or `heavy.env`). Two values are easy to get wrong:
 
-Copy your environment file to `/root/.env` and set production values.
+| Variable | Required value |
+| --- | --- |
+| `BRAINAPI_ENV_FILE` | Absolute path of this file, for example `/etc/brainapi/light.env`. A relative value resolves against the Compose working directory and will not load the secrets you just edited. |
+| `BRAINAPI_IMAGE` | The engine image. GHCR publishes **commit-suffixed** tags only (`vX.Y.Z-<sha8>`). Current `main` is `ghcr.io/lumen-labs/brainapi:v2.23.2-5826a97b`. The previous release commit is `v2.22.0-a05c55e6`. Bare tags such as `v2.23.2` or `v2.22.0` are not published. |
 
-```bash
-cp .env.example /root/.env
-```
-
-At minimum, verify:
+Replace every secret in the template. At minimum, Compose interpolation requires:
 
 <TypeTable
   type={{
-    BRAINPAT_TOKEN: {
-      description: "Token used by protected health checks and authenticated API calls.",
+    BRAINAPI_IMAGE: {
+      description: "Engine image, including tag. Example: ghcr.io/lumen-labs/brainapi:v2.23.2-5826a97b.",
       type: "string",
       required: true,
     },
-    BRAINAPI_PLUGINS: {
-      description: "Comma-separated plugin list loaded at startup.",
+    BRAINAPI_ENV_FILE: {
+      description: "Absolute path of this env file.",
+      type: "string",
+      required: true,
+    },
+    REDIS_PASSWORD: {
+      description: "Redis password used by interpolation and the Redis container.",
+      type: "string",
+      required: true,
+    },
+    POSTGRES_PASSWORD: {
+      description: "Postgres password. Required on the light profile.",
       type: "string",
       required: false,
-      default: "my-plugin:1.0.0,analytics-plugin",
     },
-    PLUGIN_REGISTRY_URL: {
-      description: "Custom plugin registry URL if not using the default.",
+    NEO4J_PASSWORD: {
+      description: "Neo4j password. Required on the heavy profile.",
       type: "string",
       required: false,
     },
-    PLUGIN_PUBLISHER_ID: {
-      description: "Publisher identifier for registry operations.",
+    MONGO_PASSWORD: {
+      description: "MongoDB password. Required on the heavy profile.",
       type: "string",
       required: false,
     },
-    PLUGIN_PUBLISHER_API_KEY: {
-      description: "Publisher API key for registry operations.",
+    MINIO_ACCESS_KEY: {
+      description: "MinIO access key. Required on the heavy profile.",
+      type: "string",
+      required: false,
+    },
+    MINIO_SECRET_KEY: {
+      description: "MinIO secret key. Required on the heavy profile.",
+      type: "string",
+      required: false,
+    },
+    MILVUS_TOKEN: {
+      description: "Milvus token. Required on the heavy profile.",
+      type: "string",
+      required: false,
+    },
+    MILVUS_ROOT_PASSWORD: {
+      description: "Milvus root password. Required on the heavy profile.",
+      type: "string",
+      required: false,
+    },
+    BRAINPAT_TOKEN: {
+      description: "System PAT for administration and authenticated API calls.",
+      type: "string",
+      required: true,
+    },
+    BRAINPAT_SCOPES: {
+      description: "Space-separated scopes for the system PAT. Self-host templates set brainapi verification so the system PAT can verify and reject facts.",
+      type: "string",
+      required: false,
+      default: "brainapi verification",
+    },
+    USAGE_CONTEXT_SECRET: {
+      description: "Shared HMAC secret for dashboard usage-context tokens. Must match the dashboard and any proxy that signs X-Usage-Context.",
       type: "string",
       required: false,
     },
   }}
 />
 
-### 3) Review service credentials before startup
+Application names from the templates also include `BRAINPAT_SCOPES`, `USAGE_CONTEXT_SECRET`, `CELERY_WORKER_CONCURRENCY`, `CELERY_BACKEND`, `REDIS_HOST`, `REDIS_PORT`, and `PLUGIN_FAILURE_POLICY`. Light needs `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USERNAME`, `POSTGRES_SYSTEM_DATABASE`, `DATA_DB`, `VECTOR_DB`, and `GRAPH_DB`. Heavy needs `NEO4J_HOST`, `NEO4J_PORT`, `NEO4J_USERNAME`, `NEO4J_ACCEPT_LICENSE_AGREEMENT`, `MONGO_HOST`, `MONGO_PORT`, `MONGO_USERNAME`, `MONGO_SYSTEM_DATABASE`, `MILVUS_HOST`, and `MILVUS_PORT`.
 
-The example compose file ships with development defaults. Update these values before production usage:
+Fill model and embedding credentials for the providers you actually use. See [Configuration](/v2/configuration). Mount cloud credential files with a private Compose override; the production profiles do not bind a host credentials path.
 
-- `NEO4J_AUTH=neo4j/your_password`
-- `MONGO_INITDB_ROOT_USERNAME`
-- `MONGO_INITDB_ROOT_PASSWORD`
-- `MINIO_ACCESS_KEY`
-- `MINIO_SECRET_KEY`
+Set `BRAINPAT_SCOPES="brainapi verification"` (the env templates already do) so the system PAT can verify and reject facts from the dashboard. `POST /system/brains` accepts optional `pat_scopes` (`brainapi` and/or `verification`); the dashboard sends both when creating brains. Existing brains with empty `pat_scopes` stay `brainapi`-only.
 
-### 4) Start the stack
+Set `USAGE_CONTEXT_SECRET` to the same value on the engine, the [self-hosted dashboard](/v2/self-host-dashboard), and any proxy that signs `X-Usage-Context`. If they differ, dashboard Verify calls return 403, or writes are attributed to the system principal. Leave `MCP_OAUTH_ISSUER_URL` and `MCP_RESOURCE_SERVER_URL` empty unless you operate those endpoints; the template placeholders otherwise appear in live `WWW-Authenticate` headers.
 
-```bash
-docker compose -f example-docker-compose.yaml pull
-docker compose -f example-docker-compose.yaml up -d
-docker compose -f example-docker-compose.yaml ps
-```
+`GET /system/brains-list` requires the system PAT. Brain keys are omitted unless you pass `?include_pats=true`.
 
-### 5) Verify endpoints
+Self-host document parsing defaults to local `OCR_MODE=docling` and does not call the hosted DocParser. Leave `DOCPARSER_ENDPOINT` and `DOCPARSER_TOKEN` unset unless you operate your own parser. That default is landing in [brainapi2#174](https://github.com/Lumen-Labs/brainapi2/pull/174); until it ships, change templates that still set `OCR_MODE=docparser` to `docling` for a local-only host.
+
+### 3) Start the stack
+
+The light compose file sets `name: brainapi`. Heavy sets `name: brainapi-heavy`. You do not need `-p` unless you override that name (CI uses `brainapi-ci`). Backup defaults match these names. Do not mix profiles under the same project.
 
 ```bash
-curl -f http://localhost:8000/ -H "BrainPAT: $BRAINPAT_TOKEN"
-curl -f http://localhost:8001/
-curl -f http://localhost:9091/healthz
-curl -f http://localhost:9000/minio/health/live
+docker compose --env-file /etc/brainapi/light.env \
+  -f deploy/docker-compose.light.yaml config -q
+docker compose --env-file /etc/brainapi/light.env \
+  -f deploy/docker-compose.light.yaml up -d --wait
+docker compose --env-file /etc/brainapi/light.env \
+  -f deploy/docker-compose.light.yaml ps
 ```
 
-If all checks pass, BrainAPI API, worker, and MCP services are running with Redis, MongoDB, Neo4j, and Milvus.
+Heavy:
+
+```bash
+docker compose --env-file /etc/brainapi/heavy.env \
+  -f deploy/docker-compose.heavy.yaml up -d --wait
+```
+
+### 4) Verify health
+
+```bash
+curl --fail http://localhost/health
+```
+
+Expected response (Compose profiles via nginx):
+
+```json
+{"status":"ok","service":"brainapi","version":"v2.23.2-5826a97b","build":"5826a97b2211daa5581a462cf457cc3cdfdb9d4a"}
+```
+
+`status` is `ok` when the data store is reachable. Do not expect `"version":"2.23.0"`: that package string lags the image. Images that include [brainapi2#174](https://github.com/Lumen-Labs/brainapi2/pull/174) set `version` from the `BRAINAPI_IMAGE` tag (for example `v2.23.2-5826a97b`) and return **503** with `"status":"degraded"` when the data store is down. `GET /health` is public. `GET /` requires the system PAT and is not a ping.
+
+Authenticated requests accept either header:
+
+```http
+BrainPAT: <token>
+```
+
+```http
+Authorization: Bearer <token>
+```
+
+```bash
+curl --fail http://localhost/meta/login-info \
+  -H "BrainPAT: $BRAINPAT_TOKEN"
+
+curl --fail http://localhost/meta/login-info \
+  -H "Authorization: Bearer $BRAINPAT_TOKEN"
+```
+
+Do not probe Redis, Postgres, MongoDB, Neo4j, MinIO, or Milvus on the host: those ports are not published.
+
+## Upgrade
+
+1. Back up with `deploy/brainapi-backup backup` using the same project name as the running stack (`brainapi` for light, `brainapi-heavy` for heavy). See [Backup and restore](#backup-and-restore).
+2. Point `BRAINAPI_IMAGE` at the new **commit-suffixed** tag in `/etc/brainapi/light.env` (or `heavy.env`). Example: `v2.22.0-a05c55e6` → `v2.23.2-5826a97b`.
+3. Recreate the application containers:
+
+```bash
+docker compose --env-file /etc/brainapi/light.env \
+  -f deploy/docker-compose.light.yaml up -d --wait
+```
+
+Current compose nginx re-resolves the API and MCP upstreams through Docker DNS (`resolver 127.0.0.11 valid=10s`), so restarting nginx after an image change is not required. If you are still on a compose nginx config without that resolver and `/health` returns **502**, run `docker compose --env-file /etc/brainapi/light.env -f deploy/docker-compose.light.yaml restart nginx`.
+
+4. System tables and collections are created on startup (`CREATE TABLE IF NOT EXISTS` / upsert). Existing brains keep their data.
+5. Verify `/health`, then a source-sync webhook or poll, then a crawl-spec run if you use re-crawl.
+
+Do not mount a volume over `/app/plugins`; custom plugins belong in `PLUGINS_EXTRA_DIR`.
+
+## Backup and restore
+
+`deploy/brainapi-backup` writes to `/srv/brainapi/backups` by default (mode `0700`). Create that directory with sudo, or pass `--backup-dir`. Backups contain application data including stored brain credentials.
+
+The default `--project-name` matches compose: `brainapi` (light) and `brainapi-heavy` (heavy). Override `--project-name` only when you started the stack with a different name (CI uses `brainapi-ci`). A mismatched project name reports `service "postgres" is not running`. A failed backup deletes the partial directory so it does not leave a 0-byte dump.
+
+```bash
+sudo install -d -m 700 -o "$USER" /srv/brainapi/backups
+
+deploy/brainapi-backup backup --profile light \
+  --env-file /etc/brainapi/light.env
+
+deploy/brainapi-backup verify --profile light \
+  --env-file /etc/brainapi/light.env \
+  --archive /srv/brainapi/backups/light-UTCSTAMP
+```
+
+Restore refuses a running stack and any non-empty target volume. Tear the stack down with volumes first:
+
+```bash
+docker compose --env-file /etc/brainapi/light.env \
+  -f deploy/docker-compose.light.yaml down -v
+
+deploy/brainapi-backup restore --profile light \
+  --env-file /etc/brainapi/light.env \
+  --archive /srv/brainapi/backups/light-UTCSTAMP
+```
+
+Heavy is the same with `--profile heavy` and `/etc/brainapi/heavy.env` (default `--project-name brainapi-heavy`). Override the destination with `--backup-dir /path/you/can/write` when `/srv/brainapi/backups` is not available. If you started the stack with a CI Compose override, pass the same file as `--compose-file deploy/docker-compose.ci.yaml`.
+
+Backup stops nginx, API, MCP, and workers before capture. Restore also refuses a profile or image mismatch or a checksum mismatch. Use a maintenance window and keep the generated manifest with the release artifacts.
+
+## Dashboard
+
+To run the product dashboard next to this engine, join Docker network `brainapi_appnet` (light) or `brainapi-heavy_appnet` (heavy), set `SELF_HOST_ENGINE_URL=http://brainapi:8000`, and set `SELF_HOST_PUBLIC_API_URL=http://localhost` so Connect shows the nginx URL. Generate `JWT_SECRET`, `BRAIN_KEY_ENCRYPTION_KEY`, and `USAGE_CONTEXT_SECRET` before the first start; empty required secrets refuse to start (maas #141). See [Self-host the dashboard](/v2/self-host-dashboard).
 
 ## LLM providers
 
@@ -189,7 +368,7 @@ BrainAPI selects chat and embedding adapters via `LLM_SMALL_PROVIDER`, `LLM_LARG
 
 ### DeepSeek (chat only)
 
-DeepSeek is an OpenAI-compatible chat provider. It does **not** serve embeddings — keep `EMBEDDINGS_PROVIDER` on `openai`, `azure`, `gcp_vertex`, or another embedding-capable adapter.
+DeepSeek is an OpenAI-compatible chat provider. It does **not** serve embeddings — keep `EMBEDDINGS_PROVIDER` on an embedding-capable adapter.
 
 ```bash
 LLM_SMALL_PROVIDER="deepseek"
@@ -197,8 +376,6 @@ LLM_LARGE_PROVIDER="deepseek"
 DEEPSEEK_API_KEY="sk-..."
 DEEPSEEK_SMALL_LLM_MODEL="deepseek-v4-flash"
 DEEPSEEK_LARGE_LLM_MODEL="deepseek-v4-pro"
-# Embeddings stay elsewhere, for example:
-# EMBEDDINGS_PROVIDER="openai"
 ```
 
 The [TUI setup wizard](/v2/tui) can also select DeepSeek as a remote chat provider when configuring models.
@@ -352,9 +529,10 @@ CONTEXT_PASSAGE_MODE="hybrid"
   }}
 />
 
-Search startup validation rejects `SEARCH_ENABLED=true` unless
-`DATA_DB=postgresql` and at least one of `SEARCH_USE_DENSE` or
-`SEARCH_USE_BM25` is true.
+BM25 requires `DATA_DB=postgresql`. Dense-only Search (`SEARCH_USE_BM25=false`)
+is valid on the heavy/Mongo profile. Startup rejects BM25 on Mongo, not
+`SEARCH_ENABLED` itself. At least one of `SEARCH_USE_DENSE` or
+`SEARCH_USE_BM25` must be true.
 
 ### Multilingual full-text search
 
@@ -391,6 +569,7 @@ own cost profile.
 
 ## Next steps
 
+- [Self-host the dashboard](/v2/self-host-dashboard)
 - [Structured ingestion](/v2/ingestion/structured-data)
 - [Retrieve context](/v2/retrieval/context)
 - [Ranked Search](/v2/retrieval/search)

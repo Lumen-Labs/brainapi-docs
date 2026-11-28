@@ -62,7 +62,7 @@ flowchart TD
 
 ### Token scopes
 
-**What.** Default PAT scopes are `brainapi`. Writes that verify or reject facts also need `verification`, which is **not** granted by default. Resolved scopes are cached for 30 seconds.
+**What.** Default PAT scopes are `brainapi`. Writes that verify or reject facts also need `verification`, which is **not** granted by default. Self-host Compose templates set `BRAINPAT_SCOPES="brainapi verification"`. Resolved scopes are cached for 30 seconds.
 
 **Why.** Marking a fact trusted is a stronger power than reading memory.
 

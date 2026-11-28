@@ -50,7 +50,7 @@ Login stores a session (API base URL + BrainPAT) in local storage:
 <TypeTable
   type={{
     "System PAT": {
-      description: "Enables the sidebar brain switcher via GET /system/brains-list.",
+      description: "Required for GET /system/brains-list (system-PAT-only). The console requests ?include_pats=true so the switcher can include brain keys.",
       type: "token scope",
     },
     "Per-brain PAT": {

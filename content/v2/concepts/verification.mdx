@@ -41,7 +41,7 @@ flowchart LR
 
 ### Token scope
 
-**What.** Read APIs work with any valid PAT. Writes need scope `verification` on the system PAT (`BRAINPAT_SCOPES`) or the brain's stored `pat_scopes`. MCP OAuth can request `verification` only if the underlying PAT already has it. Scopes are cached for 30 seconds.
+**What.** Read APIs work with any valid PAT. Writes need scope `verification` on the system PAT (`BRAINPAT_SCOPES`) or the brain's stored `pat_scopes`. Self-host Compose templates set `BRAINPAT_SCOPES="brainapi verification"`. MCP OAuth can request `verification` only if the underlying PAT already has it. Scopes are cached for 30 seconds.
 
 **Why.** Hiding or blessing facts is an expert action.
 
