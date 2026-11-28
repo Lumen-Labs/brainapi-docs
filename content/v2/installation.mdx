@@ -103,13 +103,19 @@ The light compose file sets `name: brainapi` (Docker network `brainapi_appnet`).
   </Tab>
 </Tabs>
 
-## Licensing
+## License
 
-BrainAPI is licensed under the [Business Source License 1.1](https://github.com/Lumen-Labs/brainapi2/blob/main/LICENSE). The licensor is Lumen Platforms Inc.
+BrainAPI is licensed under the [Business Source License 1.1](https://github.com/Lumen-Labs/brainapi2/blob/main/LICENSE). The licensor is Lumen Platforms Inc. The Licensed Work is BrainAPI, (c) 2026 Lumen Platforms Inc. BUSL-1.1 is not an open-source license; the Licensed Work is later made available under an open-source Change License.
 
-Evaluation, development, and other non-production self-hosting are permitted under that license. Running these production Compose profiles for a live product or service requires a commercial license from Lumen Platforms Inc. Contact [hello@lumen-labs.ai](mailto:hello@lumen-labs.ai).
+The license grants the right to copy, modify, create derivative works, redistribute, and make **non-production use** of BrainAPI. The Additional Use Grant is **None**, so the license does not add limited production use. Free self-hosting is that non-production grant, not production use of the light or heavy Compose profiles.
 
-The heavy profile uses Neo4j Enterprise (`neo4j:5.26.16-enterprise`) because each brain is a Neo4j database. Set `NEO4J_ACCEPT_LICENSE_AGREEMENT` to `yes` or `eval` only if you hold a Neo4j licence; Compose refuses to start when it is unset. Community is not a drop-in replacement for this profile.
+If your use does not comply with the license currently in effect — including production use — you must purchase a commercial license from Lumen Platforms Inc., its affiliated entities, or authorized resellers, or refrain from using BrainAPI. For alternative licensing arrangements, contact [hello@lumen-labs.ai](mailto:hello@lumen-labs.ai).
+
+The Change Date is **2030-08-13**. Effective on that date, or the fourth anniversary of the first publicly available distribution of a specific version under this license, whichever comes first, that version is available under the Apache License, Version 2.0, and the BUSL rights above terminate. The Change Date may vary for each version.
+
+The product dashboard is a separate work. Its license is not yet published; a dashboard license is being added in a separate repository PR and is awaiting the owner's decision. Do not assume the BrainAPI BUSL terms apply to the dashboard.
+
+The heavy profile uses Neo4j Enterprise (`neo4j:5.26.16-enterprise`) because each brain is a Neo4j database. Set `NEO4J_ACCEPT_LICENSE_AGREEMENT` to `yes` or `eval` only if you hold a Neo4j licence; Compose refuses to start when it is unset. Community is not a drop-in replacement for this profile. Neo4j's licence is separate from BrainAPI's BUSL-1.1.
 
 ## Production stack overview
 
