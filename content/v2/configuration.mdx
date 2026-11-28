@@ -48,7 +48,7 @@ Configure only credentials relevant to the chosen backends: `POSTGRES_*`, `MONGO
 | Variable | Runtime default | Meaning |
 | --- | --- | --- |
 | `PIPELINE_MODE` | `accurate` | `accurate` or `lightweight`. |
-| `OCR_MODE` | `docling` | `docparser` or local `docling`; `.env.example` opts into `docparser`. |
+| `OCR_MODE` | `docling` | Local `docling` or remote `docparser`. Self-host defaults to local `docling` and does not call the hosted parser ([brainapi2#174](https://github.com/Lumen-Labs/brainapi2/pull/174) in progress). |
 | `AGENTIC_ARCHITECTURE` | `custom` | `custom` or `langchain`. |
 | `RUN_GRAPH_CONSOLIDATOR` | `false` | Enable LLM graph consolidation. |
 | `RUN_OBSERVATIONS` | `false` | Generate observation notes. |

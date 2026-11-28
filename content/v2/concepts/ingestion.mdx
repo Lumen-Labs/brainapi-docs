@@ -46,7 +46,7 @@ flowchart TD
 
 ### Files and OCR
 
-**What.** `POST /ingest/file` as multipart, one file per request. Accepted types include PDF, DOC/DOCX, XLS/XLSX, TXT, CSV, JSON, JPG, and PNG. The worker extracts text; scanned pages go through OCR. `OCR_MODE` selects the extractor (`docling` is the runtime default; example env files often set `docparser`).
+**What.** `POST /ingest/file` as multipart, one file per request. Accepted types include PDF, DOC/DOCX, XLS/XLSX, TXT, CSV, JSON, JPG, and PNG. The worker extracts text; scanned pages go through OCR. `OCR_MODE` selects the extractor. The runtime default is local `docling`. Self-host Compose profiles default to local parsing and do not call the hosted DocParser ([brainapi2#174](https://github.com/Lumen-Labs/brainapi2/pull/174) in progress).
 
 **Why.** Teams store knowledge in documents and images, not only in APIs.
 

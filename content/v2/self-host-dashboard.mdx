@@ -6,7 +6,7 @@ icon: LayoutDashboard
 
 Run the product dashboard next to a customer-operated BrainAPI engine from [`Lumen-Labs/brainapi2`](https://github.com/Lumen-Labs/brainapi2). Hosted Lumen Labs behaviour is unchanged when `SELF_HOST` is unset.
 
-Bring the engine up first with the [light or heavy Compose profile](/v2/installation#production-stack-overview). The engine is licensed under Business Source License 1.1; see [License](/v2/installation#license). The dashboard license is not yet published; it is being added in a separate repository PR and is awaiting the owner's decision.
+Bring the engine up first with the [light or heavy Compose profile](/v2/installation#production-stack-overview). The dashboard is licensed under Business Source License 1.1 with the **same terms as the engine**. See [License](/v2/installation#license).
 
 ## Build RAM
 
@@ -22,7 +22,7 @@ openssl rand -hex 32      # JWT_SECRET
 openssl rand -hex 32      # USAGE_CONTEXT_SECRET
 ```
 
-`BRAIN_KEY_ENCRYPTION_KEY` must be the base64 encoding of 32 random bytes (`openssl rand -base64 32`). Empty `JWT_SECRET` or `BRAIN_KEY_ENCRYPTION_KEY` still lets the container report healthy; sign-up then fails with a misleading 500.
+`BRAIN_KEY_ENCRYPTION_KEY` must be the base64 encoding of 32 random bytes (`openssl rand -base64 32`). Empty `JWT_SECRET`, `BRAIN_KEY_ENCRYPTION_KEY`, `USAGE_CONTEXT_SECRET`, or `MONGODB_URI` now **refuses to start** instead of serving a healthy dashboard. That fail-fast is landing in [maas #141](https://github.com/Lumen-Labs/brainapi-maas-nextjs/pull/141) (it is skipped during `next build`). Until you run an image that includes it, an older dashboard can still report healthy and fail later at sign-up.
 
 Copy `USAGE_CONTEXT_SECRET` into the engine env file (`/etc/brainapi/light.env` or `heavy.env`) as well. The dashboard, the engine, and any proxy that signs `X-Usage-Context` must use the **same** value. Recreate the engine containers after changing it.
 
@@ -37,9 +37,10 @@ Join the engine Compose network. Light compose `name: brainapi` creates `brainap
 ```bash
 export SELF_HOST_ENGINE_NETWORK=brainapi_appnet
 export SELF_HOST_ENGINE_URL=http://brainapi:8000
+export SELF_HOST_PUBLIC_API_URL=http://localhost
 ```
 
-For heavy, set `SELF_HOST_ENGINE_NETWORK=brainapi-heavy_appnet`. If you started the engine with a different `-p` value, the network is `<project>_appnet` instead.
+For heavy, set `SELF_HOST_ENGINE_NETWORK=brainapi-heavy_appnet`. If you started the engine with a different `-p` value, the network is `<project>_appnet` instead. `SELF_HOST_ENGINE_URL` is the dashboard-to-engine URL on the Docker network. `SELF_HOST_PUBLIC_API_URL` is the URL Connect shows to browsers and laptops (nginx on port 80).
 
 ```bash
 docker compose -f docker-compose.self-host.yml \
@@ -54,6 +55,7 @@ The overlay attaches the dashboard to `SELF_HOST_ENGINE_NETWORK` and keeps Mongo
 | --- | --- |
 | `SELF_HOST` | Set to `1`. |
 | `SELF_HOST_ENGINE_URL` | Engine base URL with no trailing slash. On the engine network: `http://brainapi:8000`. |
+| `SELF_HOST_PUBLIC_API_URL` | Public engine URL shown in Connect snippets, for example `http://localhost`. If unset, Connect falls back to `SELF_HOST_ENGINE_URL` and warns that it may be unreachable from your laptop. |
 | `SELF_HOST_ENGINE_SYSTEM_PAT` | Engine system PAT (`BRAINPAT_TOKEN`) used to create and delete brains. |
 | `SELF_HOST_ENGINE_NETWORK` | Docker network name for the overlay. Use `brainapi_appnet` (light) or `brainapi-heavy_appnet` (heavy). |
 | `MONGODB_URI` | Dashboard MongoDB URI. The compose file uses `mongodb://mongo:27017/brainapi`. |
@@ -77,11 +79,11 @@ Check health:
 curl --fail http://localhost:3000/api/health
 ```
 
-A successful self-host response includes `"ok": true` and `"mode": "self-host"`. `engineConfigured` can be true even when the engine URL is unreachable, so also confirm `curl --fail http://localhost/health` on the engine nginx port.
+A successful self-host response includes `"ok": true` and `"mode": "self-host"`. With [maas #141](https://github.com/Lumen-Labs/brainapi-maas-nextjs/pull/141) it also includes `engineReachable`, which probes the engine `/health`. `engineConfigured` can still be true when the engine is down, so also confirm `curl --fail http://localhost/health` on the engine nginx port.
 
 The dashboard listens on `http://localhost:3000`. The first account becomes the workspace admin; later open registration is closed unless you set an invite, `SELF_HOST_ALLOWED_EMAIL_DOMAINS`, or `SELF_HOST_OPEN_SIGNUP=1`.
 
-Engine API calls from your laptop still go through nginx (`http://localhost`), not `http://brainapi:8000`. The Connect dialog currently shows the internal engine URL. Use `http://localhost` (or your public nginx URL) in clients. Send either `BrainPAT` or `Authorization: Bearer` with `X-Brain-ID`.
+Connect uses `SELF_HOST_PUBLIC_API_URL` (`http://localhost` when nginx publishes the engine on port 80). Dashboard-to-engine calls keep using `SELF_HOST_ENGINE_URL` (`http://brainapi:8000`). Send either `BrainPAT` or `Authorization: Bearer` with `X-Brain-ID`.
 
 ## Optional variables
 

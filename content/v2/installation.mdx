@@ -113,7 +113,7 @@ If your use does not comply with the license currently in effect — including p
 
 The Change Date is **2030-08-13**. Effective on that date, or the fourth anniversary of the first publicly available distribution of a specific version under this license, whichever comes first, that version is available under the Apache License, Version 2.0, and the BUSL rights above terminate. The Change Date may vary for each version.
 
-The product dashboard is a separate work. Its license is not yet published; a dashboard license is being added in a separate repository PR and is awaiting the owner's decision. Do not assume the BrainAPI BUSL terms apply to the dashboard.
+The product dashboard is a separate Licensed Work (**BrainAPI Dashboard**) under the same Business Source License 1.1 parameters: Additional Use Grant **None**, Change Date **2030-08-13**, Change License Apache License 2.0, commercial contact [hello@lumen-labs.ai](mailto:hello@lumen-labs.ai). Those terms are kept; they are not pending.
 
 The heavy profile uses Neo4j Enterprise (`neo4j:5.26.16-enterprise`) because each brain is a Neo4j database. Set `NEO4J_ACCEPT_LICENSE_AGREEMENT` to `yes` or `eval` only if you hold a Neo4j licence; Compose refuses to start when it is unset. Community is not a drop-in replacement for this profile. Neo4j's licence is separate from BrainAPI's BUSL-1.1.
 
@@ -167,7 +167,7 @@ Edit `/etc/brainapi/light.env` (or `heavy.env`). Two values are easy to get wron
 | Variable | Required value |
 | --- | --- |
 | `BRAINAPI_ENV_FILE` | Absolute path of this file, for example `/etc/brainapi/light.env`. A relative value resolves against the Compose working directory and will not load the secrets you just edited. |
-| `BRAINAPI_IMAGE` | The engine image. Current `main` is `ghcr.io/lumen-labs/brainapi:v2.23.2-5826a97b`. The latest GitHub release tag is `v2.22.0` (`ghcr.io/lumen-labs/brainapi:v2.22.0`). |
+| `BRAINAPI_IMAGE` | The engine image. GHCR publishes **commit-suffixed** tags only (`vX.Y.Z-<sha8>`). Current `main` is `ghcr.io/lumen-labs/brainapi:v2.23.2-5826a97b`. The previous release commit is `v2.22.0-a05c55e6`. Bare tags such as `v2.23.2` or `v2.22.0` are not published. |
 
 Replace every secret in the template. At minimum, Compose interpolation requires:
 
@@ -252,6 +252,8 @@ Set `USAGE_CONTEXT_SECRET` to the same value on the engine, the [self-hosted das
 
 `GET /system/brains-list` requires the system PAT. Brain keys are omitted unless you pass `?include_pats=true`.
 
+Self-host document parsing defaults to local `OCR_MODE=docling` and does not call the hosted DocParser. Leave `DOCPARSER_ENDPOINT` and `DOCPARSER_TOKEN` unset unless you operate your own parser. That default is landing in [brainapi2#174](https://github.com/Lumen-Labs/brainapi2/pull/174); until it ships, change templates that still set `OCR_MODE=docparser` to `docling` for a local-only host.
+
 ### 3) Start the stack
 
 The light compose file sets `name: brainapi`. Heavy sets `name: brainapi-heavy`. You do not need `-p` unless you override that name (CI uses `brainapi-ci`). Backup defaults match these names. Do not mix profiles under the same project.
@@ -281,10 +283,10 @@ curl --fail http://localhost/health
 Expected response (Compose profiles via nginx):
 
 ```json
-{"status":"ok","service":"brainapi","version":"2.23.0","build":"5826a97b2211daa5581a462cf457cc3cdfdb9d4a"}
+{"status":"ok","service":"brainapi","version":"v2.23.2-5826a97b","build":"5826a97b2211daa5581a462cf457cc3cdfdb9d4a"}
 ```
 
-`status` is `ok` when the data store is reachable. Current compose images prefer the `BRAINAPI_IMAGE` tag for `version` and return **503** with `"status":"degraded"` when the data store is down. `GET /health` is public. `GET /` requires the system PAT and is not a ping.
+`status` is `ok` when the data store is reachable. Do not expect `"version":"2.23.0"`: that package string lags the image. Images that include [brainapi2#174](https://github.com/Lumen-Labs/brainapi2/pull/174) set `version` from the `BRAINAPI_IMAGE` tag (for example `v2.23.2-5826a97b`) and return **503** with `"status":"degraded"` when the data store is down. `GET /health` is public. `GET /` requires the system PAT and is not a ping.
 
 Authenticated requests accept either header:
 
@@ -309,7 +311,7 @@ Do not probe Redis, Postgres, MongoDB, Neo4j, MinIO, or Milvus on the host: thos
 ## Upgrade
 
 1. Back up with `deploy/brainapi-backup backup` using the same project name as the running stack (`brainapi` for light, `brainapi-heavy` for heavy). See [Backup and restore](#backup-and-restore).
-2. Point `BRAINAPI_IMAGE` at the new tag in `/etc/brainapi/light.env` (or `heavy.env`). Example: `v2.22.0` → `v2.23.2-5826a97b`.
+2. Point `BRAINAPI_IMAGE` at the new **commit-suffixed** tag in `/etc/brainapi/light.env` (or `heavy.env`). Example: `v2.22.0-a05c55e6` → `v2.23.2-5826a97b`.
 3. Recreate the application containers:
 
 ```bash
@@ -331,7 +333,7 @@ Do not mount a volume over `/app/plugins`; custom plugins belong in `PLUGINS_EXT
 The default `--project-name` matches compose: `brainapi` (light) and `brainapi-heavy` (heavy). Override `--project-name` only when you started the stack with a different name (CI uses `brainapi-ci`). A mismatched project name reports `service "postgres" is not running`. A failed backup deletes the partial directory so it does not leave a 0-byte dump.
 
 ```bash
-sudo install -d -m 700 /srv/brainapi/backups
+sudo install -d -m 700 -o "$USER" /srv/brainapi/backups
 
 deploy/brainapi-backup backup --profile light \
   --env-file /etc/brainapi/light.env
@@ -339,6 +341,13 @@ deploy/brainapi-backup backup --profile light \
 deploy/brainapi-backup verify --profile light \
   --env-file /etc/brainapi/light.env \
   --archive /srv/brainapi/backups/light-UTCSTAMP
+```
+
+Restore refuses a running stack and any non-empty target volume. Tear the stack down with volumes first:
+
+```bash
+docker compose --env-file /etc/brainapi/light.env \
+  -f deploy/docker-compose.light.yaml down -v
 
 deploy/brainapi-backup restore --profile light \
   --env-file /etc/brainapi/light.env \
@@ -347,11 +356,11 @@ deploy/brainapi-backup restore --profile light \
 
 Heavy is the same with `--profile heavy` and `/etc/brainapi/heavy.env` (default `--project-name brainapi-heavy`). Override the destination with `--backup-dir /path/you/can/write` when `/srv/brainapi/backups` is not available. If you started the stack with a CI Compose override, pass the same file as `--compose-file deploy/docker-compose.ci.yaml`.
 
-Backup stops nginx, API, MCP, and workers before capture. Restore refuses a running stack, a profile or image mismatch, a checksum mismatch, or any non-empty target volume. Use a maintenance window and keep the generated manifest with the release artifacts.
+Backup stops nginx, API, MCP, and workers before capture. Restore also refuses a profile or image mismatch or a checksum mismatch. Use a maintenance window and keep the generated manifest with the release artifacts.
 
 ## Dashboard
 
-To run the product dashboard next to this engine, join Docker network `brainapi_appnet` (light) or `brainapi-heavy_appnet` (heavy) and set `SELF_HOST_ENGINE_URL=http://brainapi:8000`. Generate `JWT_SECRET`, `BRAIN_KEY_ENCRYPTION_KEY`, and `USAGE_CONTEXT_SECRET` before the first build. See [Self-host the dashboard](/v2/self-host-dashboard).
+To run the product dashboard next to this engine, join Docker network `brainapi_appnet` (light) or `brainapi-heavy_appnet` (heavy), set `SELF_HOST_ENGINE_URL=http://brainapi:8000`, and set `SELF_HOST_PUBLIC_API_URL=http://localhost` so Connect shows the nginx URL. Generate `JWT_SECRET`, `BRAIN_KEY_ENCRYPTION_KEY`, and `USAGE_CONTEXT_SECRET` before the first start; empty required secrets refuse to start (maas #141). See [Self-host the dashboard](/v2/self-host-dashboard).
 
 ## LLM providers
 
